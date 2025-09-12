@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>ArchSys - ERP</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <style type="text/tailwindcss">
+    :root {
+      --brand-primary: #3B82F6;
+      --brand-secondary: #F3F4F6;
+      --brand-text-primary: #1F2937;
+      --brand-text-secondary: #6B7280;
+      --primary-color: #1173d4;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .view-container {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+    }
+    .view-container.visible {
+        display: flex;
+        opacity: 1;
+    }
+    .tab-link.active {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+  <!-- Container da Tela de Login -->
+  <div id="login-page" class="view-container min-h-screen w-full">
+    <div class="hidden lg:block lg:w-1/2 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAjT4NCUeYAJKzXAWibZiV3SdaB7LitGgn5v4WuXpE35_X9_KrrMPnXX73OdMg1EJNzOgWjDy5XgvahwLDk6lsLhpHnYVqEnB6XjPJ7WNBalMkxnyaoe8Arjo-zpNktw8-MSTk8HCbpiAvQgzScQuzO44_uJJ8rNvjt8zPJsqk-JfbaSmuOn0oTmXoo-KwKNyNLhTDHga5WOhtA0HRVpiPYJn09wwgXGxMRdw6h3d67bgAO8Y8o-kqoGkTrzirm4uRgLvG19pbhmDa')">
+      <div class="flex h-full w-full bg-black bg-opacity-25 items-end p-12">
+        <div class="text-white">
+          <h1 class="text-4xl font-bold leading-tight">Projetando o futuro, um projeto de cada vez.</h1>
+          <p class="mt-4 text-lg">Seu ERP para a arquitetura moderna.</p>
+        </div>
+      </div>
+    </div>
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+      <div class="w-full max-w-md">
+        <div class="flex items-center justify-center mb-8">
+          <svg class="h-10 w-10 text-[var(--brand-primary)]" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.8261 30.5736C16.7203 29.8826 20.2244 29.4783 24 29.4783C27.7756 29.4783 31.2797 29.8826 34.1739 30.5736C36.9144 31.2278 39.9967 32.7669 41.3563 33.8352L24.8486 7.36089C24.4571 6.73303 23.5429 6.73303 23.1514 7.36089L6.64374 33.8352C8.00331 32.7669 11.0856 31.2278 13.8261 30.5736Z" fill="currentColor"></path>
+            <path clip-rule="evenodd" d="M39.998 35.764C39.9944 35.7463 39.9875 35.7155 39.9748 35.6706C39.9436 35.5601 39.8949 35.4259 39.8346 35.2825C39.8168 35.2403 39.7989 35.1993 39.7813 35.1602C38.5103 34.2887 35.9788 33.0607 33.7095 32.5189C30.9875 31.8691 27.6413 31.4783 24 31.4783C20.3587 31.4783 17.0125 31.8691 14.2905 32.5189C12.0012 33.0654 9.44505 34.3104 8.18538 35.1832C8.17384 35.2075 8.16216 35.233 8.15052 35.2592C8.09919 35.3751 8.05721 35.4886 8.02977 35.589C8.00356 35.6848 8.00039 35.7333 8.00004 35.7388C8.00004 35.739 8 35.7393 8.00004 35.7388C8.00004 35.7641 8.0104 36.0767 8.68485 36.6314C9.34546 37.1746 10.4222 37.7531 11.9291 38.2772C14.9242 39.319 19.1919 40 24 40C28.8081 40 33.0758 39.319 36.0709 38.2772C37.5778 37.7531 38.6545 37.1746 39.3151 36.6314C39.9006 36.1499 39.9857 35.8511 39.998 35.764ZM4.95178 32.7688L21.4543 6.30267C22.6288 4.4191 25.3712 4.41909 26.5457 6.30267L43.0534 32.777C43.0709 32.8052 43.0878 32.8338 43.104 32.8629L41.3563 33.8352C43.104 32.8629 43.1038 32.8626 43.104 32.8629L43.1051 32.865L43.1065 32.8675L43.1101 32.8739L43.1199 32.8918C43.1276 32.906 43.1377 32.9246 43.1497 32.9473C43.1738 32.9925 43.2062 33.0545 43.244 33.1299C43.319 33.2792 43.4196 33.489 43.5217 33.7317C43.6901 34.1321 44 34.9311 44 35.7391C44 37.4427 43.003 38.7775 41.8558 39.7209C40.6947 40.6757 39.1354 41.4464 37.385 42.0552C33.8654 43.2794 29.133 44 24 44C18.867 44 14.1346 43.2794 10.615 42.0552C8.86463 41.4464 7.30529 40.6757 6.14419 39.7209C4.99695 38.7775 3.99999 37.4427 3.99999 35.7391C3.99999 34.8725 4.29264 34.0922 4.49321 33.6393C4.60375 33.3898 4.71348 33.1804 4.79687 33.0311C4.83898 32.9556 4.87547 32.8935 4.9035 32.8471C4.91754 32.8238 4.92954 32.8043 4.93916 32.7889L4.94662 32.777L4.95178 32.7688ZM35.9868 29.004L24 9.77997L12.0131 29.004C12.4661 28.8609 12.9179 28.7342 13.3617 28.6282C16.4281 27.8961 20.0901 27.4783 24 27.4783C27.9099 27.4783 31.5719 27.8961 34.6383 28.6282C35.082 28.7342 35.5339 28.8609 35.9868 29.004Z" fill="currentColor" fill-rule="evenodd"></path>
+          </svg>
+          <h2 class="ml-3 text-2xl font-bold text-[var(--brand-text-primary)]">ArchSys</h2>
+        </div>
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-gray-900">Bem-vindo de volta</h1>
+          <p class="mt-2 text-gray-600">Por favor, insira seus dados para entrar.</p>
+        </div>
+        <form id="login-form" class="mt-8 space-y-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-email">E-mail</label>
+              <div class="mt-1">
+                <input autocomplete="email" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base" id="login-email" name="email" placeholder="seu@email.com" required="" type="email" />
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-password">Senha</label>
+              </div>
+              <div class="mt-1">
+                <input autocomplete="current-password" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base" id="login-password" name="password" placeholder="Digite sua senha" required="" type="password" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <button class="group relative flex w-full justify-center rounded-lg border border-transparent bg-[var(--brand-primary)] py-3 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" type="submit">
+              Entrar
+            </button>
+          </div>
+           <div id="login-error" class="text-red-500 text-sm text-center"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container da Tela Principal (Dashboard) -->
+  <div id="main-page" class="view-container min-h-screen w-full">
+     <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Financeiro</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <span id="user-email" class="text-sm text-gray-600"></span>
+                    <button id="logout-button" class="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> logout </span>
+                        <span class="text-sm text-gray-700 font-medium">Sair</span>
+                    </button>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Painel</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Visão geral dos principais indicadores e módulos do sistema.</p>
+                    </div>
+                    <div>
+                        <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight mb-4">Indicadores</h2>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-gray-500"> apartment </span>
+                                    <p class="text-gray-800 text-base font-medium leading-normal">Projetos em Andamento</p>
+                                </div>
+                                <p id="projects-count" class="text-gray-900 text-3xl font-bold leading-tight">...</p>
+                            </div>
+                            <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-gray-500"> attach_money </span>
+                                    <p class="text-gray-800 text-base font-medium leading-normal">Vendas do Mês</p>
+                                </div>
+                                <p id="sales-value" class="text-gray-900 text-3xl font-bold leading-tight">...</p>
+                            </div>
+                            <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-gray-500"> receipt_long </span>
+                                    <p class="text-gray-800 text-base font-medium leading-normal">Despesas Pendentes</p>
+                                </div>
+                                <p id="expenses-value" class="text-red-600 text-3xl font-bold leading-tight">...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                      <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight mb-4">Módulos</h2>
+                      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <div class="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                          <div class="flex-1">
+                            <p class="text-gray-800 text-lg font-semibold leading-tight">Cadastros</p>
+                            <p class="text-gray-600 text-sm font-normal leading-normal mt-1 mb-4">Gerencie seus clientes, fornecedores, produtos e serviços.</p>
+                            <a class="nav-link inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#" data-target="cadastros-page"> Acessar </a>
+                          </div>
+                          <div class="hidden h-32 w-48 flex-shrink-0 bg-cover bg-center rounded-md sm:block" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDQXtwWaqx7ezi2bjKi9ugj7Biy6hyw3N0Ks4L31cK8v6EcjjeIPSrwv720ad4UxVpx6xBRivD8gwIuzju0E1ETtzAbqYc8oEkIYAKFvywrEwTlR4KRg84dJFF209ewLdnxcmNn_CtkIejkV6LLUE4uTtsZJGXVQz-4gLR0-fNz9A9NuNG0b475ys_yqTDZtwPd4RFCoVxCQEfr57CU7BS-uZJZwEpdkWKE6RX7Nfxh8SjcxK-6McZGMAL2EQSolsdWovrMVLtaiWeH");'></div>
+                        </div>
+                        <div class="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                          <div class="flex-1">
+                            <p class="text-gray-800 text-lg font-semibold leading-tight">Compras</p>
+                            <p class="text-gray-600 text-sm font-normal leading-normal mt-1 mb-4">Controle suas compras, pedidos e recebimentos de materiais.</p>
+                            <a class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#"> Acessar </a>
+                          </div>
+                          <div class="hidden h-32 w-48 flex-shrink-0 bg-cover bg-center rounded-md sm:block" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCRfgZVOBXSgYtv4bX45OPD0l9q_NSImBv2eL6fzb9b8faIodKsplwhEDGJrOdzuI-0cmACUrOlqQzwN--iOpz6gFR9GvVNPVlr0mg7C6yk1CKiJYgcB3zKmOUW6VqCIzR9KfMlcwz7danWgt4MaE1qGnBEggYHG167ArDem9OEm-6WuLKVPB3nVApSPAFuEF1pNN6v_pH0ufz6fmIoFu8Yloh2KTUye2op3xHE1IHJUZSNEjOGcc9l_GUH8cLST63CUHqsCCPkIRzi");'></div>
+                        </div>
+                        <div class="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                          <div class="flex-1">
+                            <p class="text-gray-800 text-lg font-semibold leading-tight">Financeiro</p>
+                            <p class="text-gray-600 text-sm font-normal leading-normal mt-1 mb-4">Acompanhe seu fluxo de caixa, contas a pagar e receber.</p>
+                            <a class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#"> Acessar </a>
+                          </div>
+                          <div class="hidden h-32 w-48 flex-shrink-0 bg-cover bg-center rounded-md sm:block" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCu5YUQJU2O0LhHTLt4ly2-Ach75kalQbyg8Ytn4RoYxTDEEx1RtdTaziC62QYVa5WMi7R4tSNwwJur56xmdGI4WZfJ7s6TOoUhWOKA2-0NRTt8jChzRyMs55QV4kUDHcxKbYbs2LQjvNXl_i9GxdqHp_CP7vy3E1msz_ZRpEVlteAAZxODhVIVjzwYeDqqDAXoQxeGUy68t-_igunBtJc2PepF2PJO65HThfJRi1K14MAjLXM2-AQ1TIpYwZCsM-jT0ak975Jfnu3a");'></div>
+                        </div>
+                        <div class="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                          <div class="flex-1">
+                            <p class="text-gray-800 text-lg font-semibold leading-tight">Vendas</p>
+                            <p class="text-gray-600 text-sm font-normal leading-normal mt-1 mb-4">Gerencie suas propostas, orçamentos e contratos de projetos.</p>
+                            <a class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#"> Acessar </a>
+                          </div>
+                          <div class="hidden h-32 w-48 flex-shrink-0 bg-cover bg-center rounded-md sm:block" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCHwEeOGxpFtZRq_vB3s-Glt_RZPJdlaA1nZDBIXaeMEiPKoXizREavzEF3yQS6XV4QnDyhDJcJgHFxtowY_focVhtS99MG7tqO6IXegUmVswZmb6ygvGGeB9J91q3MPOQgSn1Cp4zkl0gZX7bluIIOyyiK6ZTvtObXGwVw68T6w5kk6TDf0KKCdiUJiKHVQmOLhPb5fhksHOXy94neNkJ5d_xsctvPpkSAzOj8aL6riWrNKDIuGHMM-wHOOBY8_kjeNzv0z0H4eLTb");'></div>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+  
+  <!-- Container da Tela de Cadastros -->
+  <div id="cadastros-page" class="view-container min-h-screen w-full">
+    <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-[var(--primary-color)] text-sm font-medium leading-normal" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Financeiro</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <span id="user-email-cadastros" class="text-sm text-gray-600"></span>
+                    <button id="logout-button-cadastros" class="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> logout </span>
+                        <span class="text-sm text-gray-700 font-medium">Sair</span>
+                    </button>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Módulo de Cadastros</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Gerencie os cadastros essenciais para o funcionamento do sistema.</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        <a id="gerais-card-link" class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                            <div class="flex flex-col gap-3 items-center text-center">
+                                <span class="material-symbols-outlined text-4xl text-gray-500"> settings </span>
+                                <h3 class="text-gray-800 text-lg font-semibold leading-tight">Gerais</h3>
+                                <p class="text-gray-600 text-sm">Empresas, usuários, perfis de acesso.</p>
+                            </div>
+                        </a>
+                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                            <div class="flex flex-col gap-3 items-center text-center">
+                                <span class="material-symbols-outlined text-4xl text-gray-500"> business_center </span>
+                                <h3 class="text-gray-800 text-lg font-semibold leading-tight">Comerciais e Logísticos</h3>
+                                <p class="text-gray-600 text-sm">Clientes, fornecedores, produtos, serviços.</p>
+                            </div>
+                        </a>
+                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                            <div class="flex flex-col gap-3 items-center text-center">
+                                <span class="material-symbols-outlined text-4xl text-gray-500"> account_balance </span>
+                                <h3 class="text-gray-800 text-lg font-semibold leading-tight">Financeiros e Contábeis</h3>
+                                <p class="text-gray-600 text-sm">Contas bancárias, planos de contas, impostos.</p>
+                            </div>
+                        </a>
+                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                            <div class="flex flex-col gap-3 items-center text-center">
+                                <span class="material-symbols-outlined text-4xl text-gray-500"> group </span>
+                                <h3 class="text-gray-800 text-lg font-semibold leading-tight">Recursos Humanos</h3>
+                                <p class="text-gray-600 text-sm">Funcionários, cargos, salários.</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Seção de Cadastro Gerais (inicia oculta) -->
+                    <div id="gerais-cadastro-section" class="hidden mt-8">
+                      <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
+                            <h2 class="text-gray-900 text-2xl font-bold leading-tight tracking-tight">Cadastros Gerais</h2>
+                            <button id="close-gerais-cadastro" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-gray-600">close</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Abas/Tabs para navegação -->
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <a href="#" class="tab-link active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="empresas">Empresas</a>
+                                <a href="#" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="usuarios">Usuários</a>
+                                <a href="#" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="perfis">Perfil de Acesso</a>
+                            </nav>
+                        </div>
+                    
+                        <!-- Conteúdo das Abas -->
+                        <div class="mt-6">
+                            <!-- Tab: Empresas -->
+                            <div id="empresas-tab" class="tab-content">
+                                <form class="space-y-4 max-w-lg">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700" for="empresa-nome">Nome da Empresa</label>
+                                        <input type="text" id="empresa-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700" for="empresa-cnpj">CNPJ</label>
+                                        <input type="text" id="empresa-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                    </div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Empresa</button>
+                                    </div>
+                                </form>
+                            </div>
+                    
+                            <!-- Tab: Usuários -->
+                            <div id="usuarios-tab" class="tab-content hidden">
+                                 <form class="space-y-4 max-w-lg">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700" for="usuario-nome">Nome do Usuário</label>
+                                        <input type="text" id="usuario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                    </div>
+                                     <div>
+                                        <label class="block text-sm font-medium text-gray-700" for="usuario-email">E-mail</label>
+                                        <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                    </div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Usuário</button>
+                                    </div>
+                                </form>
+                            </div>
+                    
+                            <!-- Tab: Perfil de Acesso -->
+                            <div id="perfis-tab" class="tab-content hidden">
+                                 <form class="space-y-4 max-w-lg">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700" for="perfil-nome">Nome do Perfil</label>
+                                        <input type="text" id="perfil-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                    </div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Perfil</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    
+                      </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Importações do Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDc7VXTjm1fyKerBWKh-5b6Co17jDlFHFo",
+      authDomain: "controle-financeio-85742.firebaseapp.com",
+      projectId: "controle-financeio-85742",
+      storageBucket: "controle-financeio-85742.firebasestorage.app",
+      messagingSenderId: "855241987878",
+      appId: "1:855241987878:web:7b89f1b734bd0ca20e93e7",
+      measurementId: "G-3QY0LMZN7E"
+    };
+
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- Elementos do DOM ---
+    const loginPage = document.getElementById('login-page');
+    const mainPage = document.getElementById('main-page');
+    const cadastrosPage = document.getElementById('cadastros-page');
+    const loginForm = document.getElementById('login-form');
+    const loginEmailInput = document.getElementById('login-email'), loginPasswordInput = document.getElementById('login-password'), loginError = document.getElementById('login-error');
+    
+    // Elementos de usuário e logout
+    const userEmailSpan = document.getElementById('user-email');
+    const logoutButton = document.getElementById('logout-button');
+    const userEmailCadastrosSpan = document.getElementById('user-email-cadastros');
+    const logoutButtonCadastros = document.getElementById('logout-button-cadastros');
+
+    // Elementos do Dashboard
+    const projectsCountEl = document.getElementById('projects-count');
+    const salesValueEl = document.getElementById('sales-value');
+    const expensesValueEl = document.getElementById('expenses-value');
+
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    let dashboardUnsubscribe = null; 
+
+    // --- Elementos da Tela de Cadastros ---
+    const geraisCardLink = document.getElementById('gerais-card-link');
+    const geraisCadastroSection = document.getElementById('gerais-cadastro-section');
+    const closeGeraisCadastro = document.getElementById('close-gerais-cadastro');
+
+    // --- Funções Auxiliares ---
+    function showView(viewId) {
+        document.querySelectorAll('.view-container').forEach(view => {
+            view.classList.remove('visible');
+        });
+        const viewToShow = document.getElementById(viewId);
+        if (viewToShow) {
+            viewToShow.classList.add('visible');
+        }
+        // Ocultar seção de cadastro ao mudar de view
+        if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
+    }
+
+    function formatCurrency(value) {
+        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // --- Lógica do Firestore ---
+    function setupDashboardListener(userId) {
+        const docRef = doc(db, 'users', userId, 'dashboard', 'metrics');
+        
+        dashboardUnsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("Dados do Firestore recebidos:", data);
+                projectsCountEl.textContent = data.projectsInProgress || 0;
+                salesValueEl.textContent = formatCurrency(data.monthlySales || 0);
+                expensesValueEl.textContent = formatCurrency(data.pendingExpenses || 0);
+            } else {
+                console.log("Documento de métricas não encontrado para o usuário! Crie-o no painel do Firestore.");
+                projectsCountEl.textContent = 0;
+                salesValueEl.textContent = formatCurrency(0);
+                expensesValueEl.textContent = formatCurrency(0);
+            }
+        });
+    }
+
+    // --- Lógica de Autenticação e Navegação ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Atualiza info de usuário em ambas as telas
+        userEmailSpan.textContent = user.email;
+        userEmailCadastrosSpan.textContent = user.email;
+
+        if(dashboardUnsubscribe) dashboardUnsubscribe(); 
+        setupDashboardListener(user.uid);
+        showView('main-page'); // Começa sempre no painel
+      } else {
+        userEmailSpan.textContent = '';
+        userEmailCadastrosSpan.textContent = '';
+        if(dashboardUnsubscribe) {
+            dashboardUnsubscribe(); 
+            dashboardUnsubscribe = null;
+        }
+        showView('login-page');
+      }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginError.textContent = '';
+      try {
+        await signInWithEmailAndPassword(auth, loginEmailInput.value, loginPasswordInput.value);
+      } catch (error) {
+        loginError.textContent = 'E-mail ou senha inválidos.';
+      }
+    });
+    
+    const performLogout = () => {
+         signOut(auth).catch(error => console.error("Erro no logout:", error));
+    }
+
+    logoutButton.addEventListener('click', performLogout);
+    logoutButtonCadastros.addEventListener('click', performLogout);
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetViewId = e.currentTarget.dataset.target;
+            if (targetViewId) {
+                showView(targetViewId);
+            }
+        });
+    });
+
+    // --- Lógica da Tela de Cadastros ---
+    if (geraisCardLink) {
+        geraisCardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            geraisCadastroSection.classList.remove('hidden');
+            geraisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    if (closeGeraisCadastro) {
+        closeGeraisCadastro.addEventListener('click', () => {
+            geraisCadastroSection.classList.add('hidden');
+        });
+    }
+    
+    if (geraisCadastroSection){
+        const tabLinks = geraisCadastroSection.querySelectorAll('.tab-link');
+        const tabContents = geraisCadastroSection.querySelectorAll('.tab-content');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                tabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+
+                const tabId = link.dataset.tab;
+                tabContents.forEach(content => {
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    }
+
+  </script>
+
+</body>
+
+</html>
+
