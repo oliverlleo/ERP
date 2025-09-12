@@ -279,49 +279,104 @@
                         <div class="mt-6">
                             <!-- Tab: Empresas -->
                             <div id="empresas-tab" class="tab-content">
-                                <form class="space-y-4 max-w-lg">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700" for="empresa-nome">Nome da Empresa</label>
-                                        <input type="text" id="empresa-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                <form id="empresa-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="empresa-nome">Nome da Empresa</label>
+                                            <input type="text" id="empresa-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="empresa-cnpj">CNPJ</label>
+                                            <input type="text" id="empresa-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700" for="empresa-cnpj">CNPJ</label>
-                                        <input type="text" id="empresa-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                                    </div>
+                                    <div id="empresa-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
                                         <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Empresa</button>
                                     </div>
                                 </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Empresas Cadastradas</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Empresa</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="empresas-table-body" class="bg-white divide-y divide-gray-200">
+                                                <!-- Linhas da tabela serão inseridas aqui -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                     
                             <!-- Tab: Usuários -->
                             <div id="usuarios-tab" class="tab-content hidden">
-                                 <form class="space-y-4 max-w-lg">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700" for="usuario-nome">Nome do Usuário</label>
-                                        <input type="text" id="usuario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                <form id="usuario-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="usuario-nome">Nome do Usuário</label>
+                                            <input type="text" id="usuario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                         <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="usuario-email">E-mail</label>
+                                            <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
                                     </div>
-                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700" for="usuario-email">E-mail</label>
-                                        <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                                    </div>
+                                    <div id="usuario-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
                                         <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Usuário</button>
                                     </div>
                                 </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Usuários Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                         <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Usuário</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="usuarios-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                     
                             <!-- Tab: Perfil de Acesso -->
                             <div id="perfis-tab" class="tab-content hidden">
-                                 <form class="space-y-4 max-w-lg">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700" for="perfil-nome">Nome do Perfil</label>
-                                        <input type="text" id="perfil-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                 <form id="perfil-form" >
+                                    <div class="grid grid-cols-1">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="perfil-nome">Nome do Perfil</label>
+                                            <input type="text" id="perfil-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
                                     </div>
+                                    <div id="perfil-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
                                         <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Perfil</button>
                                     </div>
                                 </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Perfis Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                         <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Perfil</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="perfis-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     
@@ -338,7 +393,7 @@
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -373,70 +428,165 @@
     const projectsCountEl = document.getElementById('projects-count');
     const salesValueEl = document.getElementById('sales-value');
     const expensesValueEl = document.getElementById('expenses-value');
-
     const navLinks = document.querySelectorAll('.nav-link');
-
+    
+    // --- Variáveis de estado ---
     let dashboardUnsubscribe = null; 
+    let empresasUnsubscribe = null;
+    let usuariosUnsubscribe = null;
+    let perfisUnsubscribe = null;
 
     // --- Elementos da Tela de Cadastros ---
     const geraisCardLink = document.getElementById('gerais-card-link');
     const geraisCadastroSection = document.getElementById('gerais-cadastro-section');
     const closeGeraisCadastro = document.getElementById('close-gerais-cadastro');
+    const empresaForm = document.getElementById('empresa-form');
+    const usuarioForm = document.getElementById('usuario-form');
+    const perfilForm = document.getElementById('perfil-form');
+    const empresasTableBody = document.getElementById('empresas-table-body');
+    const usuariosTableBody = document.getElementById('usuarios-table-body');
+    const perfisTableBody = document.getElementById('perfis-table-body');
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
-        document.querySelectorAll('.view-container').forEach(view => {
-            view.classList.remove('visible');
-        });
+        document.querySelectorAll('.view-container').forEach(view => view.classList.remove('visible'));
         const viewToShow = document.getElementById(viewId);
-        if (viewToShow) {
-            viewToShow.classList.add('visible');
-        }
-        // Ocultar seção de cadastro ao mudar de view
+        if (viewToShow) viewToShow.classList.add('visible');
         if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
     }
 
     function formatCurrency(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
+    
+    function showFeedback(elementId, message, isError = false) {
+        const feedbackEl = document.getElementById(elementId);
+        if (feedbackEl) {
+            feedbackEl.textContent = message;
+            feedbackEl.className = isError ? 'text-red-600 text-sm mt-4' : 'text-green-600 text-sm mt-4';
+            setTimeout(() => { feedbackEl.textContent = ''; }, 3000);
+        }
+    }
+
+    // --- Funções de Renderização das Tabelas ---
+    function renderTable(tbody, docs, fields, deleteHandler) {
+        tbody.innerHTML = '';
+        if (docs.length === 0) {
+            const tr = tbody.insertRow();
+            const td = tr.insertCell();
+            td.colSpan = fields.length + 1;
+            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+            td.textContent = 'Nenhum registro encontrado.';
+            return;
+        }
+
+        docs.forEach(doc => {
+            const tr = tbody.insertRow();
+            tr.setAttribute('data-id', doc.id);
+
+            fields.forEach(field => {
+                const td = tr.insertCell();
+                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700';
+                td.textContent = doc.data()[field] || '';
+            });
+
+            const actionTd = tr.insertCell();
+            actionTd.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium';
+            actionTd.innerHTML = `
+                <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+            `;
+        });
+
+        tbody.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', () => deleteHandler(button.dataset.id));
+        });
+    }
 
     // --- Lógica do Firestore ---
-    function setupDashboardListener(userId) {
-        const docRef = doc(db, 'users', userId, 'dashboard', 'metrics');
-        
-        dashboardUnsubscribe = onSnapshot(docRef, (docSnap) => {
+    async function handleFormSubmit(e, collectionName, data, feedbackId, formElement) {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+        try {
+            const userRef = collection(db, 'users', user.uid, collectionName);
+            await addDoc(userRef, { ...data, createdAt: serverTimestamp() });
+            showFeedback(feedbackId, "Salvo com sucesso!", false);
+            formElement.reset();
+        } catch (error) {
+            console.error(`Erro ao salvar em ${collectionName}:`, error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    }
+
+    async function deleteItem(collectionName, itemId) {
+        const user = auth.currentUser;
+        if (!user) return;
+        try {
+            await deleteDoc(doc(db, 'users', user.uid, collectionName, itemId));
+        } catch (error) {
+            console.error(`Erro ao excluir item de ${collectionName}:`, error);
+        }
+    }
+    
+    function setupListeners(userId) {
+        // Dashboard
+        const dashboardRef = doc(db, 'users', userId, 'dashboard', 'metrics');
+        dashboardUnsubscribe = onSnapshot(dashboardRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                console.log("Dados do Firestore recebidos:", data);
                 projectsCountEl.textContent = data.projectsInProgress || 0;
                 salesValueEl.textContent = formatCurrency(data.monthlySales || 0);
                 expensesValueEl.textContent = formatCurrency(data.pendingExpenses || 0);
             } else {
-                console.log("Documento de métricas não encontrado para o usuário! Crie-o no painel do Firestore.");
                 projectsCountEl.textContent = 0;
                 salesValueEl.textContent = formatCurrency(0);
                 expensesValueEl.textContent = formatCurrency(0);
             }
         });
+
+        // Cadastros - Empresas
+        const empresasQuery = query(collection(db, 'users', userId, 'empresas'));
+        empresasUnsubscribe = onSnapshot(empresasQuery, (querySnapshot) => {
+            renderTable(empresasTableBody, querySnapshot.docs, ['nome', 'cnpj'], (id) => deleteItem('empresas', id));
+        });
+
+        // Cadastros - Usuários
+        const usuariosQuery = query(collection(db, 'users', userId, 'usuarios'));
+        usuariosUnsubscribe = onSnapshot(usuariosQuery, (querySnapshot) => {
+            renderTable(usuariosTableBody, querySnapshot.docs, ['nome', 'email'], (id) => deleteItem('usuarios', id));
+        });
+
+        // Cadastros - Perfis de Acesso
+        const perfisQuery = query(collection(db, 'users', userId, 'perfisDeAcesso'));
+        perfisUnsubscribe = onSnapshot(perfisQuery, (querySnapshot) => {
+            renderTable(perfisTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('perfisDeAcesso', id));
+        });
     }
+
+    function detachListeners() {
+        if (dashboardUnsubscribe) dashboardUnsubscribe();
+        if (empresasUnsubscribe) empresasUnsubscribe();
+        if (usuariosUnsubscribe) usuariosUnsubscribe();
+        if (perfisUnsubscribe) perfisUnsubscribe();
+    }
+
 
     // --- Lógica de Autenticação e Navegação ---
     onAuthStateChanged(auth, (user) => {
+      detachListeners();
       if (user) {
-        // Atualiza info de usuário em ambas as telas
         userEmailSpan.textContent = user.email;
         userEmailCadastrosSpan.textContent = user.email;
-
-        if(dashboardUnsubscribe) dashboardUnsubscribe(); 
-        setupDashboardListener(user.uid);
-        showView('main-page'); // Começa sempre no painel
+        setupListeners(user.uid);
+        showView('main-page'); 
       } else {
         userEmailSpan.textContent = '';
         userEmailCadastrosSpan.textContent = '';
-        if(dashboardUnsubscribe) {
-            dashboardUnsubscribe(); 
-            dashboardUnsubscribe = null;
-        }
         showView('login-page');
       }
     });
@@ -490,21 +640,20 @@
         tabLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-
                 tabLinks.forEach(item => item.classList.remove('active'));
                 link.classList.add('active');
-
                 const tabId = link.dataset.tab;
                 tabContents.forEach(content => {
-                    if (content.id === `${tabId}-tab`) {
-                        content.classList.remove('hidden');
-                    } else {
-                        content.classList.add('hidden');
-                    }
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
                 });
             });
         });
     }
+    
+    // --- Lógica dos Formulários de Cadastro ---
+    empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value }, 'empresa-form-feedback', empresaForm));
+    usuarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'usuarios', { nome: document.getElementById('usuario-nome').value, email: document.getElementById('usuario-email').value }, 'usuario-form-feedback', usuarioForm));
+    perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
 
   </script>
 
