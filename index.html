@@ -110,12 +110,20 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Financeiro</a>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
-                <div class="flex items-center gap-4">
-                    <span id="user-email" class="text-sm text-gray-600"></span>
-                    <button id="logout-button" class="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> logout </span>
-                        <span class="text-sm text-gray-700 font-medium">Sair</span>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
                     </button>
+                    <div class="relative">
+                        <button id="profile-button" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
                 </div>
             </header>
             <main class="flex-1 px-10 py-8">
@@ -211,12 +219,20 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Financeiro</a>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
-                <div class="flex items-center gap-4">
-                    <span id="user-email-cadastros" class="text-sm text-gray-600"></span>
-                    <button id="logout-button-cadastros" class="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> logout </span>
-                        <span class="text-sm text-gray-700 font-medium">Sair</span>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
                     </button>
+                    <div class="relative">
+                        <button id="profile-button-cadastros" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-cadastros" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-cadastros" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-cadastros" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
                 </div>
             </header>
             <main class="flex-1 px-10 py-8">
@@ -423,6 +439,10 @@
     const logoutButton = document.getElementById('logout-button');
     const userEmailCadastrosSpan = document.getElementById('user-email-cadastros');
     const logoutButtonCadastros = document.getElementById('logout-button-cadastros');
+    const profileButton = document.getElementById('profile-button');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    const profileButtonCadastros = document.getElementById('profile-button-cadastros');
+    const profileDropdownCadastros = document.getElementById('profile-dropdown-cadastros');
 
     // Elementos do Dashboard
     const projectsCountEl = document.getElementById('projects-count');
@@ -607,6 +627,24 @@
 
     logoutButton.addEventListener('click', performLogout);
     logoutButtonCadastros.addEventListener('click', performLogout);
+    
+    [profileButton, profileButtonCadastros].forEach(btn => {
+        if (btn) btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = btn.nextElementSibling;
+            dropdown.classList.toggle('hidden');
+        });
+    });
+
+    window.addEventListener('click', () => {
+        if(!profileDropdown.classList.contains('hidden')) {
+            profileDropdown.classList.add('hidden');
+        }
+        if(!profileDropdownCadastros.classList.contains('hidden')) {
+            profileDropdownCadastros.classList.add('hidden');
+        }
+    });
+
 
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
