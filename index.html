@@ -343,9 +343,11 @@
                                             <label class="block text-sm font-medium text-gray-700" for="usuario-nome">Nome do Usuário</label>
                                             <input type="text" id="usuario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
                                         </div>
-                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="usuario-email">E-mail</label>
-                                            <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="usuario-perfil">Perfil de Acesso</label>
+                                            <select id="usuario-perfil" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                                <!-- Options will be populated by JavaScript -->
+                                            </select>
                                         </div>
                                     </div>
                                     <div id="usuario-form-feedback" class="text-sm mt-4"></div>
@@ -360,7 +362,8 @@
                                             <thead class="bg-gray-50">
                                                 <tr>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Usuário</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perfil de Acesso</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Senha</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -583,13 +586,23 @@
         // Cadastros - Usuários
         const usuariosQuery = query(collection(db, 'users', userId, 'usuarios'));
         usuariosUnsubscribe = onSnapshot(usuariosQuery, (querySnapshot) => {
-            renderTable(usuariosTableBody, querySnapshot.docs, ['nome', 'email'], (id) => deleteItem('usuarios', id));
+            renderTable(usuariosTableBody, querySnapshot.docs, ['nome', 'perfil', 'senha'], (id) => deleteItem('usuarios', id));
         });
 
         // Cadastros - Perfis de Acesso
         const perfisQuery = query(collection(db, 'users', userId, 'perfisDeAcesso'));
         perfisUnsubscribe = onSnapshot(perfisQuery, (querySnapshot) => {
             renderTable(perfisTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('perfisDeAcesso', id));
+
+            // Popula o select de perfis no cadastro de usuário
+            const perfilSelect = document.getElementById('usuario-perfil');
+            perfilSelect.innerHTML = '<option value="">Selecione um perfil</option>';
+            querySnapshot.docs.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.data().nome;
+                option.textContent = doc.data().nome;
+                perfilSelect.appendChild(option);
+            });
         });
     }
 
@@ -695,7 +708,12 @@
     
     // --- Lógica dos Formulários de Cadastro ---
     empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value, endereco: document.getElementById('empresa-endereco').value }, 'empresa-form-feedback', empresaForm));
-    usuarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'usuarios', { nome: document.getElementById('usuario-nome').value, email: document.getElementById('usuario-email').value }, 'usuario-form-feedback', usuarioForm));
+    usuarioForm.addEventListener('submit', (e) => {
+        const nome = document.getElementById('usuario-nome').value;
+        const perfil = document.getElementById('usuario-perfil').value;
+        const senha = Math.floor(1000 + Math.random() * 9000).toString();
+        handleFormSubmit(e, 'usuarios', { nome, perfil, senha }, 'usuario-form-feedback', usuarioForm);
+    });
     perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
 
   </script>
