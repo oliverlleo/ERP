@@ -36,6 +36,10 @@
         color: var(--primary-color);
         border-color: var(--primary-color);
     }
+    .comerciais-tab-link.active {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
   </style>
 </head>
 
@@ -200,7 +204,7 @@
         </div>
     </div>
   </div>
-  
+
   <!-- Container da Tela de Cadastros -->
   <div id="cadastros-page" class="view-container min-h-screen w-full">
     <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
@@ -249,7 +253,7 @@
                                 <p class="text-gray-600 text-sm">Empresas, usuários, perfis de acesso.</p>
                             </div>
                         </a>
-                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                        <a id="comerciais-card-link" class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
                             <div class="flex flex-col gap-3 items-center text-center">
                                 <span class="material-symbols-outlined text-4xl text-gray-500"> business_center </span>
                                 <h3 class="text-gray-800 text-lg font-semibold leading-tight">Comerciais e Logísticos</h3>
@@ -281,7 +285,7 @@
                                 <span class="material-symbols-outlined text-gray-600">close</span>
                             </button>
                         </div>
-                        
+
                         <!-- Abas/Tabs para navegação -->
                         <div class="border-b border-gray-200">
                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -290,7 +294,7 @@
                                 <a href="#" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="perfis">Perfil de Acesso</a>
                             </nav>
                         </div>
-                    
+
                         <!-- Conteúdo das Abas -->
                         <div class="mt-6">
                             <!-- Tab: Empresas -->
@@ -334,7 +338,7 @@
                                     </div>
                                 </div>
                             </div>
-                    
+
                             <!-- Tab: Usuários -->
                             <div id="usuarios-tab" class="tab-content hidden">
                                 <form id="usuario-form">
@@ -372,7 +376,7 @@
                                     </div>
                                 </div>
                             </div>
-                    
+
                             <!-- Tab: Perfil de Acesso -->
                             <div id="perfis-tab" class="tab-content hidden">
                                  <form id="perfil-form" >
@@ -403,7 +407,246 @@
                                 </div>
                             </div>
                         </div>
-                    
+
+                      </div>
+                    </div>
+
+                    <!-- Seção de Cadastro Comerciais e Logísticos (inicia oculta) -->
+                    <div id="comerciais-cadastro-section" class="hidden mt-8">
+                      <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
+                            <h2 class="text-gray-900 text-2xl font-bold leading-tight tracking-tight">Cadastros Comerciais e Logísticos</h2>
+                            <button id="close-comerciais-cadastro" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-gray-600">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Abas/Tabs para navegação -->
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <a href="#" class="comerciais-tab-link active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="produtos">Produtos</a>
+                                <a href="#" class="comerciais-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="fornecedores">Fornecedores</a>
+                                <a href="#" class="comerciais-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="clientes">Clientes</a>
+                            </nav>
+                        </div>
+
+                        <!-- Conteúdo das Abas -->
+                        <div class="mt-6">
+                            <!-- Tab: Produtos -->
+                            <div id="produtos-tab" class="comerciais-tab-content">
+                                <form id="produto-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="produto-codigo">Código</label>
+                                            <input type="text" id="produto-codigo" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="produto-descricao">Descrição</label>
+                                            <input type="text" id="produto-descricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="produto-unidade">Unidade</label>
+                                            <input type="text" id="produto-unidade" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                    </div>
+                                    <div id="produto-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Produto</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Produtos Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidade</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="produtos-table-body" class="bg-white divide-y divide-gray-200">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Fornecedores -->
+                            <div id="fornecedores-tab" class="comerciais-tab-content hidden">
+                                <form id="fornecedor-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="md:col-span-3">
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-razao-social">Nome/Razão Social</label>
+                                            <input type="text" id="fornecedor-razao-social" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-nome-fantasia">Nome Fantasia</label>
+                                            <input type="text" id="fornecedor-nome-fantasia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-cnpj">CPF/CNPJ</label>
+                                            <input type="text" id="fornecedor-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-contato">Contato Principal</label>
+                                            <input type="text" id="fornecedor-contato" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-telefone">Telefone</label>
+                                            <input type="text" id="fornecedor-telefone" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-celular">Celular</label>
+                                            <input type="text" id="fornecedor-celular" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-email">Email</label>
+                                            <input type="email" id="fornecedor-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                         <div class="md:col-span-3">
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-endereco">Endereço</label>
+                                            <input type="text" id="fornecedor-endereco" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-numero">Número</label>
+                                            <input type="text" id="fornecedor-numero" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                         <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-complemento">Complemento</label>
+                                            <input type="text" id="fornecedor-complemento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-bairro">Bairro</label>
+                                            <input type="text" id="fornecedor-bairro" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-cidade">Cidade</label>
+                                            <input type="text" id="fornecedor-cidade" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-cep">CEP</label>
+                                            <input type="text" id="fornecedor-cep" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-pais">País</label>
+                                            <input type="text" id="fornecedor-pais" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div id="fornecedor-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Salvar Fornecedor</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Fornecedores Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód.</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Razão Social</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CNPJ</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="fornecedores-table-body" class="bg-white divide-y divide-gray-200">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Clientes -->
+                            <div id="clientes-tab" class="comerciais-tab-content hidden">
+                                <form id="cliente-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="md:col-span-3">
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-razao-social">Nome/Razão Social</label>
+                                            <input type="text" id="cliente-razao-social" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-nome-fantasia">Nome Fantasia</label>
+                                            <input type="text" id="cliente-nome-fantasia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-cnpj">CPF/CNPJ</label>
+                                            <input type="text" id="cliente-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-contato">Contato Principal</label>
+                                            <input type="text" id="cliente-contato" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-telefone">Telefone</label>
+                                            <input type="text" id="cliente-telefone" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-celular">Celular</label>
+                                            <input type="text" id="cliente-celular" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-email">Email</label>
+                                            <input type="email" id="cliente-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                         <div class="md:col-span-3">
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-endereco">Endereço</label>
+                                            <input type="text" id="cliente-endereco" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-numero">Número</label>
+                                            <input type="text" id="cliente-numero" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                         <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-complemento">Complemento</label>
+                                            <input type="text" id="cliente-complemento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-bairro">Bairro</label>
+                                            <input type="text" id="cliente-bairro" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-cidade">Cidade</label>
+                                            <input type="text" id="cliente-cidade" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-cep">CEP</label>
+                                            <input type="text" id="cliente-cep" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-pais">País</label>
+                                            <input type="text" id="cliente-pais" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div id="cliente-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Salvar Cliente</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Clientes Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód.</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Razão Social</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CNPJ</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="clientes-table-body" class="bg-white divide-y divide-gray-200">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                       </div>
                     </div>
 
@@ -417,7 +660,7 @@
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -441,7 +684,7 @@
     const cadastrosPage = document.getElementById('cadastros-page');
     const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email'), loginPasswordInput = document.getElementById('login-password'), loginError = document.getElementById('login-error');
-    
+
     // Elementos de usuário e logout
     const userEmailSpan = document.getElementById('user-email');
     const logoutButton = document.getElementById('logout-button');
@@ -457,12 +700,15 @@
     const salesValueEl = document.getElementById('sales-value');
     const expensesValueEl = document.getElementById('expenses-value');
     const navLinks = document.querySelectorAll('.nav-link');
-    
+
     // --- Variáveis de estado ---
-    let dashboardUnsubscribe = null; 
+    let dashboardUnsubscribe = null;
     let empresasUnsubscribe = null;
     let usuariosUnsubscribe = null;
     let perfisUnsubscribe = null;
+    let produtosUnsubscribe = null;
+    let fornecedoresUnsubscribe = null;
+    let clientesUnsubscribe = null;
 
     // --- Elementos da Tela de Cadastros ---
     const geraisCardLink = document.getElementById('gerais-card-link');
@@ -475,6 +721,20 @@
     const usuariosTableBody = document.getElementById('usuarios-table-body');
     const perfisTableBody = document.getElementById('perfis-table-body');
 
+    // --- Elementos da Tela de Cadastros Comerciais ---
+    const comerciaisCardLink = document.getElementById('comerciais-card-link');
+    const comerciaisCadastroSection = document.getElementById('comerciais-cadastro-section');
+    const closeComerciaisCadastro = document.getElementById('close-comerciais-cadastro');
+
+    const produtoForm = document.getElementById('produto-form');
+    const produtosTableBody = document.getElementById('produtos-table-body');
+
+    const fornecedorForm = document.getElementById('fornecedor-form');
+    const fornecedoresTableBody = document.getElementById('fornecedores-table-body');
+
+    const clienteForm = document.getElementById('cliente-form');
+    const clientesTableBody = document.getElementById('clientes-table-body');
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
@@ -482,12 +742,13 @@
         const viewToShow = document.getElementById(viewId);
         if (viewToShow) viewToShow.classList.add('visible');
         if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
+        if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
     }
 
     function formatCurrency(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
-    
+
     function showFeedback(elementId, message, isError = false) {
         const feedbackEl = document.getElementById(elementId);
         if (feedbackEl) {
@@ -560,7 +821,7 @@
             console.error(`Erro ao excluir item de ${collectionName}:`, error);
         }
     }
-    
+
     function setupListeners(userId) {
         // Dashboard
         const dashboardRef = doc(db, 'users', userId, 'dashboard', 'metrics');
@@ -604,6 +865,24 @@
                 perfilSelect.appendChild(option);
             });
         });
+
+        // Cadastros - Produtos
+        const produtosQuery = query(collection(db, 'users', userId, 'produtos'));
+        produtosUnsubscribe = onSnapshot(produtosQuery, (querySnapshot) => {
+            renderTable(produtosTableBody, querySnapshot.docs, ['codigo', 'descricao', 'unidade'], (id) => deleteItem('produtos', id));
+        });
+
+        // Cadastros - Fornecedores
+        const fornecedoresQuery = query(collection(db, 'users', userId, 'fornecedores'), orderBy("codigo"));
+        fornecedoresUnsubscribe = onSnapshot(fornecedoresQuery, (querySnapshot) => {
+            renderTable(fornecedoresTableBody, querySnapshot.docs, ['codigo', 'razaoSocial', 'cnpj', 'telefone', 'email'], (id) => deleteItem('fornecedores', id));
+        });
+
+        // Cadastros - Clientes
+        const clientesQuery = query(collection(db, 'users', userId, 'clientes'), orderBy("codigo"));
+        clientesUnsubscribe = onSnapshot(clientesQuery, (querySnapshot) => {
+            renderTable(clientesTableBody, querySnapshot.docs, ['codigo', 'razaoSocial', 'cnpj', 'telefone', 'email'], (id) => deleteItem('clientes', id));
+        });
     }
 
     function detachListeners() {
@@ -611,6 +890,9 @@
         if (empresasUnsubscribe) empresasUnsubscribe();
         if (usuariosUnsubscribe) usuariosUnsubscribe();
         if (perfisUnsubscribe) perfisUnsubscribe();
+        if (produtosUnsubscribe) produtosUnsubscribe();
+        if (fornecedoresUnsubscribe) fornecedoresUnsubscribe();
+        if (clientesUnsubscribe) clientesUnsubscribe();
     }
 
 
@@ -621,7 +903,7 @@
         userEmailSpan.textContent = user.email;
         userEmailCadastrosSpan.textContent = user.email;
         setupListeners(user.uid);
-        showView('main-page'); 
+        showView('main-page');
       } else {
         userEmailSpan.textContent = '';
         userEmailCadastrosSpan.textContent = '';
@@ -638,14 +920,14 @@
         loginError.textContent = 'E-mail ou senha inválidos.';
       }
     });
-    
+
     const performLogout = () => {
          signOut(auth).catch(error => console.error("Erro no logout:", error));
     }
 
     logoutButton.addEventListener('click', performLogout);
     logoutButtonCadastros.addEventListener('click', performLogout);
-    
+
     [profileButton, profileButtonCadastros].forEach(btn => {
         if (btn) btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -678,6 +960,7 @@
     if (geraisCardLink) {
         geraisCardLink.addEventListener('click', (e) => {
             e.preventDefault();
+            if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
             geraisCadastroSection.classList.remove('hidden');
             geraisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
@@ -688,7 +971,7 @@
             geraisCadastroSection.classList.add('hidden');
         });
     }
-    
+
     if (geraisCadastroSection){
         const tabLinks = geraisCadastroSection.querySelectorAll('.tab-link');
         const tabContents = geraisCadastroSection.querySelectorAll('.tab-content');
@@ -705,7 +988,39 @@
             });
         });
     }
-    
+
+    if (comerciaisCardLink) {
+        comerciaisCardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
+            comerciaisCadastroSection.classList.remove('hidden');
+            comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    if (closeComerciaisCadastro) {
+        closeComerciaisCadastro.addEventListener('click', () => {
+            comerciaisCadastroSection.classList.add('hidden');
+        });
+    }
+
+    if (comerciaisCadastroSection){
+        const tabLinks = comerciaisCadastroSection.querySelectorAll('.comerciais-tab-link');
+        const tabContents = comerciaisCadastroSection.querySelectorAll('.comerciais-tab-content');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.tab;
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
+                });
+            });
+        });
+    }
+
     // --- Lógica dos Formulários de Cadastro ---
     empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value, endereco: document.getElementById('empresa-endereco').value }, 'empresa-form-feedback', empresaForm));
     usuarioForm.addEventListener('submit', (e) => {
@@ -716,9 +1031,109 @@
     });
     perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
 
+    produtoForm.addEventListener('submit', (e) => handleFormSubmit(e, 'produtos', {
+        codigo: document.getElementById('produto-codigo').value,
+        descricao: document.getElementById('produto-descricao').value,
+        unidade: document.getElementById('produto-unidade').value
+    }, 'produto-form-feedback', produtoForm));
+
+    fornecedorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) {
+            showFeedback('fornecedor-form-feedback', "Usuário não autenticado.", true);
+            return;
+        }
+
+        try {
+            const fornecedoresRef = collection(db, 'users', user.uid, 'fornecedores');
+            const snapshot = await getDocs(query(fornecedoresRef, orderBy("codigo", "desc"), limit(1)));
+            let nextCode = 1;
+            if (!snapshot.empty) {
+                const lastDoc = snapshot.docs[0].data();
+                if (lastDoc.codigo && !isNaN(lastDoc.codigo)) {
+                   nextCode = lastDoc.codigo + 1;
+                }
+            }
+
+            const data = {
+                codigo: nextCode,
+                razaoSocial: document.getElementById('fornecedor-razao-social').value,
+                nomeFantasia: document.getElementById('fornecedor-nome-fantasia').value,
+                cnpj: document.getElementById('fornecedor-cnpj').value,
+                contato: document.getElementById('fornecedor-contato').value,
+                telefone: document.getElementById('fornecedor-telefone').value,
+                celular: document.getElementById('fornecedor-celular').value,
+                email: document.getElementById('fornecedor-email').value,
+                endereco: document.getElementById('fornecedor-endereco').value,
+                numero: document.getElementById('fornecedor-numero').value,
+                complemento: document.getElementById('fornecedor-complemento').value,
+                bairro: document.getElementById('fornecedor-bairro').value,
+                cidade: document.getElementById('fornecedor-cidade').value,
+                cep: document.getElementById('fornecedor-cep').value,
+                pais: document.getElementById('fornecedor-pais').value,
+                dataCadastro: new Date().toLocaleDateString('pt-BR'),
+                createdAt: serverTimestamp()
+            };
+
+            await addDoc(fornecedoresRef, data);
+            showFeedback('fornecedor-form-feedback', "Fornecedor salvo com sucesso!", false);
+            fornecedorForm.reset();
+        } catch (error) {
+            console.error("Erro ao salvar fornecedor:", error);
+            showFeedback('fornecedor-form-feedback', "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+
+    clienteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) {
+            showFeedback('cliente-form-feedback', "Usuário não autenticado.", true);
+            return;
+        }
+
+        try {
+            const clientesRef = collection(db, 'users', user.uid, 'clientes');
+            const snapshot = await getDocs(query(clientesRef, orderBy("codigo", "desc"), limit(1)));
+            let nextCode = 1;
+            if (!snapshot.empty) {
+                const lastDoc = snapshot.docs[0].data();
+                if (lastDoc.codigo && !isNaN(lastDoc.codigo)) {
+                   nextCode = lastDoc.codigo + 1;
+                }
+            }
+
+            const data = {
+                codigo: nextCode,
+                razaoSocial: document.getElementById('cliente-razao-social').value,
+                nomeFantasia: document.getElementById('cliente-nome-fantasia').value,
+                cnpj: document.getElementById('cliente-cnpj').value,
+                contato: document.getElementById('cliente-contato').value,
+                telefone: document.getElementById('cliente-telefone').value,
+                celular: document.getElementById('cliente-celular').value,
+                email: document.getElementById('cliente-email').value,
+                endereco: document.getElementById('cliente-endereco').value,
+                numero: document.getElementById('cliente-numero').value,
+                complemento: document.getElementById('cliente-complemento').value,
+                bairro: document.getElementById('cliente-bairro').value,
+                cidade: document.getElementById('cliente-cidade').value,
+                cep: document.getElementById('cliente-cep').value,
+                pais: document.getElementById('cliente-pais').value,
+                dataCadastro: new Date().toLocaleDateString('pt-BR'),
+                createdAt: serverTimestamp()
+            };
+
+            await addDoc(clientesRef, data);
+            showFeedback('cliente-form-feedback', "Cliente salvo com sucesso!", false);
+            clienteForm.reset();
+        } catch (error) {
+            console.error("Erro ao salvar cliente:", error);
+            showFeedback('cliente-form-feedback', "Erro ao salvar. Tente novamente.", true);
+        }
+    });
   </script>
 
 </body>
 
 </html>
-
