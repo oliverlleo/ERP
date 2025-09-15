@@ -305,6 +305,10 @@
                                             <label class="block text-sm font-medium text-gray-700" for="empresa-cnpj">CNPJ</label>
                                             <input type="text" id="empresa-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
                                         </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700" for="empresa-endereco">Endereço</label>
+                                            <input type="text" id="empresa-endereco" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
                                     </div>
                                     <div id="empresa-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
@@ -319,6 +323,7 @@
                                                 <tr>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Empresa</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endereço</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -572,7 +577,7 @@
         // Cadastros - Empresas
         const empresasQuery = query(collection(db, 'users', userId, 'empresas'));
         empresasUnsubscribe = onSnapshot(empresasQuery, (querySnapshot) => {
-            renderTable(empresasTableBody, querySnapshot.docs, ['nome', 'cnpj'], (id) => deleteItem('empresas', id));
+            renderTable(empresasTableBody, querySnapshot.docs, ['nome', 'cnpj', 'endereco'], (id) => deleteItem('empresas', id));
         });
 
         // Cadastros - Usuários
@@ -689,7 +694,7 @@
     }
     
     // --- Lógica dos Formulários de Cadastro ---
-    empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value }, 'empresa-form-feedback', empresaForm));
+    empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value, endereco: document.getElementById('empresa-endereco').value }, 'empresa-form-feedback', empresaForm));
     usuarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'usuarios', { nome: document.getElementById('usuario-nome').value, email: document.getElementById('usuario-email').value }, 'usuario-form-feedback', usuarioForm));
     perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
 
