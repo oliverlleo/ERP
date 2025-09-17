@@ -267,7 +267,7 @@
                                 <p class="text-gray-600 text-sm">Contas bancárias, planos de contas, impostos.</p>
                             </div>
                         </a>
-                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                        <a id="rh-card-link" class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
                             <div class="flex flex-col gap-3 items-center text-center">
                                 <span class="material-symbols-outlined text-4xl text-gray-500"> group </span>
                                 <h3 class="text-gray-800 text-lg font-semibold leading-tight">Recursos Humanos</h3>
@@ -859,6 +859,110 @@
                       </div>
                     </div>
 
+                    <!-- Seção de Cadastro de Recursos Humanos (inicia oculta) -->
+                    <div id="rh-cadastro-section" class="hidden mt-8">
+                      <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
+                            <h2 class="text-gray-900 text-2xl font-bold leading-tight tracking-tight">Cadastros de Recursos Humanos</h2>
+                            <button id="close-rh-cadastro" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-gray-600">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Abas/Tabs para navegação -->
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <a href="#" class="rh-tab-link active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="cargos">Cargos</a>
+                                <a href="#" class="rh-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="funcionarios">Funcionários</a>
+                            </nav>
+                        </div>
+
+                        <!-- Conteúdo das Abas -->
+                        <div class="mt-6">
+                            <!-- Tab: Cargos -->
+                            <div id="cargos-tab" class="rh-tab-content">
+                                <form id="cargos-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700" for="cargo-nome">Nome do Cargo</label>
+                                            <input type="text" id="cargo-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                    </div>
+                                    <div id="cargos-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4 mt-4 border-t">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Cargo</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Cargos Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome do Cargo</th>
+                                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="cargos-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Funcionários -->
+                            <div id="funcionarios-tab" class="rh-tab-content hidden">
+                                <form id="funcionarios-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700" for="funcionario-nome">Nome do Funcionário</label>
+                                            <input type="text" id="funcionario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="funcionario-cpf">CPF</label>
+                                            <input type="text" id="funcionario-cpf" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700" for="funcionario-cargo">Cargo</label>
+                                            <select id="funcionario-cargo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                <option value="">Carregando cargos...</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="funcionario-salario">Salário (R$)</label>
+                                            <input type="number" step="0.01" id="funcionario-salario" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="funcionario-admissao">Data de Admissão</label>
+                                            <input type="date" id="funcionario-admissao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                    </div>
+                                    <div id="funcionarios-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4 mt-4 border-t">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Funcionário</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Funcionários Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPF</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cargo</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Salário</th>
+                                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="funcionarios-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+
                 </div>
             </main>
         </div>
@@ -921,6 +1025,8 @@
     let planoContasUnsubscribe = null;
     let bancosUnsubscribe = null;
     let centrosCustoUnsubscribe = null;
+    let cargosUnsubscribe = null;
+    let funcionariosUnsubscribe = null;
 
     // --- Elementos da Tela de Cadastros ---
     const geraisCardLink = document.getElementById('gerais-card-link');
@@ -951,6 +1057,18 @@
     const financeiroCardLink = document.getElementById('financeiro-card-link');
     const financeiroCadastroSection = document.getElementById('financeiro-cadastro-section');
     const closeFinanceiroCadastro = document.getElementById('close-financeiro-cadastro');
+
+    // --- Elementos da Tela de Cadastros de RH ---
+    const rhCardLink = document.getElementById('rh-card-link');
+    const rhCadastroSection = document.getElementById('rh-cadastro-section');
+    const closeRhCadastro = document.getElementById('close-rh-cadastro');
+
+    const cargosForm = document.getElementById('cargos-form');
+    const cargosTableBody = document.getElementById('cargos-table-body');
+    const funcionariosForm = document.getElementById('funcionarios-form');
+    const funcionariosTableBody = document.getElementById('funcionarios-table-body');
+    const funcionarioCargoSelect = document.getElementById('funcionario-cargo');
+
     const planoContasForm = document.getElementById('plano-contas-form');
     const planoContasTableBody = document.getElementById('plano-contas-table-body');
     const bancosForm = document.getElementById('bancos-form');
@@ -968,6 +1086,7 @@
         if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
         if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
         if(financeiroCadastroSection) financeiroCadastroSection.classList.add('hidden');
+        if(rhCadastroSection) rhCadastroSection.classList.add('hidden');
     }
 
     function formatCurrency(value) {
@@ -1135,6 +1254,26 @@
         centrosCustoUnsubscribe = onSnapshot(centrosCustoQuery, (querySnapshot) => {
             renderCentrosCustoTable(centrosCustoTableBody, querySnapshot.docs);
         });
+
+        // Cadastros - Cargos
+        const cargosQuery = query(collection(db, 'users', userId, 'cargos'), orderBy("nome"));
+        cargosUnsubscribe = onSnapshot(cargosQuery, (querySnapshot) => {
+            const cargosDocs = querySnapshot.docs;
+            renderTable(cargosTableBody, cargosDocs, ['nome'], (id) => deleteItem('cargos', id));
+            populateCargosDropdown(cargosDocs);
+
+            const cargosMap = {};
+            cargosDocs.forEach(doc => {
+                cargosMap[doc.id] = doc.data();
+            });
+
+            // Cadastros - Funcionários (nested to ensure cargosMap is ready)
+            if (funcionariosUnsubscribe) funcionariosUnsubscribe();
+            const funcionariosQuery = query(collection(db, 'users', userId, 'funcionarios'), orderBy("nome"));
+            funcionariosUnsubscribe = onSnapshot(funcionariosQuery, (funcionariosSnapshot) => {
+                renderFuncionariosTable(funcionariosTableBody, funcionariosSnapshot.docs, cargosMap);
+            });
+        });
     }
 
     function detachListeners() {
@@ -1148,6 +1287,58 @@
         if (planoContasUnsubscribe) planoContasUnsubscribe();
         if (bancosUnsubscribe) bancosUnsubscribe();
         if (centrosCustoUnsubscribe) centrosCustoUnsubscribe();
+        if (cargosUnsubscribe) cargosUnsubscribe();
+        if (funcionariosUnsubscribe) funcionariosUnsubscribe();
+    }
+
+    function populateCargosDropdown(docs) {
+        funcionarioCargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
+        if (docs.length === 0) {
+            funcionarioCargoSelect.innerHTML = '<option value="">Nenhum cargo cadastrado</option>';
+            return;
+        }
+        docs.forEach(doc => {
+            const cargo = doc.data();
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.textContent = cargo.nome;
+            funcionarioCargoSelect.appendChild(option);
+        });
+    }
+
+    function renderFuncionariosTable(tbody, docs, cargosMap) {
+        tbody.innerHTML = '';
+        if (docs.length === 0) {
+            const tr = tbody.insertRow();
+            const td = tr.insertCell();
+            td.colSpan = 5;
+            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+            td.textContent = 'Nenhum funcionário encontrado.';
+            return;
+        }
+
+        docs.forEach(doc => {
+            const data = doc.data();
+            const tr = tbody.insertRow();
+            tr.setAttribute('data-id', doc.id);
+
+            const cargoInfo = cargosMap[data.cargoId] || { nome: 'Cargo não encontrado' };
+            const salarioFormatado = typeof data.salario === 'number' ? formatCurrency(data.salario) : 'N/A';
+
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${data.nome}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.cpf}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cargoInfo.nome}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${salarioFormatado}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}" data-collection="funcionarios">Excluir</button>
+                </td>
+            `;
+        });
+
+        tbody.querySelectorAll('.delete-btn[data-collection="funcionarios"]').forEach(button => {
+            button.addEventListener('click', () => deleteItem('funcionarios', button.dataset.id));
+        });
     }
 
     function renderCentrosCustoTable(tbody, docs) {
@@ -1334,6 +1525,40 @@
         });
     }
 
+    if (rhCardLink) {
+        rhCardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
+            if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
+            if(financeiroCadastroSection) financeiroCadastroSection.classList.add('hidden');
+            rhCadastroSection.classList.remove('hidden');
+            rhCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    if (closeRhCadastro) {
+        closeRhCadastro.addEventListener('click', () => {
+            rhCadastroSection.classList.add('hidden');
+        });
+    }
+
+    if (rhCadastroSection){
+        const tabLinks = rhCadastroSection.querySelectorAll('.rh-tab-link');
+        const tabContents = rhCadastroSection.querySelectorAll('.rh-tab-content');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.tab;
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
+                });
+            });
+        });
+    }
+
     if (comerciaisCardLink) {
         comerciaisCardLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1400,6 +1625,26 @@
     }
 
     // --- Lógica dos Formulários de Cadastro ---
+    funcionariosForm.addEventListener('submit', (e) => {
+        const selectedOption = funcionarioCargoSelect.options[funcionarioCargoSelect.selectedIndex];
+        const data = {
+            nome: document.getElementById('funcionario-nome').value,
+            cpf: document.getElementById('funcionario-cpf').value,
+            cargoId: selectedOption.value,
+            cargoNome: selectedOption.textContent,
+            salario: parseFloat(document.getElementById('funcionario-salario').value),
+            dataAdmissao: document.getElementById('funcionario-admissao').value,
+        };
+        handleFormSubmit(e, 'funcionarios', data, 'funcionarios-form-feedback', funcionariosForm);
+    });
+
+    cargosForm.addEventListener('submit', (e) => {
+        const data = {
+            nome: document.getElementById('cargo-nome').value,
+        };
+        handleFormSubmit(e, 'cargos', data, 'cargos-form-feedback', cargosForm);
+    });
+
     centroCustoForm.addEventListener('submit', (e) => {
         const data = {
             codigo: document.getElementById('centro-custo-codigo').value,
