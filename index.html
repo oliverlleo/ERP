@@ -260,7 +260,7 @@
                                 <p class="text-gray-600 text-sm">Clientes, fornecedores, produtos, serviços.</p>
                             </div>
                         </a>
-                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                        <a id="financeiro-card-link" class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
                             <div class="flex flex-col gap-3 items-center text-center">
                                 <span class="material-symbols-outlined text-4xl text-gray-500"> account_balance </span>
                                 <h3 class="text-gray-800 text-lg font-semibold leading-tight">Financeiros e Contábeis</h3>
@@ -650,6 +650,215 @@
                       </div>
                     </div>
 
+                    <!-- Seção de Cadastro Financeiros e Contábeis (inicia oculta) -->
+                    <div id="financeiro-cadastro-section" class="hidden mt-8">
+                      <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
+                            <h2 class="text-gray-900 text-2xl font-bold leading-tight tracking-tight">Cadastros Financeiros e Contábeis</h2>
+                            <button id="close-financeiro-cadastro" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-gray-600">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Abas/Tabs para navegação -->
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <a href="#" class="financeiro-tab-link active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="plano-contas">Plano de Contas</a>
+                                <a href="#" class="financeiro-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="bancos">Bancos e Contas</a>
+                                <a href="#" class="financeiro-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="centros-custo">Centros de Custo</a>
+                            </nav>
+                        </div>
+
+                        <!-- Conteúdo das Abas -->
+                        <div class="mt-6">
+                            <!-- Tab: Plano de Contas -->
+                            <div id="plano-contas-tab" class="financeiro-tab-content">
+                                <form id="plano-contas-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div class="md:col-span-1">
+                                            <label class="block text-sm font-medium text-gray-700" for="plano-contas-codigo">Código da Conta</label>
+                                            <input type="text" id="plano-contas-codigo" placeholder="Ex: 1.1.1.01" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700" for="plano-contas-descricao">Descrição</label>
+                                            <input type="text" id="plano-contas-descricao" placeholder="Ex: Caixa Matriz" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                        </div>
+                                        <div class="md:col-span-1">
+                                            <label class="block text-sm font-medium text-gray-700" for="plano-contas-tipo">Tipo de Conta</label>
+                                            <select id="plano-contas-tipo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                                <option value="">Selecione...</option>
+                                                <option value="Ativo">Ativo</option>
+                                                <option value="Passivo">Passivo</option>
+                                                <option value="Patrimonio Liquido">Patrimônio Líquido</option>
+                                                <option value="Receita">Receita</option>
+                                                <option value="Custo">Custo</option>
+                                                <option value="Despesa">Despesa</option>
+                                            </select>
+                                        </div>
+                                        <div class="md:col-span-2 flex items-end space-x-8">
+                                            <div class="flex items-center">
+                                                <input id="plano-contas-redutora" type="checkbox" class="form-checkbox h-4 w-4 text-[var(--primary-color)] rounded border-gray-300 focus:ring-[var(--primary-color)]">
+                                                <label for="plano-contas-redutora" class="ml-2 block text-sm text-gray-900">É uma conta redutora?</label>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input id="plano-contas-permite-lancamentos" type="checkbox" class="form-checkbox h-4 w-4 text-[var(--primary-color)] rounded border-gray-300 focus:ring-[var(--primary-color)]" checked>
+                                                <label for="plano-contas-permite-lancamentos" class="ml-2 block text-sm text-gray-900">Permite Lançamentos (Analítica)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="plano-contas-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4 mt-4 border-t">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Conta</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Plano de Contas Cadastrado</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Redutora</th>
+                                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Analítica</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="plano-contas-table-body" class="bg-white divide-y divide-gray-200">
+                                                <!-- Linhas da tabela serão inseridas aqui -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Bancos e Contas -->
+                            <div id="bancos-tab" class="financeiro-tab-content hidden">
+                                <form id="bancos-form">
+                                    <div class="space-y-6">
+                                        <!-- Seção do Banco -->
+                                        <div>
+                                            <h3 class="text-lg font-medium text-gray-900 mb-2">Dados do Banco</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border p-4 rounded-md">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-codigo">Código do Banco</label>
+                                                    <input type="text" id="banco-codigo" placeholder="Ex: 001" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-nome">Nome do Banco</label>
+                                                    <input type="text" id="banco-nome" placeholder="Ex: Banco do Brasil" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Seção da Conta Corrente -->
+                                        <div>
+                                            <h3 class="text-lg font-medium text-gray-900 mb-2">Dados da Conta</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 border p-4 rounded-md">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-agencia">Agência</label>
+                                                    <input type="text" id="banco-agencia" placeholder="Ex: 1234" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-conta">Conta</label>
+                                                    <input type="text" id="banco-conta" placeholder="Ex: 56789-0" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-conta-tipo">Tipo</label>
+                                                    <select id="banco-conta-tipo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                        <option value="Conta Corrente">Conta Corrente</option>
+                                                        <option value="Poupança">Poupança</option>
+                                                        <option value="Investimento">Investimento</option>
+                                                    </select>
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-conta-apelido">Apelido da Conta</label>
+                                                    <input type="text" id="banco-conta-apelido" placeholder="Ex: Conta Principal Matriz" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-conta-contabil-associada">Conta Contábil Associada</label>
+                                                    <select id="banco-conta-contabil-associada" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                        <option value="">Carregando contas...</option>
+                                                    </select>
+                                                </div>
+                                                 <div>
+                                                    <label class="block text-sm font-medium text-gray-700" for="banco-saldo-inicial">Saldo Inicial (R$)</label>
+                                                    <input type="number" id="banco-saldo-inicial" step="0.01" placeholder="0.00" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="bancos-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4 mt-4 border-t">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Conta Bancária</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Contas Bancárias Cadastradas</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Apelido</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Banco</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Agência/Conta</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conta Contábil</th>
+                                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="bancos-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Centros de Custo -->
+                            <div id="centros-custo-tab" class="financeiro-tab-content hidden">
+                                <form id="centro-custo-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="centro-custo-codigo">Código</label>
+                                            <input type="text" id="centro-custo-codigo" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700" for="centro-custo-descricao">Descrição</label>
+                                            <input type="text" id="centro-custo-descricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="centro-custo-tipo">Tipo (Receita/Despesa)</label>
+                                            <select id="centro-custo-tipo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                <option value="Ambos">Ambos</option>
+                                                <option value="Receita">Receita</option>
+                                                <option value="Despesa">Despesa</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="centro-custo-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4 mt-4 border-t">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Centro de Custo</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Centros de Custo Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="centros-custo-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+
                 </div>
             </main>
         </div>
@@ -709,6 +918,9 @@
     let produtosUnsubscribe = null;
     let fornecedoresUnsubscribe = null;
     let clientesUnsubscribe = null;
+    let planoContasUnsubscribe = null;
+    let bancosUnsubscribe = null;
+    let centrosCustoUnsubscribe = null;
 
     // --- Elementos da Tela de Cadastros ---
     const geraisCardLink = document.getElementById('gerais-card-link');
@@ -735,6 +947,18 @@
     const clienteForm = document.getElementById('cliente-form');
     const clientesTableBody = document.getElementById('clientes-table-body');
 
+    // --- Elementos da Tela de Cadastros Financeiros ---
+    const financeiroCardLink = document.getElementById('financeiro-card-link');
+    const financeiroCadastroSection = document.getElementById('financeiro-cadastro-section');
+    const closeFinanceiroCadastro = document.getElementById('close-financeiro-cadastro');
+    const planoContasForm = document.getElementById('plano-contas-form');
+    const planoContasTableBody = document.getElementById('plano-contas-table-body');
+    const bancosForm = document.getElementById('bancos-form');
+    const bancosTableBody = document.getElementById('bancos-table-body');
+    const contaContabilSelect = document.getElementById('banco-conta-contabil-associada');
+    const centroCustoForm = document.getElementById('centro-custo-form');
+    const centrosCustoTableBody = document.getElementById('centros-custo-table-body');
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
@@ -743,6 +967,7 @@
         if (viewToShow) viewToShow.classList.add('visible');
         if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
         if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
+        if(financeiroCadastroSection) financeiroCadastroSection.classList.add('hidden');
     }
 
     function formatCurrency(value) {
@@ -883,6 +1108,33 @@
         clientesUnsubscribe = onSnapshot(clientesQuery, (querySnapshot) => {
             renderTable(clientesTableBody, querySnapshot.docs, ['codigo', 'razaoSocial', 'cnpj', 'telefone', 'email'], (id) => deleteItem('clientes', id));
         });
+
+        // Cadastros - Plano de Contas
+        const planoContasQuery = query(collection(db, 'users', userId, 'planoDeContas'), orderBy("codigo"));
+        planoContasUnsubscribe = onSnapshot(planoContasQuery, (querySnapshot) => {
+            const contasDocs = querySnapshot.docs;
+            renderPlanoContasTable(planoContasTableBody, contasDocs);
+            populateContasContabeisDropdown(contasDocs);
+
+            // Create a map for quick lookup in the bancos table
+            const contasMap = {};
+            contasDocs.forEach(doc => {
+                contasMap[doc.id] = { text: `${doc.data().codigo} - ${doc.data().descricao}` };
+            });
+
+            // Cadastros - Bancos (nested to ensure contasMap is ready)
+            if (bancosUnsubscribe) bancosUnsubscribe(); // Detach previous listener
+            const bancosQuery = query(collection(db, 'users', userId, 'bancos'), orderBy("apelido"));
+            bancosUnsubscribe = onSnapshot(bancosQuery, (bancosSnapshot) => {
+                renderBancosTable(bancosTableBody, bancosSnapshot.docs, contasMap);
+            });
+        });
+
+        // Cadastros - Centros de Custo
+        const centrosCustoQuery = query(collection(db, 'users', userId, 'centrosDeCusto'), orderBy("codigo"));
+        centrosCustoUnsubscribe = onSnapshot(centrosCustoQuery, (querySnapshot) => {
+            renderCentrosCustoTable(centrosCustoTableBody, querySnapshot.docs);
+        });
     }
 
     function detachListeners() {
@@ -893,6 +1145,99 @@
         if (produtosUnsubscribe) produtosUnsubscribe();
         if (fornecedoresUnsubscribe) fornecedoresUnsubscribe();
         if (clientesUnsubscribe) clientesUnsubscribe();
+        if (planoContasUnsubscribe) planoContasUnsubscribe();
+        if (bancosUnsubscribe) bancosUnsubscribe();
+        if (centrosCustoUnsubscribe) centrosCustoUnsubscribe();
+    }
+
+    function renderCentrosCustoTable(tbody, docs) {
+        renderTable(tbody, docs, ['codigo', 'descricao', 'tipo'], (id) => deleteItem('centrosDeCusto', id));
+    }
+
+    function populateContasContabeisDropdown(docs) {
+        contaContabilSelect.innerHTML = '<option value="">Selecione uma conta</option>';
+        const analyticalAccounts = docs.filter(doc => doc.data().permiteLancamentos);
+
+        if (analyticalAccounts.length === 0) {
+            contaContabilSelect.innerHTML = '<option value="">Nenhuma conta analítica encontrada</option>';
+            return;
+        }
+
+        analyticalAccounts.forEach(doc => {
+            const account = doc.data();
+            const option = document.createElement('option');
+            option.value = doc.id; // Store Firestore document ID as the value
+            option.textContent = `${account.codigo} - ${account.descricao}`;
+            contaContabilSelect.appendChild(option);
+        });
+    }
+
+    function renderBancosTable(tbody, docs, contasMap) {
+        tbody.innerHTML = '';
+        if (docs.length === 0) {
+            const tr = tbody.insertRow();
+            const td = tr.insertCell();
+            td.colSpan = 5;
+            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+            td.textContent = 'Nenhuma conta bancária encontrada.';
+            return;
+        }
+
+        docs.forEach(doc => {
+            const data = doc.data();
+            const tr = tbody.insertRow();
+            tr.setAttribute('data-id', doc.id);
+
+            const contaContabilInfo = contasMap[data.contaContabilId] || { text: 'Conta não encontrada' };
+
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${data.apelido}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.bancoNome} (${data.bancoCodigo})</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.agencia} / ${data.conta}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${contaContabilInfo.text}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}" data-collection="bancos">Excluir</button>
+                </td>
+            `;
+        });
+
+        tbody.querySelectorAll('.delete-btn[data-collection="bancos"]').forEach(button => {
+            button.addEventListener('click', () => deleteItem('bancos', button.dataset.id));
+        });
+    }
+
+    function renderPlanoContasTable(tbody, docs) {
+        tbody.innerHTML = '';
+        if (docs.length === 0) {
+            const tr = tbody.insertRow();
+            const td = tr.insertCell();
+            td.colSpan = 6;
+            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+            td.textContent = 'Nenhum registro encontrado.';
+            return;
+        }
+
+        docs.forEach(doc => {
+            const data = doc.data();
+            const tr = tbody.insertRow();
+            tr.setAttribute('data-id', doc.id);
+
+            const indent = (data.codigo.match(/\./g) || []).length;
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" style="padding-left: ${1.5 + indent * 1.5}rem;">${data.codigo}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.descricao}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.tipo}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${data.redutora ? 'Sim' : 'Não'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${data.permiteLancamentos ? 'Sim' : 'Não'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}" data-collection="planoDeContas">Excluir</button>
+                </td>
+            `;
+        });
+
+        tbody.querySelectorAll('.delete-btn[data-collection="planoDeContas"]').forEach(button => {
+            button.addEventListener('click', () => deleteItem('planoDeContas', button.dataset.id));
+        });
     }
 
 
@@ -1021,7 +1366,76 @@
         });
     }
 
+    if (financeiroCardLink) {
+        financeiroCardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
+            if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
+            financeiroCadastroSection.classList.remove('hidden');
+            financeiroCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    if (closeFinanceiroCadastro) {
+        closeFinanceiroCadastro.addEventListener('click', () => {
+            financeiroCadastroSection.classList.add('hidden');
+        });
+    }
+
+    if (financeiroCadastroSection){
+        const tabLinks = financeiroCadastroSection.querySelectorAll('.financeiro-tab-link');
+        const tabContents = financeiroCadastroSection.querySelectorAll('.financeiro-tab-content');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.tab;
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
+                });
+            });
+        });
+    }
+
     // --- Lógica dos Formulários de Cadastro ---
+    centroCustoForm.addEventListener('submit', (e) => {
+        const data = {
+            codigo: document.getElementById('centro-custo-codigo').value,
+            descricao: document.getElementById('centro-custo-descricao').value,
+            tipo: document.getElementById('centro-custo-tipo').value
+        };
+        handleFormSubmit(e, 'centrosDeCusto', data, 'centro-custo-form-feedback', centroCustoForm);
+    });
+
+    bancosForm.addEventListener('submit', (e) => {
+        const selectedOption = contaContabilSelect.options[contaContabilSelect.selectedIndex];
+        const data = {
+            bancoCodigo: document.getElementById('banco-codigo').value,
+            bancoNome: document.getElementById('banco-nome').value,
+            agencia: document.getElementById('banco-agencia').value,
+            conta: document.getElementById('banco-conta').value,
+            tipo: document.getElementById('banco-conta-tipo').value,
+            apelido: document.getElementById('banco-conta-apelido').value,
+            contaContabilId: selectedOption.value, // Storing the ID
+            contaContabilText: selectedOption.textContent, // Storing the text for easy display
+            saldoInicial: parseFloat(document.getElementById('banco-saldo-inicial').value) || 0,
+        };
+        handleFormSubmit(e, 'bancos', data, 'bancos-form-feedback', bancosForm);
+    });
+
+    planoContasForm.addEventListener('submit', (e) => {
+        const data = {
+            codigo: document.getElementById('plano-contas-codigo').value,
+            descricao: document.getElementById('plano-contas-descricao').value,
+            tipo: document.getElementById('plano-contas-tipo').value,
+            redutora: document.getElementById('plano-contas-redutora').checked,
+            permiteLancamentos: document.getElementById('plano-contas-permite-lancamentos').checked
+        };
+        handleFormSubmit(e, 'planoDeContas', data, 'plano-contas-form-feedback', planoContasForm);
+    });
+
     empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value, endereco: document.getElementById('empresa-endereco').value }, 'empresa-form-feedback', empresaForm));
     usuarioForm.addEventListener('submit', (e) => {
         const nome = document.getElementById('usuario-nome').value;
