@@ -1914,6 +1914,7 @@
             if (!isEdit) {
                 despesaForm.reset();
                 document.getElementById('despesa-id').value = '';
+                resetRecurrenceFields();
             }
             document.querySelector('#despesa-modal h3').textContent = isEdit ? 'Editar Despesa' : 'Lançar Nova Despesa';
             pagamentoInfo.classList.add('hidden');
@@ -2125,46 +2126,85 @@
     window.testHooks = { setupListeners, auth };
 
     // --- Lógica de Recorrência Inteligente ---
+    function resetRecurrenceFields() {
+        if (recorrenciaFimDataInput) recorrenciaFimDataInput.value = '';
+        if (recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.value = '';
+        if (recorrenciaFimDataRadio) recorrenciaFimDataRadio.checked = false;
+        if (recorrenciaFimOcorrenciasRadio) recorrenciaFimOcorrenciasRadio.checked = false;
+        if (despesaVencimentoInput) despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
+        if (document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').value = 'mensal';
+    }
+
     function handleRecurrenceInteraction() {
-        const dueDate = despesaVencimentoInput.value;
-        const occurrences = recorrenciaFimOcorrenciasInput.value;
-        const endDate = recorrenciaFimDataInput.value;
+        const dueDateValue = despesaVencimentoInput.value;
+        const occurrencesValue = recorrenciaFimOcorrenciasInput.value;
+        const endDateValue = recorrenciaFimDataInput.value;
+        const freq = document.getElementById('recorrencia-frequencia').value;
 
-        // Auto-calculate end date from occurrences
-        if (document.activeElement === recorrenciaFimOcorrenciasInput && occurrences) {
+        const activeEl = document.activeElement;
+
+        // Clear validation border when due date is filled
+        if (dueDateValue) {
+            despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
+        }
+
+        // Scenario 1: User types in "Após:" (Occurrences)
+        if (activeEl === recorrenciaFimOcorrenciasInput) {
             recorrenciaFimOcorrenciasRadio.checked = true;
-            if (!dueDate) {
+            recorrenciaFimDataInput.value = ''; // Clear conflicting field
+            if (!dueDateValue) {
                 despesaVencimentoInput.classList.add('border-red-500', 'ring-red-500');
-                recorrenciaFimDataInput.value = '';
-            } else {
-                despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
-                const startDate = new Date(dueDate + 'T00:00:00');
-                const freq = document.getElementById('recorrencia-frequencia').value;
-                const numOccurrences = parseInt(occurrences, 10);
+                return;
+            }
+            const numOccurrences = parseInt(occurrencesValue, 10);
+            if (!isNaN(numOccurrences) && numOccurrences > 0) {
+                const startDate = new Date(dueDateValue + 'T00:00:00');
+                let multiplier = 1;
+                if (freq === 'bimestral') multiplier = 2;
+                else if (freq === 'trimestral') multiplier = 3;
+                else if (freq === 'semestral') multiplier = 6;
+                else if (freq === 'anual') multiplier = 12;
 
-                if (!isNaN(numOccurrences)) {
-                    let multiplier = 1;
-                    if (freq === 'bimestral') multiplier = 2;
-                    else if (freq === 'trimestral') multiplier = 3;
-                    else if (freq === 'semestral') multiplier = 6;
-                    else if (freq === 'anual') multiplier = 12;
-
-                    const finalDate = new Date(startDate.setMonth(startDate.getMonth() + (multiplier * (numOccurrences -1) ) ));
-                    recorrenciaFimDataInput.value = finalDate.toISOString().split('T')[0];
-                }
+                const finalDate = new Date(startDate.setMonth(startDate.getMonth() + (multiplier * (numOccurrences - 1))));
+                recorrenciaFimDataInput.value = finalDate.toISOString().split('T')[0];
             }
         }
 
-        // Auto-select radio when end date is chosen
-        if (document.activeElement === recorrenciaFimDataInput && endDate) {
+        // Scenario 2: User selects "Em:" (End Date)
+        if (activeEl === recorrenciaFimDataInput) {
             recorrenciaFimDataRadio.checked = true;
-            recorrenciaFimOcorrenciasInput.value = '';
+            recorrenciaFimOcorrenciasInput.value = ''; // Clear conflicting field
+            if (!dueDateValue) {
+                despesaVencimentoInput.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+            if (endDateValue) {
+                const startDate = new Date(dueDateValue + 'T00:00:00');
+                const endDate = new Date(endDateValue + 'T00:00:00');
+
+                if (endDate < startDate) return;
+
+                const yearDiff = endDate.getFullYear() - startDate.getFullYear();
+                const monthDiff = (yearDiff * 12) + (endDate.getMonth() - startDate.getMonth());
+
+                let multiplier = 1;
+                if (freq === 'bimestral') multiplier = 2;
+                else if (freq === 'trimestral') multiplier = 3;
+                else if (freq === 'semestral') multiplier = 6;
+                else if (freq === 'anual') multiplier = 12;
+
+                const numOccurrences = Math.floor(monthDiff / multiplier) + 1;
+                recorrenciaFimOcorrenciasInput.value = numOccurrences;
+            }
         }
 
-        // Re-calculate if due date is filled in later
-        if (document.activeElement === despesaVencimentoInput && dueDate && recorrenciaFimOcorrenciasRadio.checked) {
-            despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
-            recorrenciaFimOcorrenciasInput.dispatchEvent(new Event('input')); // Re-trigger calculation
+        // Recalculate if frequency or due date changes
+        if (activeEl === document.getElementById('recorrencia-frequencia') || activeEl === despesaVencimentoInput) {
+            if (recorrenciaFimOcorrenciasRadio.checked) {
+                recorrenciaFimOcorrenciasInput.dispatchEvent(new Event('input', { bubbles:true }));
+            } else if (recorrenciaFimDataRadio.checked) {
+                recorrenciaFimDataInput.dispatchEvent(new Event('change', { bubbles:true }));
+            }
         }
     }
 
