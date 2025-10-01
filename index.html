@@ -1058,6 +1058,10 @@
                                     <span class="material-symbols-outlined text-base">payments</span>
                                     Pagar
                                 </button>
+                                <button id="visualizar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <span class="material-symbols-outlined text-base">visibility</span>
+                                    Visualizar
+                                </button>
                                 <button id="editar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                                     <span class="material-symbols-outlined text-base">edit</span>
                                     Editar
@@ -1118,6 +1122,7 @@
                                                 <input id="select-all-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
                                             </div>
                                         </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
@@ -1152,9 +1157,15 @@
                   <div class="p-4 border rounded-md">
                       <h4 class="text-lg font-semibold text-gray-800 mb-4">Informações Essenciais</h4>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div class="col-span-2">
-                              <label for="despesa-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
-                              <input type="text" id="despesa-descricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required placeholder="Ex: Manutenção do ar condicionado">
+                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 col-span-2">
+                            <div class="md:col-span-2">
+                                <label for="despesa-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                                <input type="text" id="despesa-descricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="Ex: Manutenção do ar condicionado">
+                            </div>
+                            <div>
+                                <label for="despesa-numero-documento" class="block text-sm font-medium text-gray-700">Número do Documento</label>
+                                <input type="text" id="despesa-numero-documento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ex: NF-12345">
+                            </div>
                           </div>
                           <div>
                               <label for="favorecido-tipo" class="block text-sm font-medium text-gray-700">Tipo de Favorecido</label>
@@ -1248,14 +1259,18 @@
                               </div>
                           </div>
                       </div>
-                      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                              <label for="despesa-emissao" class="block text-sm font-medium text-gray-700">Data de Emissão</label>
+                              <input type="date" id="despesa-emissao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                          </div>
                           <div>
                               <label for="despesa-competencia" class="block text-sm font-medium text-gray-700">Data de Competência</label>
-                              <input type="date" id="despesa-competencia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                              <input type="date" id="despesa-competencia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                           </div>
                           <div>
                               <label for="despesa-vencimento" class="block text-sm font-medium text-gray-700">Data de Vencimento</label>
-                              <input type="date" id="despesa-vencimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                              <input type="date" id="despesa-vencimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                           </div>
                       </div>
                   </div>
@@ -1361,6 +1376,63 @@
                       <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Pagamento</button>
                   </div>
               </form>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Visualização de Despesa -->
+  <div id="visualizar-despesa-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="text-2xl font-bold text-gray-900">Detalhes da Despesa</h3>
+              <button id="close-visualizar-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Coluna 1: Detalhes Principais -->
+              <div class="md:col-span-2 space-y-4">
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Informações Gerais</h4>
+                  <div><p class="text-sm text-gray-500">Descrição</p><p id="view-despesa-descricao" class="text-base font-medium text-gray-800"></p></div>
+                  <div><p class="text-sm text-gray-500">Favorecido</p><p id="view-despesa-favorecido" class="text-base font-medium text-gray-800"></p></div>
+                  <div><p class="text-sm text-gray-500">Categoria (Plano de Contas)</p><p id="view-despesa-categoria" class="text-base font-medium text-gray-800"></p></div>
+                  <div><p class="text-sm text-gray-500">Observações</p><p id="view-despesa-obs" class="text-base text-gray-800 break-words"></p></div>
+
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2 pt-4">Datas</h4>
+                   <div class="grid grid-cols-3 gap-4">
+                       <div><p class="text-sm text-gray-500">Emissão</p><p id="view-despesa-emissao" class="text-base font-medium text-gray-800"></p></div>
+                       <div><p class="text-sm text-gray-500">Competência</p><p id="view-despesa-competencia" class="text-base font-medium text-gray-800"></p></div>
+                       <div><p class="text-sm text-gray-500">Vencimento</p><p id="view-despesa-vencimento" class="text-base font-medium text-gray-800"></p></div>
+                   </div>
+
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2 pt-4">Registro</h4>
+                   <div class="grid grid-cols-3 gap-4">
+                        <div><p class="text-sm text-gray-500">Criado por</p><p id="view-despesa-criado-por" class="text-base font-medium text-gray-800"></p></div>
+                        <div><p class="text-sm text-gray-500">Data de Criação</p><p id="view-despesa-criado-em" class="text-base font-medium text-gray-800"></p></div>
+                   </div>
+              </div>
+              <!-- Coluna 2: Status e Valores -->
+              <div class="space-y-4 bg-gray-50 p-4 rounded-lg">
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Valores e Status</h4>
+                  <div><p class="text-sm text-gray-500">Número do Documento</p><p id="view-despesa-numero-documento" class="text-base font-medium text-gray-800"></p></div>
+                  <div>
+                      <p class="text-sm text-gray-500">Valor Original</p>
+                      <p id="view-despesa-valor" class="text-2xl font-bold text-blue-600"></p>
+                  </div>
+                   <div>
+                      <p class="text-sm text-gray-500">Status</p>
+                      <p id="view-despesa-status" class="text-base font-medium"></p>
+                  </div>
+                  <div id="view-pagamento-info" class="hidden space-y-4 border-t pt-4">
+                      <h5 class="text-md font-semibold text-gray-700">Informações do Pagamento</h5>
+                      <div><p class="text-sm text-gray-500">Data do Pagamento</p><p id="view-despesa-data-pagamento" class="text-base font-medium text-gray-800"></p></div>
+                      <div><p class="text-sm text-gray-500">Valor Pago</p><p id="view-despesa-valor-pago" class="text-base font-bold text-green-600"></p></div>
+                      <div><p class="text-sm text-gray-500">Conta de Saída</p><p id="view-despesa-conta-saida" class="text-base font-medium text-gray-800"></p></div>
+                  </div>
+              </div>
+          </div>
+          <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
+              <button type="button" id="ok-visualizar-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">OK</button>
           </div>
       </div>
   </div>
@@ -1490,9 +1562,13 @@
     const pagarForm = document.getElementById('pagar-form');
     const pagarContaSaidaSelect = document.getElementById('pagar-conta-saida');
     const pagarSelecionadasBtn = document.getElementById('pagar-selecionadas-btn');
+    const visualizarSelecionadaBtn = document.getElementById('visualizar-selecionada-btn');
     const editarSelecionadaBtn = document.getElementById('editar-selecionada-btn');
     const excluirSelecionadasBtn = document.getElementById('excluir-selecionadas-btn');
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const visualizarDespesaModal = document.getElementById('visualizar-despesa-modal');
+    const closeVisualizarModalBtn = document.getElementById('close-visualizar-modal-btn');
+    const okVisualizarModalBtn = document.getElementById('ok-visualizar-modal-btn');
 
     // --- Elementos de Recorrência Inteligente ---
     const despesaVencimentoInput = document.getElementById('despesa-vencimento');
@@ -2486,6 +2562,7 @@
                         <input type="checkbox" class="despesa-checkbox h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded" data-id="${doc.id}">
                     </div>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.numeroDocumento || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -2516,8 +2593,9 @@
         const selectedIds = getSelectedDespesaIds();
         const selectedCount = selectedIds.length;
 
-        // Enable/disable 'Editar' button
+        // Enable/disable 'Editar' and 'Visualizar' buttons
         editarSelecionadaBtn.disabled = selectedCount !== 1;
+        visualizarSelecionadaBtn.disabled = selectedCount !== 1;
 
         // Enable/disable 'Excluir' button
         excluirSelecionadasBtn.disabled = selectedCount === 0;
@@ -2565,13 +2643,14 @@
                     const data = docSnap.data();
                     document.getElementById('despesa-id').value = docSnap.id;
                     document.getElementById('despesa-descricao').value = data.descricao;
+                    document.getElementById('despesa-numero-documento').value = data.numeroDocumento || '';
                     if (data.favorecidoTipo && data.favorecidoId) {
                         favorecidoTipoSelect.value = data.favorecidoTipo;
                         favorecidoTipoSelect.dispatchEvent(new Event('change'));
                         setTimeout(() => {
                             favorecidoNomeSelect.value = data.favorecidoId;
                         }, 150);
-                    } else if (data.fornecedorId) {
+                    } else if (data.fornecedorId) { // Legacy fallback
                         favorecidoTipoSelect.value = 'fornecedores';
                         favorecidoTipoSelect.dispatchEvent(new Event('change'));
                         setTimeout(() => {
@@ -2580,6 +2659,7 @@
                     }
                     document.getElementById('despesa-categoria').value = data.categoriaId;
                     document.getElementById('despesa-valor').value = data.valor;
+                    document.getElementById('despesa-emissao').value = data.emissao || '';
                     document.getElementById('despesa-competencia').value = data.competencia;
                     document.getElementById('despesa-vencimento').value = data.vencimento;
                     document.getElementById('despesa-obs').value = data.obs || '';
@@ -2705,6 +2785,95 @@
     if(closePagarModalBtn) closePagarModalBtn.addEventListener('click', closePagarModal);
     if(cancelPagarModalBtn) cancelPagarModalBtn.addEventListener('click', closePagarModal);
 
+    if(visualizarSelecionadaBtn) {
+        visualizarSelecionadaBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedDespesaIds();
+            if (selectedIds.length !== 1) return;
+            openVisualizarModal(selectedIds[0]);
+        });
+    }
+
+    async function openVisualizarModal(despesaId) {
+        if (!visualizarDespesaModal) return;
+        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+        if (!userId) return;
+
+        try {
+            const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
+            const despesaSnap = await getDoc(despesaRef);
+
+            if (!despesaSnap.exists()) {
+                console.error("Despesa não encontrada!");
+                return;
+            }
+
+            const data = despesaSnap.data();
+
+            // Fetch related data in parallel
+            const categoriaPromise = data.categoriaId ? getDoc(doc(db, 'users', userId, 'planosDeContas', data.categoriaId)) : Promise.resolve(null);
+            const contaSaidaPromise = data.contaSaidaId ? getDoc(doc(db, 'users', userId, 'contasBancarias', data.contaSaidaId)) : Promise.resolve(null);
+            const [categoriaSnap, contaSaidaSnap] = await Promise.all([categoriaPromise, contaSaidaPromise]);
+
+            const categoriaNome = categoriaSnap?.exists() ? categoriaSnap.data().nome : 'N/A';
+            const contaSaidaNome = contaSaidaSnap?.exists() ? contaSaidaSnap.data().nome : 'N/A';
+
+            // Helper to format dates consistently
+            const formatDate = (dateString) => dateString ? new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+            const formatTimestamp = (timestamp) => timestamp ? timestamp.toDate().toLocaleString('pt-BR') : 'N/A';
+
+            // Populate modal fields
+            document.getElementById('view-despesa-descricao').textContent = data.descricao || 'N/A';
+            document.getElementById('view-despesa-favorecido').textContent = data.favorecidoNome || 'N/A';
+            document.getElementById('view-despesa-categoria').textContent = categoriaNome;
+            document.getElementById('view-despesa-obs').textContent = data.obs || 'Nenhuma';
+            document.getElementById('view-despesa-emissao').textContent = formatDate(data.emissao);
+            document.getElementById('view-despesa-competencia').textContent = formatDate(data.competencia);
+            document.getElementById('view-despesa-vencimento').textContent = formatDate(data.vencimento);
+            document.getElementById('view-despesa-criado-por').textContent = data.criadoPor || 'N/A';
+            document.getElementById('view-despesa-criado-em').textContent = formatTimestamp(data.createdAt);
+            document.getElementById('view-despesa-numero-documento').textContent = data.numeroDocumento || 'N/A';
+            document.getElementById('view-despesa-valor').textContent = formatCurrency(data.valor || 0);
+
+            // Status logic
+            const statusEl = document.getElementById('view-despesa-status');
+            const today = new Date();
+            const vencimento = new Date(data.vencimento + 'T00:00:00');
+            if (data.pago) {
+                statusEl.textContent = 'Pago';
+                statusEl.className = 'text-base font-medium text-green-600';
+            } else if (vencimento < today) {
+                statusEl.textContent = 'Vencido';
+                statusEl.className = 'text-base font-medium text-red-600';
+            } else {
+                statusEl.textContent = 'Pendente';
+                statusEl.className = 'text-base font-medium text-yellow-600';
+            }
+
+            // Payment info section
+            const pagamentoInfoEl = document.getElementById('view-pagamento-info');
+            if (data.pago) {
+                document.getElementById('view-despesa-data-pagamento').textContent = formatDate(data.dataPagamento);
+                document.getElementById('view-despesa-valor-pago').textContent = formatCurrency(data.valorPago || 0);
+                document.getElementById('view-despesa-conta-saida').textContent = contaSaidaNome;
+                pagamentoInfoEl.classList.remove('hidden');
+            } else {
+                pagamentoInfoEl.classList.add('hidden');
+            }
+
+            visualizarDespesaModal.classList.remove('hidden');
+
+        } catch (error) {
+            console.error("Erro ao abrir modal de visualização:", error);
+        }
+    }
+
+    function closeVisualizarModal() {
+        if(visualizarDespesaModal) visualizarDespesaModal.classList.add('hidden');
+    }
+
+    if(closeVisualizarModalBtn) closeVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
+    if(okVisualizarModalBtn) okVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
+
     if(pagarForm) {
         pagarForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2817,11 +2986,13 @@
 
             const baseData = {
                 descricao: baseDescricao,
+                numeroDocumento: document.getElementById('despesa-numero-documento').value,
                 favorecidoTipo: favorecidoTipo,
                 favorecidoId: favorecidoId,
                 favorecidoNome: favorecidoNome,
                 categoriaId: document.getElementById('despesa-categoria').value,
                 valor: valorTotal,
+                emissao: document.getElementById('despesa-emissao').value,
                 competencia: document.getElementById('despesa-competencia').value,
                 vencimento: document.getElementById('despesa-vencimento').value,
                 pago: document.getElementById('marcar-pago-checkbox').checked,
@@ -2861,12 +3032,17 @@
                         vencimento: vencimentoParcela.toISOString().split('T')[0],
                         pago: false, // Each installment starts as unpaid
                         parcelaInfo: { atual: i, total: numeroParcelas },
+                        criadoPor: auth.currentUser?.email || 'sistema',
                         createdAt: serverTimestamp()
                     };
                     await addDoc(userRef, despesaParcela);
                 }
             } else {
-                const despesaData = { ...baseData, createdAt: serverTimestamp() };
+                const despesaData = {
+                    ...baseData,
+                    criadoPor: auth.currentUser?.email || 'sistema',
+                    createdAt: serverTimestamp()
+                };
                 if (formaPagamento === 'recorrente') {
                     despesaData.recorrencia = {
                         frequencia: document.getElementById('recorrencia-frequencia').value,
