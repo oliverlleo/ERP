@@ -324,7 +324,7 @@
                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                                 <a href="#" class="tab-link active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="empresas">Empresas</a>
                                 <a href="#" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="usuarios">Usuários</a>
-                                <a href="#" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="perfis">Perfil de Acesso</a>
+                                <a href="#" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="perfis">Acessos de Usuário</a>
                             </nav>
                         </div>
 
@@ -356,6 +356,7 @@
                                                 <tr>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Empresa</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -372,37 +373,25 @@
                                 <form id="usuario-form">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="usuario-nome">Nome do Usuário</label>
-                                            <input type="text" id="usuario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
-                                        </div>
-                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="usuario-email">E-mail</label>
-                                            <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                        <div>
-                                            <label for="usuario-empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
-                                            <select id="usuario-empresa" required class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                                <option value="" disabled selected>Selecione a empresa</option>
-                                                <!-- Options populated by JS -->
+                                            <label class="block text-sm font-medium text-gray-700" for="usuario-funcionario-select">Funcionário</label>
+                                            <select id="usuario-funcionario-select" required class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                <option value="" disabled selected>Selecione um funcionário</option>
+                                                <!-- Options populated by JS from 'funcionarios' collection -->
                                             </select>
                                         </div>
                                     </div>
                                     <div id="usuario-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Usuário</button>
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Criar Usuário</button>
                                     </div>
                                 </form>
                                 <div class="mt-8 border-t pt-6">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Usuários Cadastrados</h3>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Usuários do Sistema</h3>
                                     <div class="overflow-x-auto">
                                          <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Usuário</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Funcionário</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -412,27 +401,36 @@
                                 </div>
                             </div>
 
-                            <!-- Tab: Perfil de Acesso -->
+                            <!-- Tab: Acessos de Usuário -->
                             <div id="perfis-tab" class="tab-content hidden">
                                  <form id="perfil-form" >
-                                    <div class="grid grid-cols-1">
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="perfil-nome">Nome do Perfil</label>
-                                            <input type="text" id="perfil-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                            <label class="block text-sm font-medium text-gray-700" for="acesso-usuario-select">Usuário do Sistema</label>
+                                             <select id="acesso-usuario-select" required class="form-select mt-1 block w-full">
+                                                <option value="" disabled selected>Selecione um usuário</option>
+                                                <!-- Options populated by JS from 'systemUsers' -->
+                                            </select>
+                                        </div>
+                                         <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="acesso-login-nome">Nome de Login</label>
+                                            <input type="text" id="acesso-login-nome" class="form-input mt-1 block w-full" required>
                                         </div>
                                     </div>
                                     <div id="perfil-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Perfil</button>
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Criar Acesso</button>
                                     </div>
                                 </form>
                                 <div class="mt-8 border-t pt-6">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Perfis Cadastrados</h3>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Acessos Criados</h3>
                                     <div class="overflow-x-auto">
                                          <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Perfil</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Login</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário (Funcionário)</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Senha Temporária</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -952,7 +950,14 @@
                                         <div><label for="funcionario-admissao" class="block text-sm font-medium text-gray-700">Data de Admissão</label><input type="date" id="funcionario-admissao" class="form-input mt-1 block w-full"></div>
                                          <div><label for="funcionario-desligamento" class="block text-sm font-medium text-gray-700">Data de Desligamento</label><input type="date" id="funcionario-desligamento" class="form-input mt-1 block w-full"></div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label for="funcionario-empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
+                                            <select id="funcionario-empresa" required class="form-select mt-1 block w-full">
+                                                <option value="" disabled selected>Selecione a empresa</option>
+                                                <!-- Options populated by JS -->
+                                            </select>
+                                        </div>
                                         <div><label for="funcionario-cargo" class="block text-sm font-medium text-gray-700">Cargo</label><input type="text" id="funcionario-cargo" class="form-input mt-1 block w-full"></div>
                                         <div><label for="funcionario-departamento" class="block text-sm font-medium text-gray-700">Departamento</label><input type="text" id="funcionario-departamento" class="form-input mt-1 block w-full"></div>
                                     </div>
@@ -1722,6 +1727,15 @@
         return password;
     }
 
+    function generateCompanyCode(length = 6) {
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "EMP-";
+        for (let i = 0, n = charset.length; i < length; ++i) {
+            code += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return code;
+    }
+
     // --- Funções de Renderização das Tabelas ---
     function renderTable(tbody, docs, fields, deleteHandler) {
         tbody.innerHTML = '';
@@ -1817,7 +1831,7 @@
                 empresasTableBody.innerHTML = '';
                 if (empresasDocs.empty) {
                     const tr = empresasTableBody.insertRow();
-                    tr.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhuma empresa cadastrada.</td>`;
+                    tr.innerHTML = `<td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhuma empresa cadastrada.</td>`;
                 } else {
                     empresasDocs.forEach(doc => {
                         const data = doc.data();
@@ -1826,6 +1840,7 @@
                         tr.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.cnpj}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">${data.codigo}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                             </td>
@@ -1842,51 +1857,73 @@
                 }
             }
 
-            // Popula o dropdown de empresa no formulário de criação de usuário
-            const usuarioEmpresaSelect = document.getElementById('usuario-empresa');
-            populateEmpresaDropdown(usuarioEmpresaSelect, empresasDocs);
+            // Popula o dropdown de empresa no formulário de criação de FUNCIONÁRIOS
+            const funcionarioEmpresaSelect = document.getElementById('funcionario-empresa');
+            populateEmpresaDropdown(funcionarioEmpresaSelect, empresasDocs);
         });
 
-        // Cadastros - Usuários
-        const usuariosQuery = query(collection(db, 'users', userId, 'usuarios'));
+        // Cadastros - Usuários do Sistema
+        const usuariosQuery = query(collection(db, 'users', userId, 'systemUsers'));
         usuariosUnsubscribe = onSnapshot(usuariosQuery, (querySnapshot) => {
-             if (!usuariosTableBody) return;
+            if (!usuariosTableBody) return;
             usuariosTableBody.innerHTML = '';
             if (querySnapshot.empty) {
                 const tr = usuariosTableBody.insertRow();
-                const td = tr.insertCell();
-                td.colSpan = 4;
-                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
-                td.textContent = 'Nenhum usuário cadastrado.';
-                return;
-            }
-            querySnapshot.forEach(doc => {
-                const data = doc.data();
-                const tr = usuariosTableBody.insertRow();
-                tr.setAttribute('data-id', doc.id);
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.email}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.empresa?.nome || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
-                    </td>
-                `;
-            });
-            usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    if (confirm('Tem certeza que deseja excluir este usuário?')) {
-                        deleteItem('usuarios', id);
-                    }
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhum usuário do sistema criado.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = usuariosTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="systemUsers" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
                 });
-            });
+                usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.currentTarget.dataset.id;
+                        if (confirm('Tem certeza que deseja excluir este usuário do sistema?')) {
+                            deleteItem('systemUsers', id);
+                        }
+                    });
+                });
+            }
         });
 
-        // Cadastros - Perfis de Acesso
-        const perfisQuery = query(collection(db, 'users', userId, 'perfisDeAcesso'));
+        // Cadastros - Usuários da Empresa (anteriormente Perfis de Acesso)
+        const perfisQuery = query(collection(db, 'usuarios'), where("adminId", "==", userId));
         perfisUnsubscribe = onSnapshot(perfisQuery, (querySnapshot) => {
-            renderTable(perfisTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('perfisDeAcesso', id));
+            if (!perfisTableBody) return;
+            perfisTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = perfisTableBody.insertRow();
+                tr.innerHTML = `<td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum usuário de empresa cadastrado.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = perfisTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.empresa?.nome || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+                perfisTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const id = e.currentTarget.dataset.id;
+                        if (confirm('Tem certeza que deseja excluir este usuário da empresa?')) {
+                           await deleteDoc(doc(db, "usuarios", id));
+                        }
+                    });
+                });
+            }
         });
 
         // Cadastros - Fornecedores
@@ -2028,41 +2065,54 @@
         // Cadastros - Funcionários
         const funcionariosQuery = query(collection(db, 'users', userId, 'funcionarios'));
         funcionariosUnsubscribe = onSnapshot(funcionariosQuery, (querySnapshot) => {
-        if (!funcionariosTableBody) return;
-        funcionariosTableBody.innerHTML = '';
-        if (querySnapshot.empty) {
-            const tr = funcionariosTableBody.insertRow();
-            const td = tr.insertCell();
-            td.colSpan = 4;
-            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
-            td.textContent = 'Nenhum funcionário cadastrado.';
-            return;
-        }
+            const funcionariosDocs = querySnapshot.docs;
+            if (!funcionariosTableBody) return;
 
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            const tr = funcionariosTableBody.insertRow();
-            tr.setAttribute('data-id', doc.id);
-            tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.matricula || ''}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.pessoal?.nomeCompleto || 'N/A'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.cargo || ''}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
-                </td>
-            `;
-        });
+            // Popula o dropdown para criar usuários do sistema
+            const funcionarioSelect = document.getElementById('usuario-funcionario-select');
+            if (funcionarioSelect) {
+                const currentVal = funcionarioSelect.value;
+                funcionarioSelect.innerHTML = '<option value="" disabled selected>Selecione um funcionário</option>';
+                funcionariosDocs.forEach(doc => {
+                    const data = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = data.pessoal?.nomeCompleto || 'Funcionário sem nome';
+                    funcionarioSelect.appendChild(option);
+                });
+                funcionarioSelect.value = currentVal;
+            }
 
-        funcionariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                if (confirm('Tem certeza que deseja excluir este funcionário?')) {
-                    deleteItem('funcionarios', id);
-                }
-            });
+            // Renderiza a tabela de funcionários
+            funcionariosTableBody.innerHTML = '';
+            if (funcionariosDocs.empty) {
+                const tr = funcionariosTableBody.insertRow();
+                tr.innerHTML = `<td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum funcionário cadastrado.</td>`;
+            } else {
+                funcionariosDocs.forEach(doc => {
+                    const data = doc.data();
+                    const tr = funcionariosTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.matricula || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.pessoal?.nomeCompleto || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.cargo || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+                funcionariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.currentTarget.dataset.id;
+                        if (confirm('Tem certeza que deseja excluir este funcionário?')) {
+                            deleteItem('funcionarios', id);
+                        }
+                    });
+                });
+            }
         });
-    });
 
     // Populate user dropdown in employee form
     const usuariosQueryForDropdown = query(collection(db, 'users', userId, 'usuarios'));
@@ -2692,11 +2742,11 @@
         const empresaData = {
             nome: document.getElementById('empresa-nome').value,
             cnpj: document.getElementById('empresa-cnpj').value,
+            codigo: generateCompanyCode(),
             adminId: adminId,
             createdAt: serverTimestamp()
         };
         try {
-            // Salva na coleção pública de empresas
             await addDoc(collection(db, 'empresas'), empresaData);
             showFeedback(feedbackId, "Empresa salva com sucesso!", false);
             empresaForm.reset();
@@ -2705,6 +2755,7 @@
             showFeedback(feedbackId, "Erro ao salvar empresa. Tente novamente.", true);
         }
     });
+    // Lógica para o formulário de criação de Usuários do Sistema
     usuarioForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'usuario-form-feedback';
@@ -2714,9 +2765,47 @@
             return;
         }
 
-        const nome = document.getElementById('usuario-nome').value;
-        const email = document.getElementById('usuario-email').value;
-        const empresaSelect = document.getElementById('usuario-empresa');
+        const funcionarioSelect = document.getElementById('usuario-funcionario-select');
+        const funcionarioId = funcionarioSelect.value;
+        const funcionarioNome = funcionarioSelect.options[funcionarioSelect.selectedIndex].text;
+
+        if (!funcionarioId) {
+            showFeedback(feedbackId, "Por favor, selecione um funcionário.", true);
+            return;
+        }
+
+        const userData = {
+            funcionarioId,
+            nome: funcionarioNome,
+            adminId,
+            createdAt: serverTimestamp()
+        };
+
+        try {
+            // Cria um "usuário do sistema" a partir de um funcionário.
+            const userRef = collection(db, 'users', adminId, 'systemUsers');
+            await addDoc(userRef, userData);
+            showFeedback(feedbackId, `Usuário '${funcionarioNome}' criado com sucesso!`, false);
+            usuarioForm.reset();
+        } catch (error) {
+            console.error(`Erro ao salvar usuário do sistema:`, error);
+            showFeedback(feedbackId, "Erro ao criar usuário. Tente novamente.", true);
+        }
+    });
+
+    // Lógica para o formulário de criação de Usuários da Empresa
+    perfilForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'perfil-form-feedback';
+        const adminId = auth.currentUser?.uid;
+        if (!adminId) {
+            showFeedback(feedbackId, "Administrador não autenticado.", true);
+            return;
+        }
+
+        const nome = document.getElementById('perfil-usuario-nome').value;
+        const email = document.getElementById('perfil-usuario-email').value;
+        const empresaSelect = document.getElementById('perfil-usuario-empresa');
         const empresaId = empresaSelect.value;
         const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
 
@@ -2733,23 +2822,21 @@
                 id: empresaId,
                 nome: empresaNome
             },
-            senha: tempPassword, // WARNING: Storing plain text passwords is not secure. This should be hashed in a real-world app.
+            senha: tempPassword, // AVISO: Salvar senhas em texto plano não é seguro.
             primeiroAcesso: true,
             adminId: adminId,
             createdAt: serverTimestamp()
         };
 
         try {
-            // Salva na coleção PÚBLICA de usuários
             await addDoc(collection(db, 'usuarios'), userData);
-            showFeedback(feedbackId, `Usuário salvo! Senha temporária: ${tempPassword}`, false, true);
-            usuarioForm.reset();
+            showFeedback(feedbackId, `Usuário da Empresa salvo! Senha temporária: ${tempPassword}`, false, true);
+            perfilForm.reset();
         } catch (error) {
-            console.error(`Erro ao salvar usuário:`, error);
+            console.error(`Erro ao salvar usuário da empresa:`, error);
             showFeedback(feedbackId, "Erro ao salvar usuário. Tente novamente.", true);
         }
     });
-    perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
     fornecedorForm.addEventListener('submit', (e) => {
         const tipoPessoa = document.getElementById('fornecedor-tipo-pessoa').value;
         let fornecedorData = {
@@ -2848,7 +2935,15 @@
     servicoForm.addEventListener('submit', (e) => handleFormSubmit(e, 'servicos', { nome: document.getElementById('servico-nome').value }, 'servico-form-feedback', servicoForm));
 
     funcionarioForm.addEventListener('submit', (e) => {
+        const empresaSelect = document.getElementById('funcionario-empresa');
+        const empresaId = empresaSelect.value;
+        const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
+
         const funcionarioData = {
+            empresa: {
+                id: empresaId,
+                nome: empresaNome
+            },
             pessoal: {
                 nomeCompleto: document.getElementById('funcionario-nome-completo').value,
                 nomeSocial: document.getElementById('funcionario-nome-social').value,
