@@ -641,6 +641,40 @@
                                 + Lançar Nova Despesa
                             </button>
                         </div>
+
+                        <!-- Toolbar de Filtros e Busca -->
+                        <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                            <!-- Search Input -->
+                            <div class="flex-grow min-w-[200px]">
+                                <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
+                                <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                            </div>
+                            <!-- Date Filters -->
+                            <div>
+                                <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
+                                <input type="date" id="start-date-input" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                            </div>
+                            <div>
+                                <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
+                                <input type="date" id="end-date-input" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                            </div>
+                            <!-- Status Filter -->
+                            <div>
+                                <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
+                                <select id="status-filter" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                    <option value="todas">Todas</option>
+                                    <option value="pendente">Pendente</option>
+                                    <option value="pago">Pago</option>
+                                    <option value="vencido">Vencido</option>
+                                </select>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="flex items-end gap-2">
+                                <button id="filter-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Filtrar</button>
+                                <button id="clear-filters-btn" class="inline-flex items-center justify-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Limpar Filtros</button>
+                            </div>
+                        </div>
+
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -998,6 +1032,15 @@
     const pagarForm = document.getElementById('pagar-form');
     const pagarContaSaidaSelect = document.getElementById('pagar-conta-saida');
 
+    // --- Elementos do Filtro ---
+    const searchInput = document.getElementById('search-input');
+    const startDateInput = document.getElementById('start-date-input');
+    const endDateInput = document.getElementById('end-date-input');
+    const statusFilter = document.getElementById('status-filter');
+    const filterBtn = document.getElementById('filter-btn');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    let allDespesas = []; // Holds all expenses for client-side filtering
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
@@ -1159,9 +1202,10 @@
         // --- Listener for Despesas Table ---
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
         despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
-            renderDespesasTable(querySnapshot.docs);
-            updateSummaryCards(querySnapshot.docs);
-            updateDashboardIndicators(querySnapshot.docs);
+            allDespesas = querySnapshot.docs; // Store all documents
+            applyFiltersAndRender(); // Apply current filters and render
+            updateSummaryCards(allDespesas);
+            updateDashboardIndicators(allDespesas);
         });
 
         // --- Listeners for Modal Dropdowns ---
@@ -1448,6 +1492,63 @@
     contaBancariaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contasBancarias', { nome: document.getElementById('conta-bancaria-nome').value }, 'conta-bancaria-form-feedback', contaBancariaForm));
 
     // --- Lógica da Tela Financeiro ---
+    function applyFiltersAndRender() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        const status = statusFilter.value;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const filteredDocs = allDespesas.filter(doc => {
+            const data = doc.data();
+
+            // Status filter
+            let statusMatch = true;
+            if (status !== 'todas') {
+                const docStatus = data.pago ? 'pago' : (new Date(data.vencimento + 'T00:00:00') < today ? 'vencido' : 'pendente');
+                if (status !== docStatus) statusMatch = false;
+            }
+
+            // Date filter
+            let dateMatch = true;
+            if (startDate || endDate) {
+                const vencimento = new Date(data.vencimento + 'T00:00:00');
+                if (startDate && vencimento < new Date(startDate + 'T00:00:00')) {
+                    dateMatch = false;
+                }
+                if (endDate && vencimento > new Date(endDate + 'T00:00:00')) {
+                    dateMatch = false;
+                }
+            }
+
+            // Search filter
+            let searchMatch = true;
+            if (searchTerm) {
+                const descriptionMatch = data.descricao.toLowerCase().includes(searchTerm);
+                const supplierMatch = (data.fornecedorNome || '').toLowerCase().includes(searchTerm);
+                searchMatch = descriptionMatch || supplierMatch;
+            }
+
+            return statusMatch && dateMatch && searchMatch;
+        });
+
+        renderDespesasTable(filteredDocs);
+    }
+
+    if(filterBtn) filterBtn.addEventListener('click', applyFiltersAndRender);
+    if(searchInput) searchInput.addEventListener('keyup', applyFiltersAndRender);
+    if(clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            startDateInput.value = '';
+            endDateInput.value = '';
+            statusFilter.value = 'todas';
+            applyFiltersAndRender();
+        });
+    }
+
+
     function renderDespesasTable(docs) {
         if (!despesasTableBody) return;
         despesasTableBody.innerHTML = '';
