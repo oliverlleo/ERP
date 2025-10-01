@@ -921,6 +921,13 @@
                                         <div><label for="funcionario-estado-civil" class="block text-sm font-medium text-gray-700">Estado Civil</label><input type="text" id="funcionario-estado-civil" class="form-input mt-1 block w-full"></div>
                                         <div><label for="funcionario-nacionalidade" class="block text-sm font-medium text-gray-700">Nacionalidade</label><input type="text" id="funcionario-nacionalidade" class="form-input mt-1 block w-full"></div>
                                     </div>
+                                     <div class="pt-4 border-t mt-4">
+                                        <label for="funcionario-empresa" class="block text-sm font-medium text-gray-700">Empresa <span class="text-red-500">*</span></label>
+                                        <select id="funcionario-empresa" class="form-select mt-1 block w-full">
+                                            <option value="" disabled selected>Selecione a empresa</option>
+                                            <!-- Options populated by JS -->
+                                        </select>
+                                    </div>
                                 </div>
                                 <!-- Tab: Contato e Endereço -->
                                 <div id="contato-tab" class="funcionario-tab-content hidden space-y-4">
@@ -950,14 +957,7 @@
                                         <div><label for="funcionario-admissao" class="block text-sm font-medium text-gray-700">Data de Admissão</label><input type="date" id="funcionario-admissao" class="form-input mt-1 block w-full"></div>
                                          <div><label for="funcionario-desligamento" class="block text-sm font-medium text-gray-700">Data de Desligamento</label><input type="date" id="funcionario-desligamento" class="form-input mt-1 block w-full"></div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label for="funcionario-empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
-                                            <select id="funcionario-empresa" required class="form-select mt-1 block w-full">
-                                                <option value="" disabled selected>Selecione a empresa</option>
-                                                <!-- Options populated by JS -->
-                                            </select>
-                                        </div>
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div><label for="funcionario-cargo" class="block text-sm font-medium text-gray-700">Cargo</label><input type="text" id="funcionario-cargo" class="form-input mt-1 block w-full"></div>
                                         <div><label for="funcionario-departamento" class="block text-sm font-medium text-gray-700">Departamento</label><input type="text" id="funcionario-departamento" class="form-input mt-1 block w-full"></div>
                                     </div>
@@ -1590,6 +1590,7 @@
 
     // --- Variáveis de estado ---
     let currentUserName = null; // To store the logged-in user's name
+    let effectiveUserId = null; // To store the UID for data operations (admin's UID)
     let dashboardUnsubscribe = null;
     let empresasUnsubscribe = null;
     let usuariosUnsubscribe = null;
@@ -1718,8 +1719,10 @@
         }
     }
 
-    function generateRandomPassword(length = 10) {
-        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    function generateRandomPassword(length = 10, numeric = false) {
+        const charset = numeric
+            ? "0123456789"
+            : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
         let password = "";
         for (let i = 0, n = charset.length; i < length; ++i) {
             password += charset.charAt(Math.floor(Math.random() * n));
@@ -1774,23 +1777,18 @@
     // --- Lógica do Firestore ---
     async function handleFormSubmit(e, collectionName, data, feedbackId, formElement) {
         e.preventDefault();
-        let userId;
-        if (window.IS_TEST_RUN) {
-            userId = 'test-user-123';
-        } else {
-            const user = auth.currentUser;
-            if (!user) {
-                showFeedback(feedbackId, "Usuário não autenticado.", true);
-                return;
-            }
-            userId = user.uid;
+        const userId = effectiveUserId; // Use the globally set effectiveUserId
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado ou sem permissão.", true);
+            return;
         }
 
         try {
             const userRef = collection(db, 'users', userId, collectionName);
-            await addDoc(userRef, { ...data, createdAt: serverTimestamp() });
+            // Ensure all created data is associated with the admin account
+            await addDoc(userRef, { ...data, createdAt: serverTimestamp(), adminId: userId });
             showFeedback(feedbackId, "Salvo com sucesso!", false);
-            formElement.reset();
+            if (formElement) formElement.reset();
         } catch (error) {
             console.error(`Erro ao salvar em ${collectionName}:`, error);
             showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
@@ -1798,13 +1796,10 @@
     }
 
     async function deleteItem(collectionName, itemId) {
-        let userId;
-        if (window.IS_TEST_RUN) {
-            userId = 'test-user-123';
-        } else {
-            const user = auth.currentUser;
-            if (!user) return;
-            userId = user.uid;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Não é possível excluir: usuário não autenticado.");
+            return;
         }
         try {
             await deleteDoc(doc(db, 'users', userId, collectionName, itemId));
@@ -1863,15 +1858,22 @@
         });
 
         // Cadastros - Usuários do Sistema
-        const usuariosQuery = query(collection(db, 'users', userId, 'systemUsers'));
-        usuariosUnsubscribe = onSnapshot(usuariosQuery, (querySnapshot) => {
+        const systemUsersQuery = query(collection(db, 'users', userId, 'systemUsers'));
+        usuariosUnsubscribe = onSnapshot(systemUsersQuery, (querySnapshot) => {
+            const systemUsersDocs = querySnapshot.docs;
+
+            // Popula o dropdown na aba de criação de acessos
+            const acessoUsuarioSelect = document.getElementById('acesso-usuario-select');
+            populateDropdown(acessoUsuarioSelect, systemUsersDocs);
+
+            // Renderiza a tabela de usuários do sistema
             if (!usuariosTableBody) return;
             usuariosTableBody.innerHTML = '';
-            if (querySnapshot.empty) {
+            if (systemUsersDocs.length === 0) {
                 const tr = usuariosTableBody.insertRow();
                 tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhum usuário do sistema criado.</td>`;
             } else {
-                querySnapshot.forEach(doc => {
+                systemUsersDocs.forEach(doc => {
                     const data = doc.data();
                     const tr = usuariosTableBody.insertRow();
                     tr.setAttribute('data-id', doc.id);
@@ -1893,33 +1895,40 @@
             }
         });
 
-        // Cadastros - Usuários da Empresa (anteriormente Perfis de Acesso)
-        const perfisQuery = query(collection(db, 'usuarios'), where("adminId", "==", userId));
-        perfisUnsubscribe = onSnapshot(perfisQuery, (querySnapshot) => {
+        // Cadastros - Acessos de Usuário
+        const acessosQuery = query(collection(db, 'acessos'), where("adminId", "==", userId));
+        perfisUnsubscribe = onSnapshot(acessosQuery, (querySnapshot) => {
             if (!perfisTableBody) return;
             perfisTableBody.innerHTML = '';
             if (querySnapshot.empty) {
                 const tr = perfisTableBody.insertRow();
-                tr.innerHTML = `<td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum usuário de empresa cadastrado.</td>`;
+                tr.innerHTML = `<td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum acesso de usuário criado.</td>`;
             } else {
                 querySnapshot.forEach(doc => {
                     const data = doc.data();
                     const tr = perfisTableBody.insertRow();
                     tr.setAttribute('data-id', doc.id);
                     tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.email}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.empresa?.nome || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.login}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nomeUsuario}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button class="view-password-btn bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs" data-password="${data.senha}">Ver Senha</button>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
                 });
+                perfisTableBody.querySelectorAll('.view-password-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        alert(`A senha temporária é: ${e.currentTarget.dataset.password}`);
+                    });
+                });
                 perfisTableBody.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', async (e) => {
                         const id = e.currentTarget.dataset.id;
-                        if (confirm('Tem certeza que deseja excluir este usuário da empresa?')) {
-                           await deleteDoc(doc(db, "usuarios", id));
+                        if (confirm('Tem certeza que deseja excluir este acesso? O usuário não poderá mais logar.')) {
+                           await deleteDoc(doc(db, "acessos", id));
                         }
                     });
                 });
@@ -2029,37 +2038,7 @@
         // Cadastros - Serviços
         const servicosQuery = query(collection(db, 'users', userId, 'servicos'));
         servicosUnsubscribe = onSnapshot(servicosQuery, (querySnapshot) => {
-             if (!usuariosTableBody) return;
-            usuariosTableBody.innerHTML = '';
-            if (querySnapshot.empty) {
-                const tr = usuariosTableBody.insertRow();
-                const td = tr.insertCell();
-                td.colSpan = 4;
-                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
-                td.textContent = 'Nenhum usuário cadastrado.';
-                return;
-            }
-            querySnapshot.forEach(doc => {
-                const data = doc.data();
-                const tr = usuariosTableBody.insertRow();
-                tr.setAttribute('data-id', doc.id);
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.email}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.empresa?.nome || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
-                    </td>
-                `;
-            });
-            usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    if (confirm('Tem certeza que deseja excluir este usuário?')) {
-                        deleteItem('usuarios', id);
-                    }
-                });
-            });
+            renderTable(servicosTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('servicos', id));
         });
 
         // Cadastros - Funcionários
@@ -2299,53 +2278,29 @@
 
     // --- Lógica de Autenticação e Navegação ---
     onAuthStateChanged(auth, (user) => {
-      // For test runs, the login is handled manually in the form submit.
-      // This handler only needs to manage the state transition on logout.
-      if (window.IS_TEST_RUN) {
-        if (!user) { // This means a logout happened for the test user
-          detachListeners();
-          userEmailSpan.textContent = '';
-          userEmailCadastrosSpan.textContent = '';
-          userEmailContasSpan.textContent = '';
-          showView('login-page');
+        // This function now PRIMARILY handles ADMIN logins/logouts via Firebase Auth.
+        // Company user logins are handled separately in the form submit handler.
+        detachListeners();
+        if (user) { // An admin is logged in
+            effectiveUserId = user.uid; // The admin's UID is the one for data operations
+            currentUserName = user.email; // Admin's name is their email
+
+            // Update UI
+            userEmailSpan.textContent = currentUserName;
+            userEmailCadastrosSpan.textContent = currentUserName;
+            userEmailContasSpan.textContent = currentUserName;
+
+            // Setup listeners to listen to the admin's data partition
+            setupListeners(effectiveUserId);
+            showView('main-page');
+        } else { // No admin is logged in, show the login page
+            currentUserName = null;
+            effectiveUserId = null;
+            userEmailSpan.textContent = '';
+            userEmailCadastrosSpan.textContent = '';
+            userEmailContasSpan.textContent = '';
+            showView('login-page');
         }
-        // If user exists, do nothing, because login is manual.
-        return;
-      }
-
-      // Regular user logic
-      detachListeners();
-      if (user) {
-        const userRef = doc(db, 'users', user.uid);
-        const usuariosRef = collection(userRef, 'usuarios');
-        const q = query(usuariosRef, where("email", "==", user.email));
-
-        getDocs(q).then(querySnapshot => {
-            if (!querySnapshot.empty) {
-                currentUserName = querySnapshot.docs[0].data().nome;
-            } else {
-                currentUserName = user.email; // Fallback to email
-            }
-            userEmailSpan.textContent = currentUserName;
-            userEmailCadastrosSpan.textContent = currentUserName;
-            userEmailContasSpan.textContent = currentUserName;
-        }).catch(error => {
-            console.error("Error getting user name:", error);
-            currentUserName = user.email; // Fallback on error
-            userEmailSpan.textContent = currentUserName;
-            userEmailCadastrosSpan.textContent = currentUserName;
-            userEmailContasSpan.textContent = currentUserName;
-        });
-
-        setupListeners(user.uid);
-        showView('main-page');
-      } else {
-        currentUserName = null;
-        userEmailSpan.textContent = '';
-        userEmailCadastrosSpan.textContent = '';
-        userEmailContasSpan.textContent = '';
-        showView('login-page');
-      }
     });
 
     if (adminLoginLink) {
@@ -2371,12 +2326,16 @@
       if (email === 'test.user@email.com') {
           console.log("Test user login detected. Simulating login.");
           window.IS_TEST_RUN = true;
+          effectiveUserId = 'test-user-123';
+          currentUserName = email;
+
           // Replicate auth success logic for test user
           detachListeners();
-          userEmailSpan.textContent = email;
-          userEmailCadastrosSpan.textContent = email;
-          userEmailContasSpan.textContent = email;
-          setupListeners('test-user-123'); // Use a mock UID
+          userEmailSpan.textContent = currentUserName;
+          userEmailCadastrosSpan.textContent = currentUserName;
+          userEmailContasSpan.textContent = currentUserName;
+          setupListeners(effectiveUserId); // Use a mock UID
+          adminLoginModal.classList.add('hidden');
           showView('main-page');
           return; // Stop here for test user
       }
@@ -2403,9 +2362,9 @@
 
         try {
             const q = query(
-                collection(db, "usuarios"),
-                where("empresa.id", "==", empresaId),
-                where("nome", "==", nomeUsuario),
+                collection(db, "acessos"),
+                where("empresaId", "==", empresaId),
+                where("login", "==", nomeUsuario),
                 where("senha", "==", senha) // WARNING: INSECURE, plain text password check.
             );
 
@@ -2418,25 +2377,25 @@
 
             const userDoc = querySnapshot.docs[0];
             const userData = userDoc.data();
-            const userId = userDoc.id;
+            const acessoId = userDoc.id;
 
             if (userData.primeiroAcesso) {
-                document.getElementById('change-password-userid').value = userId;
+                document.getElementById('change-password-userid').value = acessoId;
                 changePasswordModal.classList.remove('hidden');
             } else {
-                const adminIdForListeners = userData.adminId;
-                if (!adminIdForListeners) {
+                effectiveUserId = userData.adminId;
+                if (!effectiveUserId) {
                     userLoginError.textContent = 'Erro de configuração: A empresa deste usuário não tem um administrador associado.';
                     return;
                 }
-                currentUserName = userData.nome;
+                currentUserName = userData.nomeUsuario;
                 userEmailSpan.textContent = currentUserName;
                 userEmailCadastrosSpan.textContent = currentUserName;
                 userEmailContasSpan.textContent = currentUserName;
 
                 // We are NOT a Firebase Auth user, so we call setupListeners with the admin's ID
                 // to access the correct data partitions.
-                setupListeners(adminIdForListeners);
+                setupListeners(effectiveUserId);
                 showView('main-page');
             }
         } catch (error) {
@@ -2448,12 +2407,12 @@
     changePasswordForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         changePasswordError.textContent = '';
-        const userId = document.getElementById('change-password-userid').value;
+        const acessoId = document.getElementById('change-password-userid').value;
         const newPassword = document.getElementById('new-password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
 
-        if (!userId) {
-            changePasswordError.textContent = 'Erro: ID do usuário não encontrado.';
+        if (!acessoId) {
+            changePasswordError.textContent = 'Erro: ID do acesso não encontrado.';
             return;
         }
 
@@ -2467,7 +2426,7 @@
         }
 
         try {
-            const userDocRef = doc(db, "usuarios", userId);
+            const userDocRef = doc(db, "acessos", acessoId);
             await updateDoc(userDocRef, {
                 senha: newPassword, // WARNING: INSECURE, plain text password.
                 primeiroAcesso: false
@@ -2478,22 +2437,20 @@
             // Após a troca de senha, realize o login automaticamente
             const userDoc = await getDoc(userDocRef);
             const userData = userDoc.data();
-            const adminIdForListeners = userData.adminId;
+            effectiveUserId = userData.adminId;
 
-            if (!adminIdForListeners) {
+            if (!effectiveUserId) {
                 userLoginError.textContent = 'Erro de configuração: Administrador não encontrado.';
                 showView('login-page');
                 return;
             }
 
-            currentUserName = userData.nome;
+            currentUserName = userData.nomeUsuario;
             userEmailSpan.textContent = currentUserName;
             userEmailCadastrosSpan.textContent = currentUserName;
             userEmailContasSpan.textContent = currentUserName;
 
-            // We are NOT a Firebase Auth user, so we call setupListeners with the admin's ID
-            // to access the correct data partitions.
-            setupListeners(adminIdForListeners);
+            setupListeners(effectiveUserId);
             showView('main-page');
 
         } catch (error) {
@@ -2503,7 +2460,20 @@
     });
 
     const performLogout = () => {
-         signOut(auth).catch(error => console.error("Erro no logout:", error));
+        // Se há um usuário Firebase autenticado, é um admin.
+        if (auth.currentUser) {
+            signOut(auth).catch(error => console.error("Erro no logout do admin:", error));
+        } else {
+            // Se não, é um usuário da empresa, e fazemos o logout manual.
+            console.log("Fazendo logout do usuário da empresa...");
+            currentUserName = null;
+            effectiveUserId = null;
+            userEmailSpan.textContent = '';
+            userEmailCadastrosSpan.textContent = '';
+            userEmailContasSpan.textContent = '';
+            detachListeners();
+            showView('login-page');
+        }
     }
 
     logoutButton.addEventListener('click', performLogout);
@@ -2793,7 +2763,7 @@
         }
     });
 
-    // Lógica para o formulário de criação de Usuários da Empresa
+    // Lógica para o formulário de criação de Acessos de Usuário
     perfilForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'perfil-form-feedback';
@@ -2803,38 +2773,46 @@
             return;
         }
 
-        const nome = document.getElementById('perfil-usuario-nome').value;
-        const email = document.getElementById('perfil-usuario-email').value;
-        const empresaSelect = document.getElementById('perfil-usuario-empresa');
-        const empresaId = empresaSelect.value;
-        const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
+        const usuarioSelect = document.getElementById('acesso-usuario-select');
+        const systemUserId = usuarioSelect.value;
+        const nomeUsuario = usuarioSelect.options[usuarioSelect.selectedIndex].text;
+        const login = document.getElementById('acesso-login-nome').value;
 
-        if (!empresaId) {
-            showFeedback(feedbackId, "Por favor, selecione uma empresa.", true);
+        if (!systemUserId || !login) {
+            showFeedback(feedbackId, "Por favor, selecione um usuário e defina um login.", true);
             return;
         }
 
-        const tempPassword = generateRandomPassword();
-        const userData = {
-            nome,
-            email,
-            empresa: {
-                id: empresaId,
-                nome: empresaNome
-            },
-            senha: tempPassword, // AVISO: Salvar senhas em texto plano não é seguro.
-            primeiroAcesso: true,
-            adminId: adminId,
-            createdAt: serverTimestamp()
-        };
-
         try {
-            await addDoc(collection(db, 'usuarios'), userData);
-            showFeedback(feedbackId, `Usuário da Empresa salvo! Senha temporária: ${tempPassword}`, false, true);
+            // Precisamos buscar a empresa do usuário do sistema para vincular ao acesso
+            const systemUserDocRef = doc(db, 'users', adminId, 'systemUsers', systemUserId);
+            const systemUserDoc = await getDoc(systemUserDocRef);
+            if (!systemUserDoc.exists() || !systemUserDoc.data().empresa) {
+                 showFeedback(feedbackId, "Erro: Usuário do sistema ou empresa não encontrados.", true);
+                 return;
+            }
+            const empresa = systemUserDoc.data().empresa;
+
+            const tempPassword = generateRandomPassword(6, true);
+
+            const acessoData = {
+                login,
+                senha: tempPassword,
+                primeiroAcesso: true,
+                systemUserId,
+                nomeUsuario,
+                empresaId: empresa.id,
+                adminId,
+                createdAt: serverTimestamp()
+            };
+
+            await addDoc(collection(db, 'acessos'), acessoData);
+            showFeedback(feedbackId, `Acesso para '${nomeUsuario}' criado! Login: ${login}, Senha Temporária: ${tempPassword}`, false, true);
             perfilForm.reset();
+
         } catch (error) {
-            console.error(`Erro ao salvar usuário da empresa:`, error);
-            showFeedback(feedbackId, "Erro ao salvar usuário. Tente novamente.", true);
+            console.error(`Erro ao criar acesso:`, error);
+            showFeedback(feedbackId, "Erro ao criar acesso. Tente novamente.", true);
         }
     });
     fornecedorForm.addEventListener('submit', (e) => {
@@ -2937,6 +2915,14 @@
     funcionarioForm.addEventListener('submit', (e) => {
         const empresaSelect = document.getElementById('funcionario-empresa');
         const empresaId = empresaSelect.value;
+        const feedbackId = 'funcionario-form-feedback';
+
+        if (!empresaId) {
+            showFeedback(feedbackId, "O campo 'Empresa' é obrigatório.", true);
+            e.preventDefault();
+            return;
+        }
+
         const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
 
         const funcionarioData = {
