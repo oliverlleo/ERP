@@ -2729,7 +2729,7 @@
     usuarioForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'usuario-form-feedback';
-        const adminId = auth.currentUser?.uid;
+        const adminId = effectiveUserId;
         if (!adminId) {
             showFeedback(feedbackId, "Administrador não autenticado.", true);
             return;
@@ -2744,15 +2744,26 @@
             return;
         }
 
-        const userData = {
-            funcionarioId,
-            nome: funcionarioNome,
-            adminId,
-            createdAt: serverTimestamp()
-        };
-
         try {
-            // Cria um "usuário do sistema" a partir de um funcionário.
+            // Get the employee's company data first
+            const funcionarioDocRef = doc(db, 'users', adminId, 'funcionarios', funcionarioId);
+            const funcionarioDoc = await getDoc(funcionarioDocRef);
+
+            if (!funcionarioDoc.exists() || !funcionarioDoc.data().empresa) {
+                showFeedback(feedbackId, "Erro: A empresa do funcionário selecionado não foi encontrada.", true);
+                return;
+            }
+            const empresaData = funcionarioDoc.data().empresa;
+
+            const userData = {
+                funcionarioId,
+                nome: funcionarioNome,
+                empresa: empresaData, // Store the company object
+                adminId,
+                createdAt: serverTimestamp()
+            };
+
+            // Creates a "system user" from an employee.
             const userRef = collection(db, 'users', adminId, 'systemUsers');
             await addDoc(userRef, userData);
             showFeedback(feedbackId, `Usuário '${funcionarioNome}' criado com sucesso!`, false);
