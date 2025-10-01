@@ -829,6 +829,60 @@
       </div>
   </div>
 
+  <!-- Modal de Registro de Pagamento -->
+  <div id="pagar-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="text-2xl font-bold text-gray-900">Registrar Pagamento</h3>
+              <button id="close-pagar-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5">
+              <form id="pagar-form" class="space-y-6">
+                  <input type="hidden" id="pagar-despesa-id">
+                  <div class="p-4 border rounded-md space-y-4">
+                      <h4 class="text-lg font-semibold text-gray-800 mb-4">Detalhes do Pagamento</h4>
+                      <div>
+                          <label for="pagar-data" class="block text-sm font-medium text-gray-700">Data do Pagamento</label>
+                          <input type="date" id="pagar-data" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                      </div>
+                      <div>
+                          <label for="pagar-valor" class="block text-sm font-medium text-gray-700">Valor Efetivamente Pago (R$)</label>
+                          <input type="number" id="pagar-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-conta-saida" class="block text-sm font-medium text-gray-700">Conta de Saída</label>
+                          <select id="pagar-conta-saida" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                              <option value="">Selecione a conta de saída</option>
+                              <!-- Opções via JS -->
+                          </select>
+                      </div>
+                      <div>
+                          <label for="pagar-meio-pagamento" class="block text-sm font-medium text-gray-700">Meio de Pagamento</label>
+                          <select id="pagar-meio-pagamento" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                              <option>PIX</option>
+                              <option>Boleto</option>
+                              <option>Transferência (TED/DOC)</option>
+                              <option>Cartão de Crédito</option>
+                              <option>Débito Automático</option>
+                              <option>Dinheiro</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label for="pagar-anexo" class="block text-sm font-medium text-gray-700">Anexar Comprovante</label>
+                          <input type="file" id="pagar-anexo" class="form-input mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-[var(--primary-color)] hover:file:bg-blue-100">
+                      </div>
+                  </div>
+                  <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                      <button type="button" id="cancel-pagar-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                      <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Pagamento</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
   <script type="module">
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
@@ -938,6 +992,11 @@
     const formaPagamentoSelect = document.getElementById('forma-pagamento');
     const parceladoFields = document.getElementById('parcelado-fields');
     const recorrenteFields = document.getElementById('recorrente-fields');
+    const pagarModal = document.getElementById('pagar-modal');
+    const closePagarModalBtn = document.getElementById('close-pagar-modal-btn');
+    const cancelPagarModalBtn = document.getElementById('cancel-pagar-modal-btn');
+    const pagarForm = document.getElementById('pagar-form');
+    const pagarContaSaidaSelect = document.getElementById('pagar-conta-saida');
 
 
     // --- Funções Auxiliares ---
@@ -1112,7 +1171,9 @@
             populateDropdown(despesaCategoriaSelect, querySnapshot.docs);
         });
         contasBancariasDropdownUnsubscribe = onSnapshot(contasBancariasQuery, (querySnapshot) => {
-            populateDropdown(pagamentoContaSelect, querySnapshot.docs);
+            const docs = querySnapshot.docs;
+            populateDropdown(pagamentoContaSelect, docs);
+            populateDropdown(pagarContaSaidaSelect, docs);
         });
     }
 
@@ -1468,22 +1529,9 @@
         });
 
         despesasTableBody.querySelectorAll('.pagar-despesa-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
+            button.addEventListener('click', (e) => {
                 const id = e.currentTarget.dataset.id;
-                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-                if (!userId) return;
-
-                if (confirm('Marcar esta despesa como paga?')) {
-                    const docRef = doc(db, 'users', userId, 'despesas', id);
-                    try {
-                        await updateDoc(docRef, {
-                            pago: true,
-                            dataPagamento: new Date().toISOString().split('T')[0]
-                        });
-                    } catch (error) {
-                        console.error("Erro ao marcar como pago:", error);
-                    }
-                }
+                openPagarModal(id);
             });
         });
     }
@@ -1514,12 +1562,94 @@
     }
 
     function closeModal() {
-        if(despesaModal) despesaModal.classList.add('hidden');
+        console.log("Attempting to close modal...");
+        if(despesaModal) {
+            despesaModal.classList.add('hidden');
+            console.log("Modal class list after hiding:", despesaModal.classList);
+        }
+    }
+
+    function openPagarModal(despesaId) {
+        if (!pagarModal) return;
+        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+        if (!userId) return;
+
+        const docRef = doc(db, 'users', userId, 'despesas', despesaId);
+        getDoc(docRef).then(docSnap => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('pagar-despesa-id').value = docSnap.id;
+                document.getElementById('pagar-valor').value = data.valor;
+                document.getElementById('pagar-data').value = new Date().toISOString().split('T')[0];
+                pagarModal.classList.remove('hidden');
+            } else {
+                console.error("No such document!");
+            }
+        }).catch(error => {
+            console.error("Error getting document:", error);
+        });
+    }
+
+    function closePagarModal() {
+        if(pagarModal) pagarModal.classList.add('hidden');
     }
 
     if(lancarDespesaBtn) lancarDespesaBtn.addEventListener('click', () => openModal(false));
     if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
     if(cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+    if(closePagarModalBtn) closePagarModalBtn.addEventListener('click', closePagarModal);
+    if(cancelPagarModalBtn) cancelPagarModalBtn.addEventListener('click', closePagarModal);
+
+    if(pagarForm) {
+        pagarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+            if (!userId) {
+                console.error("Usuário não autenticado.");
+                return;
+            }
+
+            const despesaId = document.getElementById('pagar-despesa-id').value;
+            const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
+
+            try {
+                const despesaSnap = await getDoc(despesaRef);
+                if (!despesaSnap.exists()) {
+                    console.error("Despesa original não encontrada!");
+                    return;
+                }
+                const despesaData = despesaSnap.data();
+
+                // 1. Criar a transação financeira
+                const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
+                await addDoc(transacoesRef, {
+                    referenciaContaPagar: despesaRef,
+                    dataPagamento: document.getElementById('pagar-data').value,
+                    dataCompetencia: despesaData.competencia,
+                    valorPago: parseFloat(document.getElementById('pagar-valor').value),
+                    referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', document.getElementById('pagar-conta-saida').value),
+                    referenciaFornecedor: doc(db, 'users', userId, 'fornecedores', despesaData.fornecedorId),
+                    referenciaPlanoDeContas: doc(db, 'users', userId, 'planosDeContas', despesaData.categoriaId),
+                    meioPagamento: document.getElementById('pagar-meio-pagamento').value,
+                    tipoTransacao: "DESPESA",
+                    createdAt: serverTimestamp()
+                    // Anexo pode ser adicionado aqui com o Firebase Storage
+                });
+
+                // 2. Atualizar a conta a pagar original
+                await updateDoc(despesaRef, {
+                    pago: true,
+                    dataPagamento: document.getElementById('pagar-data').value,
+                    valorPago: parseFloat(document.getElementById('pagar-valor').value)
+                });
+
+                closePagarModal();
+
+            } catch (error) {
+                console.error("Erro ao registrar pagamento:", error);
+            }
+        });
+    }
 
     if(marcarPagoCheckbox) {
         marcarPagoCheckbox.addEventListener('change', () => {
@@ -1537,6 +1667,7 @@
 
     despesaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        console.log("Despesa form submitted.");
         closeModal(); // Close modal immediately for better UX and testability
 
         let userId;
