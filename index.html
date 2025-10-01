@@ -75,30 +75,40 @@
           <h1 class="text-3xl font-bold text-gray-900">Bem-vindo de volta</h1>
           <p class="mt-2 text-gray-600">Por favor, insira seus dados para entrar.</p>
         </div>
-        <form id="login-form" class="mt-8 space-y-6">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-email">E-mail</label>
-              <div class="mt-1">
-                <input autocomplete="email" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base" id="login-email" name="email" placeholder="seu@email.com" required="" type="email" />
-              </div>
+        <form id="user-login-form" class="mt-8 space-y-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-empresa">Empresa</label>
+                    <div class="mt-1">
+                        <select id="login-empresa" name="empresa" required class="form-select block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base">
+                           <option value="" disabled selected>Selecione a empresa</option>
+                           <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-usuario">Usuário</label>
+                    <div class="mt-1">
+                        <input id="login-usuario" name="usuario" required class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base" placeholder="Digite seu usuário" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-password">Senha</label>
+                    <div class="mt-1">
+                        <input autocomplete="current-password" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base" id="login-password" name="password" placeholder="Digite sua senha" required type="password" />
+                    </div>
+                </div>
             </div>
             <div>
-              <div class="flex items-center justify-between">
-                <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="login-password">Senha</label>
-              </div>
-              <div class="mt-1">
-                <input autocomplete="current-password" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base" id="login-password" name="password" placeholder="Digite sua senha" required="" type="password" />
-              </div>
+                <button class="group relative flex w-full justify-center rounded-lg border border-transparent bg-[var(--brand-primary)] py-3 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" type="submit">
+                    Entrar
+                </button>
             </div>
-          </div>
-          <div>
-            <button class="group relative flex w-full justify-center rounded-lg border border-transparent bg-[var(--brand-primary)] py-3 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" type="submit">
-              Entrar
-            </button>
-          </div>
-           <div id="login-error" class="text-red-500 text-sm text-center"></div>
+            <div id="user-login-error" class="text-red-500 text-sm text-center"></div>
         </form>
+        <div class="mt-4 text-center">
+            <a href="#" id="admin-login-link" class="text-sm text-gray-600 hover:text-[var(--primary-color)]">Acesso do Administrador</a>
+        </div>
       </div>
     </div>
   </div>
@@ -367,7 +377,16 @@
                                         </div>
                                          <div>
                                             <label class="block text-sm font-medium text-gray-700" for="usuario-email">E-mail</label>
-                                            <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                            <input type="email" id="usuario-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <div>
+                                            <label for="usuario-empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
+                                            <select id="usuario-empresa" required class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                <option value="" disabled selected>Selecione a empresa</option>
+                                                <!-- Options populated by JS -->
+                                            </select>
                                         </div>
                                     </div>
                                     <div id="usuario-form-feedback" class="text-sm mt-4"></div>
@@ -383,6 +402,7 @@
                                                 <tr>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Usuário</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -1437,6 +1457,72 @@
       </div>
   </div>
 
+  <!-- Modal de Login do Administrador -->
+  <div id="admin-login-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="text-2xl font-bold text-gray-900">Acesso do Administrador</h3>
+              <button id="close-admin-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5">
+              <form id="admin-login-form" class="space-y-6">
+                  <div class="space-y-4">
+                      <div>
+                          <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="admin-login-email">E-mail</label>
+                          <div class="mt-1">
+                              <input autocomplete="email" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm" id="admin-login-email" name="email" placeholder="seu@email.com" required type="email" />
+                          </div>
+                      </div>
+                      <div>
+                          <label class="block text-sm font-medium text-[var(--brand-text-primary)]" for="admin-login-password">Senha</label>
+                          <div class="mt-1">
+                              <input autocomplete="current-password" class="form-input block w-full rounded-lg border-gray-300 bg-[var(--brand-secondary)] p-3 shadow-sm" id="admin-login-password" name="password" placeholder="Digite sua senha" required type="password" />
+                          </div>
+                      </div>
+                  </div>
+                  <div>
+                      <button class="group relative flex w-full justify-center rounded-lg border border-transparent bg-[var(--brand-primary)] py-3 px-4 text-sm font-medium text-white" type="submit">
+                          Entrar como Admin
+                      </button>
+                  </div>
+                  <div id="admin-login-error" class="text-red-500 text-sm text-center"></div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Troca de Senha Obrigatória -->
+    <div id="change-password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-2xl font-bold text-gray-900">Defina sua Nova Senha</h3>
+            </div>
+            <div class="mt-5">
+                <p class="text-gray-600 text-sm mb-4">Por segurança, você precisa definir uma nova senha para o seu primeiro acesso.</p>
+                <form id="change-password-form" class="space-y-4">
+                    <input type="hidden" id="change-password-userid">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="new-password">Nova Senha</label>
+                        <input type="password" id="new-password" required class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="confirm-password">Confirme a Nova Senha</label>
+                        <input type="password" id="confirm-password" required class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div id="change-password-error" class="text-red-500 text-sm"></div>
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700">
+                            Salvar Nova Senha
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
   <script type="module">
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
@@ -1464,8 +1550,21 @@
     const mainPage = document.getElementById('main-page');
     const cadastrosPage = document.getElementById('cadastros-page');
     const contasAPagarPage = document.getElementById('contas-a-pagar-page');
-    const loginForm = document.getElementById('login-form');
-    const loginEmailInput = document.getElementById('login-email'), loginPasswordInput = document.getElementById('login-password'), loginError = document.getElementById('login-error');
+
+    // Forms e Modais de Login
+    const userLoginForm = document.getElementById('user-login-form');
+    const adminLoginLink = document.getElementById('admin-login-link');
+    const adminLoginModal = document.getElementById('admin-login-modal');
+    const adminLoginForm = document.getElementById('admin-login-form');
+    const closeAdminModalBtn = document.getElementById('close-admin-modal-btn');
+    const adminLoginError = document.getElementById('admin-login-error');
+    const userLoginError = document.getElementById('user-login-error');
+    const loginEmpresaSelect = document.getElementById('login-empresa');
+
+    // Modal de Troca de Senha
+    const changePasswordModal = document.getElementById('change-password-modal');
+    const changePasswordForm = document.getElementById('change-password-form');
+    const changePasswordError = document.getElementById('change-password-error');
 
     // Elementos de usuário e logout
     const userEmailSpan = document.getElementById('user-email');
@@ -1603,13 +1702,24 @@
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    function showFeedback(elementId, message, isError = false) {
+    function showFeedback(elementId, message, isError = false, persistent = false) {
         const feedbackEl = document.getElementById(elementId);
         if (feedbackEl) {
             feedbackEl.textContent = message;
             feedbackEl.className = isError ? 'text-red-600 text-sm mt-4' : 'text-green-600 text-sm mt-4';
-            setTimeout(() => { feedbackEl.textContent = ''; }, 3000);
+            if (!persistent) {
+                setTimeout(() => { feedbackEl.textContent = ''; }, 5000);
+            }
         }
+    }
+
+    function generateRandomPassword(length = 10) {
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+        let password = "";
+        for (let i = 0, n = charset.length; i < length; ++i) {
+            password += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return password;
     }
 
     // --- Funções de Renderização das Tabelas ---
@@ -1697,16 +1807,80 @@
 
         // Dashboard indicators are now driven by the despesas listener
 
-        // Cadastros - Empresas
-        const empresasQuery = query(collection(db, 'users', userId, 'empresas'));
+        // Cadastros - Empresas (Admin View)
+        const empresasQuery = query(collection(db, 'empresas'), where("adminId", "==", userId));
         empresasUnsubscribe = onSnapshot(empresasQuery, (querySnapshot) => {
-            renderTable(empresasTableBody, querySnapshot.docs, ['nome', 'cnpj'], (id) => deleteItem('empresas', id));
+            const empresasDocs = querySnapshot.docs;
+
+            // Renderiza a tabela de empresas que o admin gerencia
+            if (empresasTableBody) {
+                empresasTableBody.innerHTML = '';
+                if (empresasDocs.empty) {
+                    const tr = empresasTableBody.insertRow();
+                    tr.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhuma empresa cadastrada.</td>`;
+                } else {
+                    empresasDocs.forEach(doc => {
+                        const data = doc.data();
+                        const tr = empresasTableBody.insertRow();
+                        tr.setAttribute('data-id', doc.id);
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.cnpj}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                            </td>
+                        `;
+                    });
+                    empresasTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const id = e.currentTarget.dataset.id;
+                            if (confirm('Tem certeza que deseja excluir esta empresa? A ação não pode ser desfeita.')) {
+                                await deleteDoc(doc(db, "empresas", id));
+                            }
+                        });
+                    });
+                }
+            }
+
+            // Popula o dropdown de empresa no formulário de criação de usuário
+            const usuarioEmpresaSelect = document.getElementById('usuario-empresa');
+            populateEmpresaDropdown(usuarioEmpresaSelect, empresasDocs);
         });
 
         // Cadastros - Usuários
         const usuariosQuery = query(collection(db, 'users', userId, 'usuarios'));
         usuariosUnsubscribe = onSnapshot(usuariosQuery, (querySnapshot) => {
-            renderTable(usuariosTableBody, querySnapshot.docs, ['nome', 'email'], (id) => deleteItem('usuarios', id));
+             if (!usuariosTableBody) return;
+            usuariosTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = usuariosTableBody.insertRow();
+                const td = tr.insertCell();
+                td.colSpan = 4;
+                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+                td.textContent = 'Nenhum usuário cadastrado.';
+                return;
+            }
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                const tr = usuariosTableBody.insertRow();
+                tr.setAttribute('data-id', doc.id);
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.empresa?.nome || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                    </td>
+                `;
+            });
+            usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+                        deleteItem('usuarios', id);
+                    }
+                });
+            });
         });
 
         // Cadastros - Perfis de Acesso
@@ -1818,7 +1992,37 @@
         // Cadastros - Serviços
         const servicosQuery = query(collection(db, 'users', userId, 'servicos'));
         servicosUnsubscribe = onSnapshot(servicosQuery, (querySnapshot) => {
-            renderTable(servicosTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('servicos', id));
+             if (!usuariosTableBody) return;
+            usuariosTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = usuariosTableBody.insertRow();
+                const td = tr.insertCell();
+                td.colSpan = 4;
+                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+                td.textContent = 'Nenhum usuário cadastrado.';
+                return;
+            }
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                const tr = usuariosTableBody.insertRow();
+                tr.setAttribute('data-id', doc.id);
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.empresa?.nome || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                    </td>
+                `;
+            });
+            usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+                        deleteItem('usuarios', id);
+                    }
+                });
+            });
         });
 
         // Cadastros - Funcionários
@@ -1941,6 +2145,19 @@
         if (!selectElement) return;
         const currentVal = selectElement.value;
         selectElement.innerHTML = '<option value="">Selecione uma opção</option>';
+        docs.forEach(doc => {
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.textContent = doc.data().nome;
+            selectElement.appendChild(option);
+        });
+        selectElement.value = currentVal;
+    }
+
+    function populateEmpresaDropdown(selectElement, docs) {
+        if (!selectElement) return;
+        const currentVal = selectElement.value;
+        selectElement.innerHTML = '<option value="" disabled selected>Selecione a empresa</option>';
         docs.forEach(doc => {
             const option = document.createElement('option');
             option.value = doc.id;
@@ -2081,11 +2298,24 @@
       }
     });
 
-    loginForm.addEventListener('submit', async (e) => {
+    if (adminLoginLink) {
+        adminLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            adminLoginModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeAdminModalBtn) {
+        closeAdminModalBtn.addEventListener('click', () => {
+            adminLoginModal.classList.add('hidden');
+        });
+    }
+
+    adminLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      loginError.textContent = '';
-      const email = loginEmailInput.value;
-      const password = loginPasswordInput.value;
+      adminLoginError.textContent = '';
+      const email = document.getElementById('admin-login-email').value;
+      const password = document.getElementById('admin-login-password').value;
 
       // Special handling for test user to bypass Firebase auth
       if (email === 'test.user@email.com') {
@@ -2103,9 +2333,123 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
+        adminLoginModal.classList.add('hidden'); // Close modal on success
       } catch (error) {
-        loginError.textContent = 'E-mail ou senha inválidos.';
+        adminLoginError.textContent = 'E-mail ou senha inválidos.';
       }
+    });
+
+    userLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        userLoginError.textContent = '';
+        const empresaId = loginEmpresaSelect.value;
+        const nomeUsuario = document.getElementById('login-usuario').value;
+        const senha = document.getElementById('login-password').value;
+
+        if (!empresaId) {
+            userLoginError.textContent = 'Por favor, selecione uma empresa.';
+            return;
+        }
+
+        try {
+            const q = query(
+                collection(db, "usuarios"),
+                where("empresa.id", "==", empresaId),
+                where("nome", "==", nomeUsuario),
+                where("senha", "==", senha) // WARNING: INSECURE, plain text password check.
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                userLoginError.textContent = 'Empresa, usuário ou senha inválidos.';
+                return;
+            }
+
+            const userDoc = querySnapshot.docs[0];
+            const userData = userDoc.data();
+            const userId = userDoc.id;
+
+            if (userData.primeiroAcesso) {
+                document.getElementById('change-password-userid').value = userId;
+                changePasswordModal.classList.remove('hidden');
+            } else {
+                const adminIdForListeners = userData.adminId;
+                if (!adminIdForListeners) {
+                    userLoginError.textContent = 'Erro de configuração: A empresa deste usuário não tem um administrador associado.';
+                    return;
+                }
+                currentUserName = userData.nome;
+                userEmailSpan.textContent = currentUserName;
+                userEmailCadastrosSpan.textContent = currentUserName;
+                userEmailContasSpan.textContent = currentUserName;
+
+                // We are NOT a Firebase Auth user, so we call setupListeners with the admin's ID
+                // to access the correct data partitions.
+                setupListeners(adminIdForListeners);
+                showView('main-page');
+            }
+        } catch (error) {
+            console.error("Erro no login do usuário:", error);
+            userLoginError.textContent = 'Ocorreu um erro. Tente novamente.';
+        }
+    });
+
+    changePasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        changePasswordError.textContent = '';
+        const userId = document.getElementById('change-password-userid').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (!userId) {
+            changePasswordError.textContent = 'Erro: ID do usuário não encontrado.';
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            changePasswordError.textContent = 'As senhas não conferem.';
+            return;
+        }
+        if (newPassword.length < 6) {
+            changePasswordError.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+            return;
+        }
+
+        try {
+            const userDocRef = doc(db, "usuarios", userId);
+            await updateDoc(userDocRef, {
+                senha: newPassword, // WARNING: INSECURE, plain text password.
+                primeiroAcesso: false
+            });
+
+            changePasswordModal.classList.add('hidden');
+
+            // Após a troca de senha, realize o login automaticamente
+            const userDoc = await getDoc(userDocRef);
+            const userData = userDoc.data();
+            const adminIdForListeners = userData.adminId;
+
+            if (!adminIdForListeners) {
+                userLoginError.textContent = 'Erro de configuração: Administrador não encontrado.';
+                showView('login-page');
+                return;
+            }
+
+            currentUserName = userData.nome;
+            userEmailSpan.textContent = currentUserName;
+            userEmailCadastrosSpan.textContent = currentUserName;
+            userEmailContasSpan.textContent = currentUserName;
+
+            // We are NOT a Firebase Auth user, so we call setupListeners with the admin's ID
+            // to access the correct data partitions.
+            setupListeners(adminIdForListeners);
+            showView('main-page');
+
+        } catch (error) {
+            console.error("Erro ao alterar senha:", error);
+            changePasswordError.textContent = 'Ocorreu um erro ao alterar a senha.';
+        }
     });
 
     const performLogout = () => {
@@ -2337,8 +2681,74 @@
     }
 
     // --- Lógica dos Formulários de Cadastro ---
-    empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value }, 'empresa-form-feedback', empresaForm));
-    usuarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'usuarios', { nome: document.getElementById('usuario-nome').value, email: document.getElementById('usuario-email').value }, 'usuario-form-feedback', usuarioForm));
+    empresaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'empresa-form-feedback';
+        const adminId = auth.currentUser?.uid;
+        if (!adminId) {
+            showFeedback(feedbackId, "Administrador não autenticado.", true);
+            return;
+        }
+        const empresaData = {
+            nome: document.getElementById('empresa-nome').value,
+            cnpj: document.getElementById('empresa-cnpj').value,
+            adminId: adminId,
+            createdAt: serverTimestamp()
+        };
+        try {
+            // Salva na coleção pública de empresas
+            await addDoc(collection(db, 'empresas'), empresaData);
+            showFeedback(feedbackId, "Empresa salva com sucesso!", false);
+            empresaForm.reset();
+        } catch (error) {
+            console.error(`Erro ao salvar empresa:`, error);
+            showFeedback(feedbackId, "Erro ao salvar empresa. Tente novamente.", true);
+        }
+    });
+    usuarioForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'usuario-form-feedback';
+        const adminId = auth.currentUser?.uid;
+        if (!adminId) {
+            showFeedback(feedbackId, "Administrador não autenticado.", true);
+            return;
+        }
+
+        const nome = document.getElementById('usuario-nome').value;
+        const email = document.getElementById('usuario-email').value;
+        const empresaSelect = document.getElementById('usuario-empresa');
+        const empresaId = empresaSelect.value;
+        const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
+
+        if (!empresaId) {
+            showFeedback(feedbackId, "Por favor, selecione uma empresa.", true);
+            return;
+        }
+
+        const tempPassword = generateRandomPassword();
+        const userData = {
+            nome,
+            email,
+            empresa: {
+                id: empresaId,
+                nome: empresaNome
+            },
+            senha: tempPassword, // WARNING: Storing plain text passwords is not secure. This should be hashed in a real-world app.
+            primeiroAcesso: true,
+            adminId: adminId,
+            createdAt: serverTimestamp()
+        };
+
+        try {
+            // Salva na coleção PÚBLICA de usuários
+            await addDoc(collection(db, 'usuarios'), userData);
+            showFeedback(feedbackId, `Usuário salvo! Senha temporária: ${tempPassword}`, false, true);
+            usuarioForm.reset();
+        } catch (error) {
+            console.error(`Erro ao salvar usuário:`, error);
+            showFeedback(feedbackId, "Erro ao salvar usuário. Tente novamente.", true);
+        }
+    });
     perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
     fornecedorForm.addEventListener('submit', (e) => {
         const tipoPessoa = document.getElementById('fornecedor-tipo-pessoa').value;
@@ -3150,6 +3560,13 @@
     if(recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.addEventListener('input', handleRecurrenceInteraction);
     if(recorrenciaFimDataInput) recorrenciaFimDataInput.addEventListener('change', handleRecurrenceInteraction);
     if(document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').addEventListener('change', handleRecurrenceInteraction);
+
+    // --- Lógica da Tela de Login de Usuário ---
+    // Popula o dropdown de empresas na tela de login assim que a página carrega
+    const allEmpresasQuery = query(collection(db, 'empresas'));
+    onSnapshot(allEmpresasQuery, (querySnapshot) => {
+        populateEmpresaDropdown(loginEmpresaSelect, querySnapshot.docs);
+    });
 
   </script>
 
