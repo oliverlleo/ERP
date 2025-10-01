@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
   <style type="text/tailwindcss">
     :root {
       --brand-primary: #3B82F6;
@@ -1076,88 +1077,95 @@
                     </div>
 
                     <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
-                        <div class="flex justify-between items-center mb-4">
+                        <!-- Cabeçalho com Título e Botões de Visualização -->
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b">
                             <h2 class="text-gray-900 text-xl font-semibold">Contas a Pagar</h2>
-                            <div class="flex items-center gap-2">
-                                <button id="pagar-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">payments</span>
-                                    Pagar
-                                </button>
-                                <button id="visualizar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">visibility</span>
-                                    Visualizar
-                                </button>
-                                <button id="editar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">edit</span>
-                                    Editar
-                                </button>
-                                <button id="excluir-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">delete</span>
-                                    Excluir
-                                </button>
-                                <button id="lancar-despesa-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                                    Novo
-                                </button>
+                            <div class="flex items-center gap-2" id="view-toggle-buttons">
+                                <button id="lista-view-btn" class="px-3 py-1 text-sm font-medium rounded-md bg-blue-100 text-blue-700">Lista</button>
+                                <button id="calendario-view-btn" class="px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100">Calendário</button>
                             </div>
                         </div>
 
-                        <!-- Toolbar de Filtros e Busca -->
-                        <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                            <!-- Search Input -->
-                            <div class="flex-grow min-w-[200px]">
-                                <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
-                                <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                            </div>
-                            <!-- Date Filters -->
-                            <div>
-                                <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
-                                <input type="date" id="start-date-input" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                            </div>
-                            <div>
-                                <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
-                                <input type="date" id="end-date-input" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                            </div>
-                            <!-- Status Filter -->
-                            <div>
-                                <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
-                                <select id="status-filter" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                                    <option value="todas">Todas</option>
-                                    <option value="pendente">Pendente</option>
-                                    <option value="pago">Pago</option>
-                                    <option value="vencido">Vencido</option>
-                                </select>
-                            </div>
-                            <!-- Action Buttons -->
-                            <div class="flex items-end gap-4">
+                        <!-- Barra de Ferramentas com Botões de Ação -->
+                        <div class="flex items-center gap-2 mb-4">
+                             <button id="lancar-despesa-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                                Novo
+                            </button>
+                            <button id="pagar-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">payments</span> Pagar
+                            </button>
+                            <button id="visualizar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">visibility</span> Visualizar
+                            </button>
+                            <button id="editar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">edit</span> Editar
+                            </button>
+                            <button id="excluir-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">delete</span> Excluir
+                            </button>
+                        </div>
+
+                        <!-- Container da Visualização de Lista -->
+                        <div id="lista-view">
+                             <!-- Toolbar de Filtros e Busca -->
+                            <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                                <div class="flex-grow min-w-[200px]">
+                                    <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
+                                    <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full">
+                                </div>
+                                <div>
+                                    <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
+                                    <input type="date" id="start-date-input" class="form-input mt-1 block w-full">
+                                </div>
+                                <div>
+                                    <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
+                                    <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
+                                </div>
+                                <div>
+                                    <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
+                                    <select id="status-filter" class="form-select mt-1 block w-full">
+                                        <option value="todas">Todas</option>
+                                        <option value="pendente">Pendente</option>
+                                        <option value="pago">Pago</option>
+                                        <option value="vencido">Vencido</option>
+                                    </select>
+                                </div>
                                 <div class="flex items-center h-full pt-7">
                                     <input id="include-paid-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
                                     <label for="include-paid-checkbox" class="ml-2 block text-sm font-medium text-gray-900">Incluir Pagos</label>
                                 </div>
-                                <button id="filter-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Filtrar</button>
-                                <button id="clear-filters-btn" class="inline-flex items-center justify-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Limpar Filtros</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="p-4"><input id="select-all-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="despesas-table-body" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="p-4">
-                                            <div class="flex items-center">
-                                                <input id="select-all-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
-                                            </div>
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="despesas-table-body" class="bg-white divide-y divide-gray-200">
-                                </tbody>
-                            </table>
+                        <!-- Container da Visualização de Calendário (inicia oculto) -->
+                        <div id="calendario-view" class="hidden">
+                            <div id="calendar-filters" class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg border">
+                                <label for="calendar-status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Status:</label>
+                                <select id="calendar-status-filter" class="form-select rounded-md border-gray-300 shadow-sm">
+                                    <option value="todas">Mostrar Todas</option>
+                                    <option value="pendente">Apenas Pendentes</option>
+                                    <option value="pago">Apenas Pagas</option>
+                                    <option value="vencido">Apenas Vencidas</option>
+                                </select>
+                            </div>
+                            <div id="calendar" class="w-full"></div>
                         </div>
                     </div>
                 </div>
@@ -1693,6 +1701,15 @@
     const includePaidCheckbox = document.getElementById('include-paid-checkbox');
     let allDespesas = []; // Holds all expenses for client-side filtering
 
+    // --- Elementos da Visualização de Calendário ---
+    const listaViewBtn = document.getElementById('lista-view-btn');
+    const calendarioViewBtn = document.getElementById('calendario-view-btn');
+    const listaView = document.getElementById('lista-view');
+    const calendarioView = document.getElementById('calendario-view');
+    const calendarEl = document.getElementById('calendar');
+    const calendarStatusFilter = document.getElementById('calendar-status-filter');
+    let calendarInstance = null;
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
@@ -1702,6 +1719,97 @@
         if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
         if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
         if(financeirosCadastroSection) financeirosCadastroSection.classList.add('hidden');
+
+        if (viewId === 'contas-a-pagar-page') {
+            const savedView = localStorage.getItem('contasView') || 'lista';
+            setContasView(savedView);
+        }
+    }
+
+    // --- Lógica de Alternância de Visualização (Lista/Calendário) ---
+    function setContasView(viewName) {
+        if (viewName === 'calendario') {
+            listaView.classList.add('hidden');
+            calendarioView.classList.remove('hidden');
+            listaViewBtn.classList.remove('bg-blue-100', 'text-blue-700');
+            listaViewBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            calendarioViewBtn.classList.add('bg-blue-100', 'text-blue-700');
+            calendarioViewBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            if (!calendarInstance) {
+                initializeCalendar();
+            }
+             calendarInstance.render();
+        } else { // 'lista'
+            listaView.classList.remove('hidden');
+            calendarioView.classList.add('hidden');
+            calendarioViewBtn.classList.remove('bg-blue-100', 'text-blue-700');
+            calendarioViewBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            listaViewBtn.classList.add('bg-blue-100', 'text-blue-700');
+            listaViewBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+        }
+        localStorage.setItem('contasView', viewName);
+    }
+
+    function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        calendarInstance = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            initialView: 'dayGridMonth',
+            buttonText: {
+                today:    'Hoje',
+                month:    'Mês',
+                week:     'Semana',
+                day:      'Dia',
+            },
+            eventDidMount: function(info) {
+                // Tooltip logic can be added here later if needed
+            },
+            eventClick: function(info) {
+                const despesaId = info.event.id;
+                if(despesaId) {
+                    openVisualizarModal(despesaId);
+                }
+            }
+        });
+        calendarInstance.render();
+    }
+
+    function processAndRenderCalendarEvents(docs) {
+        if (!calendarInstance) return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const events = docs.map(doc => {
+            const data = doc.data();
+            const vencimento = new Date(data.vencimento + 'T00:00:00');
+
+            let eventColor = '#f59e0b'; // Amarelo para Pendente
+            if (data.pago) {
+                eventColor = '#16a34a'; // Verde para Pago
+            } else if (vencimento < today) {
+                eventColor = '#dc2626'; // Vermelho para Vencido
+            }
+
+            return {
+                id: doc.id,
+                title: `${data.favorecidoNome}: ${formatCurrency(data.valor)}`,
+                start: data.vencimento,
+                backgroundColor: eventColor,
+                borderColor: eventColor,
+                extendedProps: {
+                    status: data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente')
+                }
+            };
+        });
+
+        calendarInstance.getEventSources().forEach(source => source.remove());
+        calendarInstance.addEventSource(events);
     }
 
     function formatCurrency(value) {
@@ -2130,9 +2238,12 @@
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
         despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
             allDespesas = querySnapshot.docs; // Store all documents
-            applyFiltersAndRender(); // Apply current filters and render
+            applyFiltersAndRender(); // Apply current filters and render for the list
             updateSummaryCards(allDespesas);
             updateDashboardIndicators(allDespesas);
+            if (calendarInstance) {
+                processAndRenderCalendarEvents(allDespesas); // Process for calendar
+            }
         });
 
         // --- Listeners for Modal Dropdowns ---
@@ -3622,6 +3733,32 @@
 
     // Expose functions for testing
     window.testHooks = { setupListeners, auth };
+
+    if(listaViewBtn) {
+        listaViewBtn.addEventListener('click', () => setContasView('lista'));
+    }
+    if(calendarioViewBtn) {
+        calendarioViewBtn.addEventListener('click', () => setContasView('calendario'));
+    }
+
+    if(calendarStatusFilter) {
+        calendarStatusFilter.addEventListener('change', () => {
+            const status = calendarStatusFilter.value;
+            if (status === 'todas') {
+                processAndRenderCalendarEvents(allDespesas);
+            } else {
+                const filteredDespesas = allDespesas.filter(doc => {
+                    const data = doc.data();
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const vencimento = new Date(data.vencimento + 'T00:00:00');
+                    const docStatus = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
+                    return docStatus === status;
+                });
+                processAndRenderCalendarEvents(filteredDespesas);
+            }
+        });
+    }
 
     // --- Lógica de Recorrência Inteligente ---
     function resetRecurrenceFields() {
