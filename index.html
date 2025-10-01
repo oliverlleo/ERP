@@ -1441,7 +1441,7 @@
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -1485,6 +1485,7 @@
     const navLinks = document.querySelectorAll('.nav-link');
 
     // --- Variáveis de estado ---
+    let currentUserName = null; // To store the logged-in user's name
     let dashboardUnsubscribe = null;
     let empresasUnsubscribe = null;
     let usuariosUnsubscribe = null;
@@ -2048,12 +2049,31 @@
       // Regular user logic
       detachListeners();
       if (user) {
-        userEmailSpan.textContent = user.email;
-        userEmailCadastrosSpan.textContent = user.email;
-        userEmailContasSpan.textContent = user.email;
+        const userRef = doc(db, 'users', user.uid);
+        const usuariosRef = collection(userRef, 'usuarios');
+        const q = query(usuariosRef, where("email", "==", user.email));
+
+        getDocs(q).then(querySnapshot => {
+            if (!querySnapshot.empty) {
+                currentUserName = querySnapshot.docs[0].data().nome;
+            } else {
+                currentUserName = user.email; // Fallback to email
+            }
+            userEmailSpan.textContent = currentUserName;
+            userEmailCadastrosSpan.textContent = currentUserName;
+            userEmailContasSpan.textContent = currentUserName;
+        }).catch(error => {
+            console.error("Error getting user name:", error);
+            currentUserName = user.email; // Fallback on error
+            userEmailSpan.textContent = currentUserName;
+            userEmailCadastrosSpan.textContent = currentUserName;
+            userEmailContasSpan.textContent = currentUserName;
+        });
+
         setupListeners(user.uid);
         showView('main-page');
       } else {
+        currentUserName = null;
         userEmailSpan.textContent = '';
         userEmailCadastrosSpan.textContent = '';
         userEmailContasSpan.textContent = '';
@@ -3032,7 +3052,7 @@
                         vencimento: vencimentoParcela.toISOString().split('T')[0],
                         pago: false, // Each installment starts as unpaid
                         parcelaInfo: { atual: i, total: numeroParcelas },
-                        criadoPor: auth.currentUser?.email || 'sistema',
+                        criadoPor: currentUserName || 'sistema',
                         createdAt: serverTimestamp()
                     };
                     await addDoc(userRef, despesaParcela);
@@ -3040,7 +3060,7 @@
             } else {
                 const despesaData = {
                     ...baseData,
-                    criadoPor: auth.currentUser?.email || 'sistema',
+                    criadoPor: currentUserName || 'sistema',
                     createdAt: serverTimestamp()
                 };
                 if (formaPagamento === 'recorrente') {
