@@ -1112,7 +1112,7 @@
                 const data = docSnap.data();
                 projectsCountEl.textContent = data.projectsInProgress || 0;
                 salesValueEl.textContent = formatCurrency(data.monthlySales || 0);
-                expensesValueEl.textContent = formatCurrency(data.pendingExpenses || 0);
+                // The 'expensesValueEl' is now updated by the 'despesas' listener.
             } else {
                 projectsCountEl.textContent = 0;
                 salesValueEl.textContent = formatCurrency(0);
@@ -1161,6 +1161,7 @@
         despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
             renderDespesasTable(querySnapshot.docs);
             updateSummaryCards(querySnapshot.docs);
+            updateDashboardIndicators(querySnapshot.docs);
         });
 
         // --- Listeners for Modal Dropdowns ---
@@ -1239,6 +1240,19 @@
         document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagar);
         document.getElementById('total-pago-card').textContent = formatCurrency(totalPago);
         document.getElementById('contas-vencidas-card').textContent = formatCurrency(contasVencidas);
+    }
+
+    function updateDashboardIndicators(docs) {
+        let pendingExpenses = 0;
+        docs.forEach(doc => {
+            const data = doc.data();
+            if (!data.pago) {
+                pendingExpenses += data.valor;
+            }
+        });
+        if (expensesValueEl) {
+            expensesValueEl.textContent = formatCurrency(pendingExpenses);
+        }
     }
 
 
@@ -1565,7 +1579,7 @@
         console.log("Attempting to close modal...");
         if(despesaModal) {
             despesaModal.classList.add('hidden');
-            console.log("Modal class list after hiding:", despesaModal.classList);
+            console.log("Modal closed.");
         }
     }
 

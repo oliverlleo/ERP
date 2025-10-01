@@ -98,23 +98,20 @@ def test_finance_module(browser: Browser):
 
         # Delete Fornecedor
         page.click("#comerciais-card-link")
-        fornecedor_row = page.locator("#fornecedores-table-body tr", has_text="Fornecedor Teste Playwright")
-        if fornecedor_row.count() > 0:
-             fornecedor_row.locator(".delete-btn").click()
-             expect(fornecedor_row).not_to_be_visible(timeout=5000)
+        while page.locator("#fornecedores-table-body tr", has_text="Fornecedor Teste Playwright").count() > 0:
+            page.locator("#fornecedores-table-body tr", has_text="Fornecedor Teste Playwright").first.locator(".delete-btn").click()
+            page.wait_for_timeout(200) # Brief pause for UI update
 
         # Delete Plano de Contas & Conta Bancária
         page.click("#financeiros-card-link")
         page.click("a[data-tab-financeiro='planos-de-contas']")
-        categoria_row = page.locator("#planos-contas-table-body tr", has_text="Categoria Teste Playwright")
-        if categoria_row.count() > 0:
-            categoria_row.locator(".delete-btn").click()
-            expect(categoria_row).not_to_be_visible(timeout=5000)
+        while page.locator("#planos-contas-table-body tr", has_text="Categoria Teste Playwright").count() > 0:
+            page.locator("#planos-contas-table-body tr", has_text="Categoria Teste Playwright").first.locator(".delete-btn").click()
+            page.wait_for_timeout(200) # Brief pause for UI update
 
         page.click("a[data-tab-financeiro='contas-bancarias']")
-        conta_row = page.locator("#contas-bancarias-table-body tr", has_text="Conta Teste Playwright")
-        if conta_row.count() > 0:
-            conta_row.locator(".delete-btn").click()
-            expect(conta_row).not_to_be_visible(timeout=5000)
+        while page.locator("#contas-bancarias-table-body tr", has_text="Conta Teste Playwright").count() > 0:
+            page.locator("#contas-bancarias-table-body tr", has_text="Conta Teste Playwright").first.locator(".delete-btn").click()
+            page.wait_for_timeout(200) # Brief pause for UI update
 
         context.close()
