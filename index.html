@@ -287,7 +287,7 @@
                                 <p class="text-gray-600 text-sm">Contas bancárias, planos de contas, impostos.</p>
                             </div>
                         </a>
-                        <a class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
+                        <a id="rh-card-link" class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]" href="#">
                             <div class="flex flex-col gap-3 items-center text-center">
                                 <span class="material-symbols-outlined text-4xl text-gray-500"> group </span>
                                 <h3 class="text-gray-800 text-lg font-semibold leading-tight">Recursos Humanos</h3>
@@ -436,8 +436,9 @@
                         <!-- Abas/Tabs para navegação -->
                         <div class="border-b border-gray-200">
                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                                <a href="#" class="tab-link-comercial active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab-comercial="fornecedores">Fornecedores</a>
-                                <!-- Outras abas podem ser adicionadas aqui (Clientes, Produtos, etc.) -->
+                                <a href="#" class="tab-link-comercial active" data-tab-comercial="fornecedores">Fornecedores</a>
+                                <a href="#" class="tab-link-comercial" data-tab-comercial="clientes">Clientes</a>
+                                <a href="#" class="tab-link-comercial" data-tab-comercial="servicos">Serviços</a>
                             </nav>
                         </div>
 
@@ -474,6 +475,69 @@
                                             </thead>
                                             <tbody id="fornecedores-table-body" class="bg-white divide-y divide-gray-200">
                                             </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Tab: Clientes -->
+                            <div id="clientes-tab-comercial" class="tab-content-comercial hidden">
+                                <form id="cliente-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-nome">Nome do Cliente</label>
+                                            <input type="text" id="cliente-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="cliente-cpf-cnpj">CPF / CNPJ</label>
+                                            <input type="text" id="cliente-cpf-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div id="cliente-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Cliente</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Clientes Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Cliente</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF / CNPJ</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="clientes-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Tab: Serviços -->
+                            <div id="servicos-tab-comercial" class="tab-content-comercial hidden">
+                                <form id="servico-form">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="servico-nome">Nome do Serviço</label>
+                                            <input type="text" id="servico-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                    </div>
+                                    <div id="servico-form-feedback" class="text-sm mt-4"></div>
+                                    <div class="flex justify-end pt-4">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Serviço</button>
+                                    </div>
+                                </form>
+                                <div class="mt-8 border-t pt-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Serviços Cadastrados</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Serviço</th>
+                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="servicos-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -564,6 +628,50 @@
                       </div>
                     </div>
 
+                    <!-- Seção de Cadastro Recursos Humanos (inicia oculta) -->
+                    <div id="rh-cadastro-section" class="hidden mt-8">
+                      <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
+                            <h2 class="text-gray-900 text-2xl font-bold leading-tight tracking-tight">Recursos Humanos</h2>
+                            <button id="close-rh-cadastro" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-gray-600">close</span>
+                            </button>
+                        </div>
+                        <!-- Formulário de Funcionário -->
+                        <form id="funcionario-form">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700" for="funcionario-nome">Nome do Funcionário</label>
+                                    <input type="text" id="funcionario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700" for="funcionario-cpf">CPF</label>
+                                    <input type="text" id="funcionario-cpf" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
+                            </div>
+                            <div id="funcionario-form-feedback" class="text-sm mt-4"></div>
+                            <div class="flex justify-end pt-4">
+                                <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Funcionário</button>
+                            </div>
+                        </form>
+                        <!-- Tabela de Funcionários -->
+                        <div class="mt-8 border-t pt-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Funcionários Cadastrados</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Funcionário</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
+                                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="funcionarios-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
                 </div>
             </main>
         </div>
@@ -680,7 +788,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -719,10 +827,20 @@
                               <input type="text" id="despesa-descricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required placeholder="Ex: Manutenção do ar condicionado">
                           </div>
                           <div>
-                              <label for="despesa-fornecedor" class="block text-sm font-medium text-gray-700">Fornecedor</label>
-                              <select id="despesa-fornecedor" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
-                                  <option value="">Selecione um fornecedor</option>
-                                  <!-- Opções via JS -->
+                              <label for="favorecido-tipo" class="block text-sm font-medium text-gray-700">Tipo de Favorecido</label>
+                              <select id="favorecido-tipo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                  <option value="">Selecione o Tipo</option>
+                                  <option value="fornecedores">Fornecedor</option>
+                                  <option value="funcionarios">Funcionário</option>
+                                  <option value="servicos">Serviço</option>
+                                  <option value="clientes">Cliente</option>
+                              </select>
+                          </div>
+                          <div>
+                              <label for="favorecido-nome" class="block text-sm font-medium text-gray-700">Nome do Favorecido</label>
+                              <select id="favorecido-nome" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                  <option value="">Selecione um favorecido</option>
+                                  <!-- Opções preenchidas dinamicamente -->
                               </select>
                           </div>
                           <div>
@@ -975,6 +1093,9 @@
     let fornecedoresUnsubscribe = null;
     let planosDeContasUnsubscribe = null;
     let contasBancariasUnsubscribe = null;
+    let clientesUnsubscribe = null;
+    let servicosUnsubscribe = null;
+    let funcionariosUnsubscribe = null;
 
     // Listeners for modal dropdowns
     let fornecedoresDropdownUnsubscribe = null;
@@ -1004,6 +1125,15 @@
     const planosContasTableBody = document.getElementById('planos-contas-table-body');
     const contaBancariaForm = document.getElementById('conta-bancaria-form');
     const contasBancariasTableBody = document.getElementById('contas-bancarias-table-body');
+    const rhCardLink = document.getElementById('rh-card-link');
+    const rhCadastroSection = document.getElementById('rh-cadastro-section');
+    const closeRhCadastro = document.getElementById('close-rh-cadastro');
+    const funcionarioForm = document.getElementById('funcionario-form');
+    const funcionariosTableBody = document.getElementById('funcionarios-table-body');
+    const clienteForm = document.getElementById('cliente-form');
+    const clientesTableBody = document.getElementById('clientes-table-body');
+    const servicoForm = document.getElementById('servico-form');
+    const servicosTableBody = document.getElementById('servicos-table-body');
 
     // --- Elementos da Tela Financeiro ---
     const financeiroNavLink = document.getElementById('financeiro-nav-link');
@@ -1019,7 +1149,8 @@
     const despesaForm = document.getElementById('despesa-form');
     const marcarPagoCheckbox = document.getElementById('marcar-pago-checkbox');
     const pagamentoInfo = document.getElementById('pagamento-info');
-    const despesaFornecedorSelect = document.getElementById('despesa-fornecedor');
+    const favorecidoTipoSelect = document.getElementById('favorecido-tipo');
+    const favorecidoNomeSelect = document.getElementById('favorecido-nome');
     const despesaCategoriaSelect = document.getElementById('despesa-categoria');
     const pagamentoContaSelect = document.getElementById('pagamento-conta');
     const despesasTableBody = document.getElementById('despesas-table-body');
@@ -1199,6 +1330,24 @@
             renderTable(contasBancariasTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('contasBancarias', id));
         });
 
+        // Cadastros - Clientes
+        const clientesQuery = query(collection(db, 'users', userId, 'clientes'));
+        clientesUnsubscribe = onSnapshot(clientesQuery, (querySnapshot) => {
+            renderTable(clientesTableBody, querySnapshot.docs, ['nome', 'cpf_cnpj'], (id) => deleteItem('clientes', id));
+        });
+
+        // Cadastros - Serviços
+        const servicosQuery = query(collection(db, 'users', userId, 'servicos'));
+        servicosUnsubscribe = onSnapshot(servicosQuery, (querySnapshot) => {
+            renderTable(servicosTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('servicos', id));
+        });
+
+        // Cadastros - Funcionários
+        const funcionariosQuery = query(collection(db, 'users', userId, 'funcionarios'));
+        funcionariosUnsubscribe = onSnapshot(funcionariosQuery, (querySnapshot) => {
+            renderTable(funcionariosTableBody, querySnapshot.docs, ['nome', 'cpf'], (id) => deleteItem('funcionarios', id));
+        });
+
         // --- Listener for Despesas Table ---
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
         despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
@@ -1209,9 +1358,37 @@
         });
 
         // --- Listeners for Modal Dropdowns ---
-        fornecedoresDropdownUnsubscribe = onSnapshot(fornecedoresQuery, (querySnapshot) => {
-            populateDropdown(despesaFornecedorSelect, querySnapshot.docs);
+        let favorecidoData = {
+            fornecedores: [],
+            clientes: [],
+            servicos: [],
+            funcionarios: []
+        };
+
+        const unsubFornecedoresModal = onSnapshot(fornecedoresQuery, snapshot => {
+            favorecidoData.fornecedores = snapshot.docs;
         });
+        const unsubClientesModal = onSnapshot(clientesQuery, snapshot => {
+            favorecidoData.clientes = snapshot.docs;
+        });
+        const unsubServicosModal = onSnapshot(servicosQuery, snapshot => {
+            favorecidoData.servicos = snapshot.docs;
+        });
+        const unsubFuncionariosModal = onSnapshot(funcionariosQuery, snapshot => {
+            favorecidoData.funcionarios = snapshot.docs;
+        });
+
+        if (favorecidoTipoSelect) {
+            favorecidoTipoSelect.addEventListener('change', () => {
+                const tipo = favorecidoTipoSelect.value;
+                if (tipo && favorecidoData[tipo]) {
+                    populateDropdown(favorecidoNomeSelect, favorecidoData[tipo]);
+                } else {
+                    favorecidoNomeSelect.innerHTML = '<option value="">Selecione um tipo primeiro</option>';
+                }
+            });
+        }
+
         planosContasDropdownUnsubscribe = onSnapshot(planosContasQuery, (querySnapshot) => {
             populateDropdown(despesaCategoriaSelect, querySnapshot.docs);
         });
@@ -1230,6 +1407,9 @@
         if (fornecedoresUnsubscribe) fornecedoresUnsubscribe();
         if (planosDeContasUnsubscribe) planosDeContasUnsubscribe();
         if (contasBancariasUnsubscribe) contasBancariasUnsubscribe();
+        if (clientesUnsubscribe) clientesUnsubscribe();
+        if (servicosUnsubscribe) servicosUnsubscribe();
+        if (funcionariosUnsubscribe) funcionariosUnsubscribe();
         if (fornecedoresDropdownUnsubscribe) fornecedoresDropdownUnsubscribe();
         if (planosContasDropdownUnsubscribe) planosContasDropdownUnsubscribe();
         if (contasBancariasDropdownUnsubscribe) contasBancariasDropdownUnsubscribe();
@@ -1450,6 +1630,20 @@
         });
     }
 
+    if (rhCardLink) {
+        rhCardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            rhCadastroSection.classList.remove('hidden');
+            rhCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    if (closeRhCadastro) {
+        closeRhCadastro.addEventListener('click', () => {
+            rhCadastroSection.classList.add('hidden');
+        });
+    }
+
     if (geraisCadastroSection){
         const tabLinks = geraisCadastroSection.querySelectorAll('.tab-link');
         const tabContents = geraisCadastroSection.querySelectorAll('.tab-content');
@@ -1466,6 +1660,24 @@
             });
         });
     }
+
+    if (comerciaisCadastroSection){
+        const tabLinks = comerciaisCadastroSection.querySelectorAll('.tab-link-comercial');
+        const tabContents = comerciaisCadastroSection.querySelectorAll('.tab-content-comercial');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.tabComercial;
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab-comercial`);
+                });
+            });
+        });
+    }
+
     if (financeirosCadastroSection){
         const tabLinks = financeirosCadastroSection.querySelectorAll('.tab-link-financeiro');
         const tabContents = financeirosCadastroSection.querySelectorAll('.tab-content-financeiro');
@@ -1490,6 +1702,9 @@
     fornecedorForm.addEventListener('submit', (e) => handleFormSubmit(e, 'fornecedores', { nome: document.getElementById('fornecedor-nome').value, cnpj: document.getElementById('fornecedor-cnpj').value }, 'fornecedor-form-feedback', fornecedorForm));
     planoContaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'planosDeContas', { nome: document.getElementById('plano-conta-nome').value }, 'plano-conta-form-feedback', planoContaForm));
     contaBancariaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contasBancarias', { nome: document.getElementById('conta-bancaria-nome').value }, 'conta-bancaria-form-feedback', contaBancariaForm));
+    clienteForm.addEventListener('submit', (e) => handleFormSubmit(e, 'clientes', { nome: document.getElementById('cliente-nome').value, cpf_cnpj: document.getElementById('cliente-cpf-cnpj').value }, 'cliente-form-feedback', clienteForm));
+    servicoForm.addEventListener('submit', (e) => handleFormSubmit(e, 'servicos', { nome: document.getElementById('servico-nome').value }, 'servico-form-feedback', servicoForm));
+    funcionarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'funcionarios', { nome: document.getElementById('funcionario-nome').value, cpf: document.getElementById('funcionario-cpf').value }, 'funcionario-form-feedback', funcionarioForm));
 
     // --- Lógica da Tela Financeiro ---
     function applyFiltersAndRender() {
@@ -1526,8 +1741,8 @@
             let searchMatch = true;
             if (searchTerm) {
                 const descriptionMatch = data.descricao.toLowerCase().includes(searchTerm);
-                const supplierMatch = (data.fornecedorNome || '').toLowerCase().includes(searchTerm);
-                searchMatch = descriptionMatch || supplierMatch;
+                const payeeMatch = (data.favorecidoNome || '').toLowerCase().includes(searchTerm);
+                searchMatch = descriptionMatch || payeeMatch;
             }
 
             return statusMatch && dateMatch && searchMatch;
@@ -1576,7 +1791,7 @@
 
             tr.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.fornecedorNome || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatCurrency(data.valor)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -1805,31 +2020,34 @@
         const valorTotal = parseFloat(document.getElementById('despesa-valor').value);
 
         try {
-            if (expenseId && formaPagamento !== 'parcelado' && formaPagamento !== 'recorrente') {
-                // Logic for updating a single, non-recurring, non-installment expense
-                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
-                const fornecedorSelect = document.getElementById('despesa-fornecedor');
-                const despesaData = {
-                    descricao: baseDescricao,
-                    fornecedorId: fornecedorSelect.value,
-                    fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
-                    categoriaId: document.getElementById('despesa-categoria').value,
-                    valor: valorTotal,
-                    competencia: document.getElementById('despesa-competencia').value,
-                    vencimento: document.getElementById('despesa-vencimento').value,
-                    pago: document.getElementById('marcar-pago-checkbox').checked,
-                    obs: document.getElementById('despesa-obs').value,
-                    formaPagamento: formaPagamento,
-                };
-                if (despesaData.pago) {
-                    despesaData.dataPagamento = document.getElementById('pagamento-data').value;
-                    despesaData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
-                    despesaData.contaSaidaId = document.getElementById('pagamento-conta').value;
-                }
-                await updateDoc(docRef, despesaData);
+            const favorecidoTipo = favorecidoTipoSelect.value;
+            const favorecidoId = favorecidoNomeSelect.value;
+            const favorecidoNome = favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text;
 
+            const baseData = {
+                descricao: baseDescricao,
+                favorecidoTipo: favorecidoTipo,
+                favorecidoId: favorecidoId,
+                favorecidoNome: favorecidoNome,
+                categoriaId: document.getElementById('despesa-categoria').value,
+                valor: valorTotal,
+                competencia: document.getElementById('despesa-competencia').value,
+                vencimento: document.getElementById('despesa-vencimento').value,
+                pago: document.getElementById('marcar-pago-checkbox').checked,
+                obs: document.getElementById('despesa-obs').value,
+                formaPagamento: formaPagamento,
+            };
+
+            if (baseData.pago) {
+                baseData.dataPagamento = document.getElementById('pagamento-data').value;
+                baseData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
+                baseData.contaSaidaId = document.getElementById('pagamento-conta').value;
+            }
+
+            if (expenseId && formaPagamento !== 'parcelado' && formaPagamento !== 'recorrente') {
+                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
+                await updateDoc(docRef, baseData);
             } else if (formaPagamento === 'parcelado') {
-                // Logic for creating new installment expenses
                 const numeroParcelas = parseInt(document.getElementById('parcelas-numero').value);
                 const intervalo = document.getElementById('parcelas-intervalo').value;
                 const vencimentoInicial = new Date(document.getElementById('despesa-vencimento').value + 'T00:00:00');
@@ -1845,39 +2063,19 @@
                         vencimentoParcela.setDate(vencimentoInicial.getDate() + 7 * (i - 1));
                     }
 
-                    const fornecedorSelect = document.getElementById('despesa-fornecedor');
                     const despesaParcela = {
+                        ...baseData,
                         descricao: `${baseDescricao} (${i}/${numeroParcelas})`,
-                        fornecedorId: fornecedorSelect.value,
-                        fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
-                        categoriaId: document.getElementById('despesa-categoria').value,
                         valor: valorParcela,
-                        competencia: document.getElementById('despesa-competencia').value,
                         vencimento: vencimentoParcela.toISOString().split('T')[0],
-                        pago: false,
-                        obs: document.getElementById('despesa-obs').value,
-                        formaPagamento: formaPagamento,
+                        pago: false, // Each installment starts as unpaid
                         parcelaInfo: { atual: i, total: numeroParcelas },
                         createdAt: serverTimestamp()
                     };
                     await addDoc(userRef, despesaParcela);
                 }
-            } else { // Handles "recorrente" and all other single payment methods
-                const fornecedorSelect = document.getElementById('despesa-fornecedor');
-                const despesaData = {
-                    descricao: baseDescricao,
-                    fornecedorId: fornecedorSelect.value,
-                    fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
-                    categoriaId: document.getElementById('despesa-categoria').value,
-                    valor: valorTotal,
-                    competencia: document.getElementById('despesa-competencia').value,
-                    vencimento: document.getElementById('despesa-vencimento').value,
-                    pago: document.getElementById('marcar-pago-checkbox').checked,
-                    obs: document.getElementById('despesa-obs').value,
-                    formaPagamento: formaPagamento,
-                    createdAt: serverTimestamp()
-                };
-
+            } else {
+                const despesaData = { ...baseData, createdAt: serverTimestamp() };
                 if (formaPagamento === 'recorrente') {
                     despesaData.recorrencia = {
                         frequencia: document.getElementById('recorrencia-frequencia').value,
@@ -1885,12 +2083,6 @@
                         fimData: document.getElementById('recorrencia-fim-data').value,
                         fimOcorrencias: parseInt(document.getElementById('recorrencia-fim-ocorrencias').value) || null
                     };
-                }
-
-                if (despesaData.pago) {
-                    despesaData.dataPagamento = document.getElementById('pagamento-data').value;
-                    despesaData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
-                    despesaData.contaSaidaId = document.getElementById('pagamento-conta').value;
                 }
                 await addDoc(userRef, despesaData);
             }
