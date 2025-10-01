@@ -1830,7 +1830,17 @@
                         const data = docSnap.data();
                         document.getElementById('despesa-id').value = docSnap.id;
                         document.getElementById('despesa-descricao').value = data.descricao;
-                        document.getElementById('despesa-fornecedor').value = data.fornecedorId;
+
+                        if (data.favorecidoTipo && data.favorecidoId) {
+                            favorecidoTipoSelect.value = data.favorecidoTipo;
+                            favorecidoTipoSelect.dispatchEvent(new Event('change'));
+                            favorecidoNomeSelect.value = data.favorecidoId;
+                        } else if (data.fornecedorId) { // Fallback for old data
+                            favorecidoTipoSelect.value = 'fornecedores';
+                            favorecidoTipoSelect.dispatchEvent(new Event('change'));
+                            favorecidoNomeSelect.value = data.fornecedorId;
+                        }
+
                         document.getElementById('despesa-categoria').value = data.categoriaId;
                         document.getElementById('despesa-valor').value = data.valor;
                         document.getElementById('despesa-competencia').value = data.competencia;
