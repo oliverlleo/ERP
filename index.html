@@ -1189,7 +1189,7 @@
                             </div>
                             <div>
                                 <label for="despesa-numero-documento" class="block text-sm font-medium text-gray-700">Número do Documento</label>
-                                <input type="text" id="despesa-numero-documento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ex: NF-12345">
+                                <input type="text" id="despesa-numero-documento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" placeholder="Gerado automaticamente" readonly>
                             </div>
                           </div>
                           <div>
@@ -1532,7 +1532,7 @@
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -1737,6 +1737,30 @@
             code += charset.charAt(Math.floor(Math.random() * n));
         }
         return code;
+    }
+
+    // --- Lógica de Geração de Número de Documento ---
+    async function setNextDocumentNumber() {
+        if (!effectiveUserId) return;
+        const counterRef = doc(db, 'users', effectiveUserId, 'counters', 'despesas');
+        const despesaNumeroInput = document.getElementById('despesa-numero-documento');
+
+        try {
+            const newNumber = await runTransaction(db, async (transaction) => {
+                const counterDoc = await transaction.get(counterRef);
+                const currentNumber = counterDoc.exists() ? counterDoc.data().currentNumber : 0;
+                const nextNumber = currentNumber + 1;
+                transaction.set(counterRef, { currentNumber: nextNumber }, { merge: true });
+                return nextNumber;
+            });
+
+            // Format the number with at least 4 digits
+            despesaNumeroInput.value = String(newNumber).padStart(4, '0');
+
+        } catch (error) {
+            console.error("Erro ao gerar número do documento:", error);
+            despesaNumeroInput.value = "Erro";
+        }
     }
 
     // --- Funções de Renderização das Tabelas ---
@@ -3242,6 +3266,7 @@
                 despesaForm.reset();
                 document.getElementById('despesa-id').value = '';
                 resetRecurrenceFields();
+                setNextDocumentNumber();
             }
             document.querySelector('#despesa-modal h3').textContent = isEdit ? 'Editar Despesa' : 'Lançar Nova Despesa';
             pagamentoInfo.classList.add('hidden');
