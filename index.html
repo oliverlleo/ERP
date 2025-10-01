@@ -2153,40 +2153,40 @@
         const multiplier = getRecurrenceMultiplier(freq);
         const activeEl = document.activeElement;
 
-        // Always remove validation error when user interacts
+        // Validation: If user interacts with recurrence fields before setting a due date
+        if ((activeEl === occurrencesInput || activeEl === endDateInput) && !dueDateInput.value) {
+            dueDateInput.classList.add('border-red-500', 'ring-red-500');
+            return; // Stop further calculations until due date is set
+        }
+        // If due date is filled, remove any existing error style.
         dueDateInput.classList.remove('border-red-500', 'ring-red-500');
 
         const dueDate = dueDateInput.value ? new Date(dueDateInput.value + 'T00:00:00') : null;
         const occurrences = occurrencesInput.value ? parseInt(occurrencesInput.value, 10) : null;
         const endDate = endDateInput.value ? new Date(endDateInput.value + 'T00:00:00') : null;
 
-        // Scenario 1: User provides Due Date and Occurrences -> Calculate End Date
-        if (activeEl === dueDateInput || activeEl === occurrencesInput || activeEl === document.getElementById('recorrencia-frequencia')) {
-            if (dueDate && occurrences) {
-                recorrenciaFimOcorrenciasRadio.checked = true;
-                const calculatedEndDate = new Date(dueDate.getTime());
-                calculatedEndDate.setMonth(calculatedEndDate.getMonth() + (multiplier * (occurrences - 1)));
-                endDateInput.value = calculatedEndDate.toISOString().split('T')[0];
-            }
-        }
+        // Determine which field to clear based on user's last action
+        if (activeEl === occurrencesInput) endDateInput.value = '';
+        if (activeEl === endDateInput) occurrencesInput.value = '';
 
-        // Scenario 2: User provides Due Date and End Date -> Calculate Occurrences
-        if (activeEl === dueDateInput || activeEl === endDateInput || activeEl === document.getElementById('recorrencia-frequencia')) {
-             if (dueDate && endDate && endDate >= dueDate) {
+        // Recalculate based on the two available fields
+        if (dueDate && occurrences) {
+            recorrenciaFimOcorrenciasRadio.checked = true;
+            const calculatedEndDate = new Date(dueDate.getTime());
+            calculatedEndDate.setMonth(calculatedEndDate.getMonth() + (multiplier * (occurrences - 1)));
+            endDateInput.value = calculatedEndDate.toISOString().split('T')[0];
+        } else if (dueDate && endDate) {
+            if (endDate >= dueDate) {
                 recorrenciaFimDataRadio.checked = true;
                 const monthDiff = (endDate.getFullYear() - dueDate.getFullYear()) * 12 + (endDate.getMonth() - dueDate.getMonth());
                 const calculatedOccurrences = Math.floor(monthDiff / multiplier) + 1;
                 occurrencesInput.value = calculatedOccurrences > 0 ? calculatedOccurrences : '';
             }
-        }
-
-        // Scenario 3: User provides Occurrences and End Date -> Calculate Due Date
-        if (activeEl === occurrencesInput || activeEl === endDateInput || activeEl === document.getElementById('recorrencia-frequencia')) {
-            if (occurrences && endDate) {
-                const calculatedStartDate = new Date(endDate.getTime());
-                calculatedStartDate.setMonth(calculatedStartDate.getMonth() - (multiplier * (occurrences - 1)));
-                dueDateInput.value = calculatedStartDate.toISOString().split('T')[0];
-            }
+        } else if (occurrences && endDate) {
+            recorrenciaFimOcorrenciasRadio.checked = true;
+            const calculatedStartDate = new Date(endDate.getTime());
+            calculatedStartDate.setMonth(calculatedStartDate.getMonth() - (multiplier * (occurrences - 1)));
+            dueDateInput.value = calculatedStartDate.toISOString().split('T')[0];
         }
     }
 
