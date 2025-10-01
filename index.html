@@ -674,6 +674,7 @@
           </div>
           <div class="mt-5">
               <form id="despesa-form" class="space-y-6">
+                  <input type="hidden" id="despesa-id">
                   <!-- Seção 1: Informações Essenciais -->
                   <div class="p-4 border rounded-md">
                       <h4 class="text-lg font-semibold text-gray-800 mb-4">Informações Essenciais</h4>
@@ -699,14 +700,72 @@
                       </div>
                   </div>
 
-                  <!-- Seção 2: Valores e Prazos -->
+                  <!-- Seção 2: Valores, Prazos e Condições de Pagamento -->
                   <div class="p-4 border rounded-md">
-                      <h4 class="text-lg font-semibold text-gray-800 mb-4">Valores e Prazos</h4>
-                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <h4 class="text-lg font-semibold text-gray-800 mb-4">Valores, Prazos e Condições</h4>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                               <label for="despesa-valor" class="block text-sm font-medium text-gray-700">Valor</label>
-                              <input type="number" id="despesa-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required placeholder="0,00">
+                              <input type="number" id="despesa-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
                           </div>
+                          <div>
+                              <label for="forma-pagamento" class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
+                              <select id="forma-pagamento" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                  <option value="a_vista">À Vista</option>
+                                  <option value="boleto">Boleto Bancário</option>
+                                  <option value="pix">PIX</option>
+                                  <option value="cartao_credito">Cartão de Crédito</option>
+                                  <option value="transferencia">Transferência (TED/DOC)</option>
+                                  <option value="parcelado">Parcelado</option>
+                                  <option value="recorrente">Recorrente</option>
+                              </select>
+                          </div>
+                      </div>
+                      <div id="parcelado-fields" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                              <label for="parcelas-numero" class="block text-sm font-medium text-gray-700">Quantidade de Parcelas</label>
+                              <input type="number" id="parcelas-numero" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ex: 12">
+                          </div>
+                          <div>
+                              <label for="parcelas-intervalo" class="block text-sm font-medium text-gray-700">Intervalo</label>
+                              <select id="parcelas-intervalo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                  <option value="mensal">Mensal</option>
+                                  <option value="quinzenal">Quinzenal</option>
+                                  <option value="semanal">Semanal</option>
+                              </select>
+                          </div>
+                      </div>
+                      <div id="recorrente-fields" class="hidden mt-4 space-y-4">
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                  <label for="recorrencia-frequencia" class="block text-sm font-medium text-gray-700">Repetir a cada</label>
+                                  <select id="recorrencia-frequencia" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                      <option value="mensal">Mês</option>
+                                      <option value="bimestral">Bimestre</option>
+                                      <option value="trimestral">Trimestre</option>
+                                      <option value="semestral">Semestre</option>
+                                      <option value="anual">Ano</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div>
+                              <label class="block text-sm font-medium text-gray-700">Fim da Recorrência</label>
+                              <div class="mt-2 space-y-2">
+                                  <div class="flex items-center">
+                                      <input type="radio" id="recorrencia-fim-data-radio" name="recorrencia-fim" value="data" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                      <label for="recorrencia-fim-data-radio" class="ml-3 block text-sm font-medium text-gray-700">Em:</label>
+                                      <input type="date" id="recorrencia-fim-data" class="form-input ml-2 block w-full rounded-md border-gray-300 shadow-sm">
+                                  </div>
+                                  <div class="flex items-center">
+                                      <input type="radio" id="recorrencia-fim-ocorrencias-radio" name="recorrencia-fim" value="ocorrencias" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                      <label for="recorrencia-fim-ocorrencias-radio" class="ml-3 block text-sm font-medium text-gray-700">Após:</label>
+                                      <input type="number" id="recorrencia-fim-ocorrencias" class="form-input ml-2 block w-24 rounded-md border-gray-300 shadow-sm">
+                                      <span class="ml-2 text-sm text-gray-600">ocorrências</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                               <label for="despesa-competencia" class="block text-sm font-medium text-gray-700">Data de Competência</label>
                               <input type="date" id="despesa-competencia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
@@ -773,7 +832,7 @@
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -875,6 +934,9 @@
     const despesaCategoriaSelect = document.getElementById('despesa-categoria');
     const pagamentoContaSelect = document.getElementById('pagamento-conta');
     const despesasTableBody = document.getElementById('despesas-table-body');
+    const formaPagamentoSelect = document.getElementById('forma-pagamento');
+    const parceladoFields = document.getElementById('parcelado-fields');
+    const recorrenteFields = document.getElementById('recorrente-fields');
 
 
     // --- Funções Auxiliares ---
@@ -1280,11 +1342,82 @@
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button class="text-indigo-600 hover:text-indigo-900">Editar</button>
-                    <button class="text-red-600 hover:text-red-900 ml-2">Excluir</button>
-                    ${!data.pago ? '<button class="text-green-600 hover:text-green-900 ml-2">Pagar</button>' : ''}
+                    <button class="edit-despesa-btn text-indigo-600 hover:text-indigo-900" data-id="${doc.id}">Editar</button>
+                    <button class="delete-despesa-btn text-red-600 hover:text-red-900 ml-2" data-id="${doc.id}">Excluir</button>
+                    ${!data.pago ? `<button class="pagar-despesa-btn text-green-600 hover:text-green-900 ml-2" data-id="${doc.id}">Pagar</button>` : ''}
                 </td>
             `;
+        });
+
+        despesasTableBody.querySelectorAll('.delete-despesa-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (confirm('Tem certeza que deseja excluir esta despesa?')) {
+                    deleteItem('despesas', id);
+                }
+            });
+        });
+
+        despesasTableBody.querySelectorAll('.edit-despesa-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+                if (!userId) return;
+
+                try {
+                    const docRef = doc(db, 'users', userId, 'despesas', id);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        document.getElementById('despesa-id').value = docSnap.id;
+                        document.getElementById('despesa-descricao').value = data.descricao;
+                        document.getElementById('despesa-fornecedor').value = data.fornecedorId;
+                        document.getElementById('despesa-categoria').value = data.categoriaId;
+                        document.getElementById('despesa-valor').value = data.valor;
+                        document.getElementById('despesa-competencia').value = data.competencia;
+                        document.getElementById('despesa-vencimento').value = data.vencimento;
+                        document.getElementById('despesa-obs').value = data.obs || '';
+
+                        const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
+                        pagoCheckbox.checked = data.pago;
+
+                        const pagamentoInfoDiv = document.getElementById('pagamento-info');
+                        if (data.pago) {
+                            pagamentoInfoDiv.classList.remove('hidden');
+                            document.getElementById('pagamento-data').value = data.dataPagamento || '';
+                            document.getElementById('pagamento-valor').value = data.valorPago || '';
+                            document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
+                        } else {
+                            pagamentoInfoDiv.classList.add('hidden');
+                        }
+
+                        openModal(true); // Open in edit mode
+                    }
+                } catch (error) {
+                    console.error("Error getting document:", error);
+                }
+            });
+        });
+
+        despesasTableBody.querySelectorAll('.pagar-despesa-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+                if (!userId) return;
+
+                if (confirm('Marcar esta despesa como paga?')) {
+                    const docRef = doc(db, 'users', userId, 'despesas', id);
+                    try {
+                        await updateDoc(docRef, {
+                            pago: true,
+                            dataPagamento: new Date().toISOString().split('T')[0]
+                        });
+                    } catch (error) {
+                        console.error("Erro ao marcar como pago:", error);
+                    }
+                }
+            });
         });
     }
 
@@ -1301,9 +1434,13 @@
     setupDropdown(financeiroNavLinkCadastros, financeiroDropdownCadastros);
     setupDropdown(financeiroNavLinkContas, financeiroDropdownContas);
 
-    function openModal() {
+    function openModal(isEdit = false) {
         if(despesaModal) {
-            despesaForm.reset();
+            if (!isEdit) {
+                despesaForm.reset();
+                document.getElementById('despesa-id').value = '';
+            }
+            document.querySelector('#despesa-modal h3').textContent = isEdit ? 'Editar Despesa' : 'Lançar Nova Despesa';
             pagamentoInfo.classList.add('hidden');
             despesaModal.classList.remove('hidden');
         }
@@ -1313,13 +1450,21 @@
         if(despesaModal) despesaModal.classList.add('hidden');
     }
 
-    if(lancarDespesaBtn) lancarDespesaBtn.addEventListener('click', openModal);
+    if(lancarDespesaBtn) lancarDespesaBtn.addEventListener('click', () => openModal(false));
     if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
     if(cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
 
     if(marcarPagoCheckbox) {
         marcarPagoCheckbox.addEventListener('change', () => {
             pagamentoInfo.classList.toggle('hidden', !marcarPagoCheckbox.checked);
+        });
+    }
+
+    if(formaPagamentoSelect) {
+        formaPagamentoSelect.addEventListener('change', (e) => {
+            const selection = e.target.value;
+            parceladoFields.classList.toggle('hidden', selection !== 'parcelado');
+            recorrenteFields.classList.toggle('hidden', selection !== 'recorrente');
         });
     }
 
@@ -1338,34 +1483,107 @@
             userId = user.uid;
         }
 
-        const fornecedorSelect = document.getElementById('despesa-fornecedor');
+        const expenseId = document.getElementById('despesa-id').value;
+        const formaPagamento = document.getElementById('forma-pagamento').value;
+        const userRef = collection(db, 'users', userId, 'despesas');
 
-        const despesaData = {
-            descricao: document.getElementById('despesa-descricao').value,
-            fornecedorId: fornecedorSelect.value,
-            fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
-            categoriaId: document.getElementById('despesa-categoria').value,
-            valor: parseFloat(document.getElementById('despesa-valor').value),
-            competencia: document.getElementById('despesa-competencia').value,
-            vencimento: document.getElementById('despesa-vencimento').value,
-            pago: document.getElementById('marcar-pago-checkbox').checked,
-            obs: document.getElementById('despesa-obs').value,
-            createdAt: serverTimestamp()
-        };
-
-        if (despesaData.pago) {
-            despesaData.dataPagamento = document.getElementById('pagamento-data').value;
-            despesaData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
-            despesaData.contaSaidaId = document.getElementById('pagamento-conta').value;
-        }
+        const baseDescricao = document.getElementById('despesa-descricao').value;
+        const valorTotal = parseFloat(document.getElementById('despesa-valor').value);
 
         try {
-            const userRef = collection(db, 'users', userId, 'despesas');
-            await addDoc(userRef, despesaData);
+            if (expenseId && formaPagamento !== 'parcelado' && formaPagamento !== 'recorrente') {
+                // Logic for updating a single, non-recurring, non-installment expense
+                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
+                const fornecedorSelect = document.getElementById('despesa-fornecedor');
+                const despesaData = {
+                    descricao: baseDescricao,
+                    fornecedorId: fornecedorSelect.value,
+                    fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
+                    categoriaId: document.getElementById('despesa-categoria').value,
+                    valor: valorTotal,
+                    competencia: document.getElementById('despesa-competencia').value,
+                    vencimento: document.getElementById('despesa-vencimento').value,
+                    pago: document.getElementById('marcar-pago-checkbox').checked,
+                    obs: document.getElementById('despesa-obs').value,
+                    formaPagamento: formaPagamento,
+                };
+                if (despesaData.pago) {
+                    despesaData.dataPagamento = document.getElementById('pagamento-data').value;
+                    despesaData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
+                    despesaData.contaSaidaId = document.getElementById('pagamento-conta').value;
+                }
+                await updateDoc(docRef, despesaData);
+
+            } else if (formaPagamento === 'parcelado') {
+                // Logic for creating new installment expenses
+                const numeroParcelas = parseInt(document.getElementById('parcelas-numero').value);
+                const intervalo = document.getElementById('parcelas-intervalo').value;
+                const vencimentoInicial = new Date(document.getElementById('despesa-vencimento').value + 'T00:00:00');
+                const valorParcela = valorTotal / numeroParcelas;
+
+                for (let i = 1; i <= numeroParcelas; i++) {
+                    const vencimentoParcela = new Date(vencimentoInicial);
+                    if (intervalo === 'mensal') {
+                        vencimentoParcela.setMonth(vencimentoInicial.getMonth() + (i - 1));
+                    } else if (intervalo === 'quinzenal') {
+                        vencimentoParcela.setDate(vencimentoInicial.getDate() + 15 * (i - 1));
+                    } else if (intervalo === 'semanal') {
+                        vencimentoParcela.setDate(vencimentoInicial.getDate() + 7 * (i - 1));
+                    }
+
+                    const fornecedorSelect = document.getElementById('despesa-fornecedor');
+                    const despesaParcela = {
+                        descricao: `${baseDescricao} (${i}/${numeroParcelas})`,
+                        fornecedorId: fornecedorSelect.value,
+                        fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
+                        categoriaId: document.getElementById('despesa-categoria').value,
+                        valor: valorParcela,
+                        competencia: document.getElementById('despesa-competencia').value,
+                        vencimento: vencimentoParcela.toISOString().split('T')[0],
+                        pago: false,
+                        obs: document.getElementById('despesa-obs').value,
+                        formaPagamento: formaPagamento,
+                        parcelaInfo: { atual: i, total: numeroParcelas },
+                        createdAt: serverTimestamp()
+                    };
+                    await addDoc(userRef, despesaParcela);
+                }
+            } else { // Handles "recorrente" and all other single payment methods
+                const fornecedorSelect = document.getElementById('despesa-fornecedor');
+                const despesaData = {
+                    descricao: baseDescricao,
+                    fornecedorId: fornecedorSelect.value,
+                    fornecedorNome: fornecedorSelect.options[fornecedorSelect.selectedIndex].text,
+                    categoriaId: document.getElementById('despesa-categoria').value,
+                    valor: valorTotal,
+                    competencia: document.getElementById('despesa-competencia').value,
+                    vencimento: document.getElementById('despesa-vencimento').value,
+                    pago: document.getElementById('marcar-pago-checkbox').checked,
+                    obs: document.getElementById('despesa-obs').value,
+                    formaPagamento: formaPagamento,
+                    createdAt: serverTimestamp()
+                };
+
+                if (formaPagamento === 'recorrente') {
+                    despesaData.recorrencia = {
+                        frequencia: document.getElementById('recorrencia-frequencia').value,
+                        fimCondicao: document.querySelector('input[name="recorrencia-fim"]:checked').value,
+                        fimData: document.getElementById('recorrencia-fim-data').value,
+                        fimOcorrencias: parseInt(document.getElementById('recorrencia-fim-ocorrencias').value) || null
+                    };
+                }
+
+                if (despesaData.pago) {
+                    despesaData.dataPagamento = document.getElementById('pagamento-data').value;
+                    despesaData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
+                    despesaData.contaSaidaId = document.getElementById('pagamento-conta').value;
+                }
+                await addDoc(userRef, despesaData);
+            }
+
             closeModal();
         } catch (error) {
             console.error("Erro ao salvar despesa:", error);
-            // Implementar feedback de erro para o usuário se necessário
         }
     });
 
