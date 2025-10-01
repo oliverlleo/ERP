@@ -32,12 +32,12 @@
         display: flex;
         opacity: 1;
     }
-    .tab-link.active, .tab-link-financeiro.active, .cliente-tab-link.active, .funcionario-tab-link.active {
+    .tab-link.active, .tab-link-financeiro.active, .cliente-tab-link.active, .funcionario-tab-link.active, .fornecedor-tab-link.active {
         color: var(--primary-color);
         border-color: var(--primary-color);
         border-bottom-width: 2px;
     }
-    .cliente-tab-link, .funcionario-tab-link {
+    .cliente-tab-link, .funcionario-tab-link, .fornecedor-tab-link {
         /* Applying Tailwind classes directly in CSS is incorrect. This will be moved to the HTML. */
     }
   </style>
@@ -152,28 +152,28 @@
                         <p class="text-gray-600 text-base font-normal leading-normal">Visão geral dos principais indicadores e módulos do sistema.</p>
                     </div>
                     <div>
-                        <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight mb-4">Indicadores</h2>
+                        <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight mb-4">Indicadores Financeiros</h2>
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                                 <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-gray-500"> apartment </span>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">Projetos em Andamento</p>
+                                    <span class="material-symbols-outlined text-yellow-500"> calendar_month </span>
+                                    <p class="text-gray-800 text-base font-medium leading-normal">Total a Pagar no Mês</p>
                                 </div>
-                                <p id="projects-count" class="text-gray-900 text-3xl font-bold leading-tight">...</p>
+                                <p id="dashboard-total-a-pagar" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                             </div>
                             <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                                 <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-gray-500"> attach_money </span>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">Vendas do Mês</p>
+                                    <span class="material-symbols-outlined text-green-500"> check_circle </span>
+                                    <p class="text-gray-800 text-base font-medium leading-normal">Total Pago no Mês</p>
                                 </div>
-                                <p id="sales-value" class="text-gray-900 text-3xl font-bold leading-tight">...</p>
+                                <p id="dashboard-total-pago" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                             </div>
                             <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                                 <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-gray-500"> receipt_long </span>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">Despesas Pendentes</p>
+                                    <span class="material-symbols-outlined text-red-500"> error </span>
+                                    <p class="text-gray-800 text-base font-medium leading-normal">Contas Vencidas</p>
                                 </div>
-                                <p id="expenses-value" class="text-red-600 text-3xl font-bold leading-tight">...</p>
+                                <p id="dashboard-contas-vencidas" class="text-red-600 text-3xl font-bold leading-tight">R$ 0,00</p>
                             </div>
                         </div>
                     </div>
@@ -449,20 +449,87 @@
                         <div class="mt-6">
                             <!-- Tab: Fornecedores -->
                             <div id="fornecedores-tab-comercial" class="tab-content-comercial">
-                                <form id="fornecedor-form">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-nome">Nome do Fornecedor</label>
-                                            <input type="text" id="fornecedor-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                <form id="fornecedor-form" class="space-y-6">
+                                    <!-- Abas do Formulário de Fornecedor -->
+                                    <div class="border-b border-gray-200">
+                                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                            <a href="#" class="fornecedor-tab-link active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-fornecedor-tab="fornecedor-dados-principais">Dados Principais</a>
+                                            <a href="#" class="fornecedor-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-fornecedor-tab="fornecedor-contato">Contato</a>
+                                            <a href="#" class="fornecedor-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-fornecedor-tab="fornecedor-endereco">Endereço</a>
+                                            <a href="#" class="fornecedor-tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-fornecedor-tab="fornecedor-financeiro">Financeiro e Compra</a>
+                                        </nav>
+                                    </div>
+
+                                    <div class="pt-4">
+                                        <!-- Tab: Dados Principais -->
+                                        <div id="fornecedor-dados-principais-tab" class="fornecedor-tab-content space-y-4">
+                                            <div>
+                                                <label for="fornecedor-tipo-pessoa" class="block text-sm font-medium text-gray-700">Tipo de Pessoa</label>
+                                                <select id="fornecedor-tipo-pessoa" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    <option value="juridica">Pessoa Jurídica</option>
+                                                    <option value="fisica">Pessoa Física</option>
+                                                </select>
+                                            </div>
+                                            <div id="fornecedor-pessoa-juridica-fields" class="space-y-4">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div><label for="fornecedor-razao-social" class="block text-sm font-medium text-gray-700">Razão Social</label><input type="text" id="fornecedor-razao-social" class="form-input mt-1 block w-full"></div>
+                                                    <div><label for="fornecedor-nome-fantasia" class="block text-sm font-medium text-gray-700">Nome Fantasia</label><input type="text" id="fornecedor-nome-fantasia" class="form-input mt-1 block w-full"></div>
+                                                </div>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div><label for="fornecedor-cnpj" class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="fornecedor-cnpj" class="form-input mt-1 block w-full"></div>
+                                                    <div><label for="fornecedor-inscricao" class="block text-sm font-medium text-gray-700">Inscrição Estadual / Municipal</label><input type="text" id="fornecedor-inscricao" class="form-input mt-1 block w-full"></div>
+                                                </div>
+                                            </div>
+                                            <div id="fornecedor-pessoa-fisica-fields" class="hidden space-y-4">
+                                                <div><label for="fornecedor-nome-completo" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="fornecedor-nome-completo" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-cpf" class="block text-sm font-medium text-gray-700">CPF</label><input type="text" id="fornecedor-cpf" class="form-input mt-1 block w-full"></div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="fornecedor-cnpj">CNPJ / CPF</label>
-                                            <input type="text" id="fornecedor-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+                                        <!-- Tab: Contato -->
+                                        <div id="fornecedor-contato-tab" class="fornecedor-tab-content hidden space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div><label for="fornecedor-telefone" class="block text-sm font-medium text-gray-700">Telefone Principal</label><input type="tel" id="fornecedor-telefone" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-email" class="block text-sm font-medium text-gray-700">E-mail Principal</label><input type="email" id="fornecedor-email" class="form-input mt-1 block w-full"></div>
+                                            </div>
+                                            <div><label for="fornecedor-website" class="block text-sm font-medium text-gray-700">Website</label><input type="url" id="fornecedor-website" class="form-input mt-1 block w-full"></div>
+                                            <div><label for="fornecedor-contato-principal" class="block text-sm font-medium text-gray-700">Vendedor/Contato Principal (Nome, e-mail, telefone)</label><input type="text" id="fornecedor-contato-principal" class="form-input mt-1 block w-full"></div>
+                                        </div>
+                                        <!-- Tab: Endereço -->
+                                        <div id="fornecedor-endereco-tab" class="fornecedor-tab-content hidden space-y-4">
+                                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div><label for="fornecedor-cep" class="block text-sm font-medium text-gray-700">CEP</label><input type="text" id="fornecedor-cep" class="form-input mt-1 block w-full"></div>
+                                                <div class="col-span-2"><label for="fornecedor-logradouro" class="block text-sm font-medium text-gray-700">Logradouro</label><input type="text" id="fornecedor-logradouro" class="form-input mt-1 block w-full"></div>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div><label for="fornecedor-numero" class="block text-sm font-medium text-gray-700">Número</label><input type="text" id="fornecedor-numero" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-complemento" class="block text-sm font-medium text-gray-700">Complemento</label><input type="text" id="fornecedor-complemento" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-bairro" class="block text-sm font-medium text-gray-700">Bairro</label><input type="text" id="fornecedor-bairro" class="form-input mt-1 block w-full"></div>
+                                            </div>
+                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div><label for="fornecedor-cidade" class="block text-sm font-medium text-gray-700">Cidade</label><input type="text" id="fornecedor-cidade" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-estado" class="block text-sm font-medium text-gray-700">Estado (UF)</label><input type="text" id="fornecedor-estado" class="form-input mt-1 block w-full"></div>
+                                            </div>
+                                        </div>
+                                        <!-- Tab: Financeiro e Compra -->
+                                        <div id="fornecedor-financeiro-tab" class="fornecedor-tab-content hidden space-y-4">
+                                            <h4 class="text-md font-semibold text-gray-700">Informações Bancárias</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div><label for="fornecedor-banco" class="block text-sm font-medium text-gray-700">Banco</label><input type="text" id="fornecedor-banco" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-agencia" class="block text-sm font-medium text-gray-700">Agência</label><input type="text" id="fornecedor-agencia" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-conta" class="block text-sm font-medium text-gray-700">Conta</label><input type="text" id="fornecedor-conta" class="form-input mt-1 block w-full"></div>
+                                            </div>
+                                            <div><label for="fornecedor-pix" class="block text-sm font-medium text-gray-700">PIX</label><input type="text" id="fornecedor-pix" class="form-input mt-1 block w-full"></div>
+                                            <h4 class="text-md font-semibold text-gray-700 pt-4 border-t">Condições de Compra</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div><label for="fornecedor-condicao-pagamento" class="block text-sm font-medium text-gray-700">Condição de Pagamento Padrão</label><input type="text" id="fornecedor-condicao-pagamento" class="form-input mt-1 block w-full"></div>
+                                                <div><label for="fornecedor-prazo-entrega" class="block text-sm font-medium text-gray-700">Prazo de Entrega Padrão (dias)</label><input type="number" id="fornecedor-prazo-entrega" class="form-input mt-1 block w-full"></div>
+                                            </div>
+                                            <div><label for="fornecedor-obs" class="block text-sm font-medium text-gray-700">Observações</label><textarea id="fornecedor-obs" rows="3" class="form-textarea mt-1 block w-full"></textarea></div>
                                         </div>
                                     </div>
                                     <div id="fornecedor-form-feedback" class="text-sm mt-4"></div>
-                                    <div class="flex justify-end pt-4">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Salvar Fornecedor</button>
+                                    <div class="flex justify-end pt-4 border-t">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Fornecedor</button>
                                     </div>
                                 </form>
                                 <div class="mt-8 border-t pt-6">
@@ -471,13 +538,13 @@
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Fornecedor</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome / Razão Social</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ / CPF</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato Principal</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="fornecedores-table-body" class="bg-white divide-y divide-gray-200">
-                                            </tbody>
+                                            <tbody id="fornecedores-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -986,9 +1053,23 @@
                     <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-gray-900 text-xl font-semibold">Contas a Pagar</h2>
-                            <button id="lancar-despesa-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                                + Lançar Nova Despesa
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button id="pagar-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <span class="material-symbols-outlined text-base">payments</span>
+                                    Pagar
+                                </button>
+                                <button id="editar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <span class="material-symbols-outlined text-base">edit</span>
+                                    Editar
+                                </button>
+                                <button id="excluir-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                    Excluir
+                                </button>
+                                <button id="lancar-despesa-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                                    + Lançar Nova Despesa
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Toolbar de Filtros e Busca -->
@@ -1032,12 +1113,16 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th scope="col" class="p-4">
+                                            <div class="flex items-center">
+                                                <input id="select-all-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
+                                            </div>
+                                        </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="despesas-table-body" class="bg-white divide-y divide-gray-200">
@@ -1325,9 +1410,6 @@
     const profileDropdownContas = document.getElementById('profile-dropdown-contas');
 
     // Elementos do Dashboard
-    const projectsCountEl = document.getElementById('projects-count');
-    const salesValueEl = document.getElementById('sales-value');
-    const expensesValueEl = document.getElementById('expenses-value');
     const navLinks = document.querySelectorAll('.nav-link');
 
     // --- Variáveis de estado ---
@@ -1407,6 +1489,10 @@
     const cancelPagarModalBtn = document.getElementById('cancel-pagar-modal-btn');
     const pagarForm = document.getElementById('pagar-form');
     const pagarContaSaidaSelect = document.getElementById('pagar-conta-saida');
+    const pagarSelecionadasBtn = document.getElementById('pagar-selecionadas-btn');
+    const editarSelecionadaBtn = document.getElementById('editar-selecionada-btn');
+    const excluirSelecionadasBtn = document.getElementById('excluir-selecionadas-btn');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
 
     // --- Elementos de Recorrência Inteligente ---
     const despesaVencimentoInput = document.getElementById('despesa-vencimento');
@@ -1532,20 +1618,7 @@
         }
         if (!userId) return;
 
-        // Dashboard
-        const dashboardRef = doc(db, 'users', userId, 'dashboard', 'metrics');
-        dashboardUnsubscribe = onSnapshot(dashboardRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                projectsCountEl.textContent = data.projectsInProgress || 0;
-                salesValueEl.textContent = formatCurrency(data.monthlySales || 0);
-                // The 'expensesValueEl' is now updated by the 'despesas' listener.
-            } else {
-                projectsCountEl.textContent = 0;
-                salesValueEl.textContent = formatCurrency(0);
-                expensesValueEl.textContent = formatCurrency(0);
-            }
-        });
+        // Dashboard indicators are now driven by the despesas listener
 
         // Cadastros - Empresas
         const empresasQuery = query(collection(db, 'users', userId, 'empresas'));
@@ -1568,7 +1641,44 @@
         // Cadastros - Fornecedores
         const fornecedoresQuery = query(collection(db, 'users', userId, 'fornecedores'));
         fornecedoresUnsubscribe = onSnapshot(fornecedoresQuery, (querySnapshot) => {
-            renderTable(fornecedoresTableBody, querySnapshot.docs, ['nome', 'cnpj'], (id) => deleteItem('fornecedores', id));
+            if (!fornecedoresTableBody) return;
+            fornecedoresTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = fornecedoresTableBody.insertRow();
+                const td = tr.insertCell();
+                td.colSpan = 4;
+                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+                td.textContent = 'Nenhum fornecedor cadastrado.';
+                return;
+            }
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                const tr = fornecedoresTableBody.insertRow();
+                tr.setAttribute('data-id', doc.id);
+
+                // Adapt to new nested data structure
+                const nome = data.dadosPrincipais?.razaoSocial || data.dadosPrincipais?.nomeCompleto || 'N/A';
+                const cpfCnpj = data.dadosPrincipais?.cnpj || data.dadosPrincipais?.cpf || '';
+                const contato = data.contato?.contatoPrincipal || data.contato?.email || '';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${nome}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cpfCnpj}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${contato}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                    </td>
+                `;
+            });
+            fornecedoresTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+                        deleteItem('fornecedores', id);
+                    }
+                });
+            });
         });
 
         // Cadastros - Planos de Contas
@@ -1801,16 +1911,45 @@
     }
 
     function updateDashboardIndicators(docs) {
-        let pendingExpenses = 0;
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        let totalAPagar = 0;
+        let totalPago = 0;
+        let contasVencidas = 0;
+
         docs.forEach(doc => {
             const data = doc.data();
-            if (!data.pago) {
-                pendingExpenses += data.valor;
+            const vencimento = new Date(data.vencimento + 'T00:00:00');
+
+            // Total a Pagar no Mês
+            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && !data.pago) {
+                totalAPagar += data.valor;
+            }
+
+            // Total Pago no Mês
+            if (data.pago && data.dataPagamento) {
+                const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
+                if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
+                    totalPago += data.valorPago || data.valor;
+                }
+            }
+
+            // Contas Vencidas
+            if (!data.pago && vencimento < today) {
+                contasVencidas += data.valor;
             }
         });
-        if (expensesValueEl) {
-            expensesValueEl.textContent = formatCurrency(pendingExpenses);
-        }
+
+        // Update dashboard-specific elements
+        const dashTotalAPagarEl = document.getElementById('dashboard-total-a-pagar');
+        const dashTotalPagoEl = document.getElementById('dashboard-total-pago');
+        const dashContasVencidasEl = document.getElementById('dashboard-contas-vencidas');
+
+        if (dashTotalAPagarEl) dashTotalAPagarEl.textContent = formatCurrency(totalAPagar);
+        if (dashTotalPagoEl) dashTotalPagoEl.textContent = formatCurrency(totalPago);
+        if (dashContasVencidasEl) dashContasVencidasEl.textContent = formatCurrency(contasVencidas);
     }
 
 
@@ -2055,6 +2194,33 @@
                 pessoaJuridicaFields.classList.toggle('hidden', isFisica);
             });
         }
+
+        // Supplier form-specific tabs and fields
+        const fornecedorTabLinks = comerciaisCadastroSection.querySelectorAll('.fornecedor-tab-link');
+        const fornecedorTabContents = comerciaisCadastroSection.querySelectorAll('.fornecedor-tab-content');
+        const fornecedorTipoPessoaSelect = document.getElementById('fornecedor-tipo-pessoa');
+        const fornecedorPessoaFisicaFields = document.getElementById('fornecedor-pessoa-fisica-fields');
+        const fornecedorPessoaJuridicaFields = document.getElementById('fornecedor-pessoa-juridica-fields');
+
+        fornecedorTabLinks.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                fornecedorTabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.fornecedorTab;
+                fornecedorTabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
+                });
+            });
+        });
+
+        if (fornecedorTipoPessoaSelect) {
+            fornecedorTipoPessoaSelect.addEventListener('change', () => {
+                const isFisica = fornecedorTipoPessoaSelect.value === 'fisica';
+                fornecedorPessoaFisicaFields.classList.toggle('hidden', !isFisica);
+                fornecedorPessoaJuridicaFields.classList.toggle('hidden', isFisica);
+            });
+        }
     }
 
     if (financeirosCadastroSection){
@@ -2078,7 +2244,53 @@
     empresaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'empresas', { nome: document.getElementById('empresa-nome').value, cnpj: document.getElementById('empresa-cnpj').value }, 'empresa-form-feedback', empresaForm));
     usuarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'usuarios', { nome: document.getElementById('usuario-nome').value, email: document.getElementById('usuario-email').value }, 'usuario-form-feedback', usuarioForm));
     perfilForm.addEventListener('submit', (e) => handleFormSubmit(e, 'perfisDeAcesso', { nome: document.getElementById('perfil-nome').value }, 'perfil-form-feedback', perfilForm));
-    fornecedorForm.addEventListener('submit', (e) => handleFormSubmit(e, 'fornecedores', { nome: document.getElementById('fornecedor-nome').value, cnpj: document.getElementById('fornecedor-cnpj').value }, 'fornecedor-form-feedback', fornecedorForm));
+    fornecedorForm.addEventListener('submit', (e) => {
+        const tipoPessoa = document.getElementById('fornecedor-tipo-pessoa').value;
+        let fornecedorData = {
+            tipoPessoa: tipoPessoa,
+            dadosPrincipais: {},
+            contato: {
+                telefone: document.getElementById('fornecedor-telefone').value,
+                email: document.getElementById('fornecedor-email').value,
+                website: document.getElementById('fornecedor-website').value,
+                contatoPrincipal: document.getElementById('fornecedor-contato-principal').value,
+            },
+            endereco: {
+                cep: document.getElementById('fornecedor-cep').value,
+                logradouro: document.getElementById('fornecedor-logradouro').value,
+                numero: document.getElementById('fornecedor-numero').value,
+                complemento: document.getElementById('fornecedor-complemento').value,
+                bairro: document.getElementById('fornecedor-bairro').value,
+                cidade: document.getElementById('fornecedor-cidade').value,
+                estado: document.getElementById('fornecedor-estado').value,
+            },
+            financeiro: {
+                banco: document.getElementById('fornecedor-banco').value,
+                agencia: document.getElementById('fornecedor-agencia').value,
+                conta: document.getElementById('fornecedor-conta').value,
+                pix: document.getElementById('fornecedor-pix').value,
+                condicaoPagamento: document.getElementById('fornecedor-condicao-pagamento').value,
+                prazoEntrega: parseInt(document.getElementById('fornecedor-prazo-entrega').value) || null,
+            },
+            obs: document.getElementById('fornecedor-obs').value,
+        };
+
+        if (tipoPessoa === 'fisica') {
+            fornecedorData.dadosPrincipais.nomeCompleto = document.getElementById('fornecedor-nome-completo').value;
+            fornecedorData.dadosPrincipais.cpf = document.getElementById('fornecedor-cpf').value;
+            // Use nomeCompleto for top-level 'nome' for consistent display
+            fornecedorData.nome = fornecedorData.dadosPrincipais.nomeCompleto;
+        } else { // 'juridica'
+            fornecedorData.dadosPrincipais.razaoSocial = document.getElementById('fornecedor-razao-social').value;
+            fornecedorData.dadosPrincipais.nomeFantasia = document.getElementById('fornecedor-nome-fantasia').value;
+            fornecedorData.dadosPrincipais.cnpj = document.getElementById('fornecedor-cnpj').value;
+            fornecedorData.dadosPrincipais.inscricaoEstadual = document.getElementById('fornecedor-inscricao').value;
+            // Use razaoSocial for top-level 'nome' for consistent display
+            fornecedorData.nome = fornecedorData.dadosPrincipais.razaoSocial;
+        }
+
+        handleFormSubmit(e, 'fornecedores', fornecedorData, 'fornecedor-form-feedback', fornecedorForm);
+    });
     planoContaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'planosDeContas', { nome: document.getElementById('plano-conta-nome').value }, 'plano-conta-form-feedback', planoContaForm));
     contaBancariaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contasBancarias', { nome: document.getElementById('conta-bancaria-nome').value }, 'conta-bancaria-form-feedback', contaBancariaForm));
 
@@ -2269,6 +2481,11 @@
             const currentStatus = statusInfo[status];
 
             tr.innerHTML = `
+                <td class="p-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" class="despesa-checkbox h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded" data-id="${doc.id}">
+                    </div>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -2278,80 +2495,7 @@
                         ${currentStatus.icon} ${currentStatus.text}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button class="edit-despesa-btn text-indigo-600 hover:text-indigo-900" data-id="${doc.id}">Editar</button>
-                    <button class="delete-despesa-btn text-red-600 hover:text-red-900 ml-2" data-id="${doc.id}">Excluir</button>
-                    ${!data.pago ? `<button class="pagar-despesa-btn text-green-600 hover:text-green-900 ml-2" data-id="${doc.id}">Pagar</button>` : ''}
-                </td>
             `;
-        });
-
-        despesasTableBody.querySelectorAll('.delete-despesa-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                if (confirm('Tem certeza que deseja excluir esta despesa?')) {
-                    deleteItem('despesas', id);
-                }
-            });
-        });
-
-        despesasTableBody.querySelectorAll('.edit-despesa-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                const id = e.currentTarget.dataset.id;
-                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-                if (!userId) return;
-
-                try {
-                    const docRef = doc(db, 'users', userId, 'despesas', id);
-                    const docSnap = await getDoc(docRef);
-
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        document.getElementById('despesa-id').value = docSnap.id;
-                        document.getElementById('despesa-descricao').value = data.descricao;
-
-                        if (data.favorecidoTipo && data.favorecidoId) {
-                            favorecidoTipoSelect.value = data.favorecidoTipo;
-                            favorecidoTipoSelect.dispatchEvent(new Event('change'));
-                            favorecidoNomeSelect.value = data.favorecidoId;
-                        } else if (data.fornecedorId) { // Fallback for old data
-                            favorecidoTipoSelect.value = 'fornecedores';
-                            favorecidoTipoSelect.dispatchEvent(new Event('change'));
-                            favorecidoNomeSelect.value = data.fornecedorId;
-                        }
-
-                        document.getElementById('despesa-categoria').value = data.categoriaId;
-                        document.getElementById('despesa-valor').value = data.valor;
-                        document.getElementById('despesa-competencia').value = data.competencia;
-                        document.getElementById('despesa-vencimento').value = data.vencimento;
-                        document.getElementById('despesa-obs').value = data.obs || '';
-
-                        const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
-                        pagoCheckbox.checked = data.pago;
-
-                        const pagamentoInfoDiv = document.getElementById('pagamento-info');
-                        if (data.pago) {
-                            pagamentoInfoDiv.classList.remove('hidden');
-                            document.getElementById('pagamento-data').value = data.dataPagamento || '';
-                            document.getElementById('pagamento-valor').value = data.valorPago || '';
-                            document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
-                        } else {
-                            pagamentoInfoDiv.classList.add('hidden');
-                        }
-
-                        openModal(true); // Open in edit mode
-                    }
-                } catch (error) {
-                    console.error("Error getting document:", error);
-                }
-            });
-        });
-
-        despesasTableBody.querySelectorAll('.pagar-despesa-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                openPagarModal(id);
-            });
         });
     }
 
@@ -2362,6 +2506,128 @@
                 dropdown.classList.toggle('hidden');
             });
         }
+    }
+
+    function getSelectedDespesaIds() {
+        return Array.from(despesasTableBody.querySelectorAll('.despesa-checkbox:checked')).map(cb => cb.dataset.id);
+    }
+
+    function updateActionButtonsState() {
+        const selectedIds = getSelectedDespesaIds();
+        const selectedCount = selectedIds.length;
+
+        // Enable/disable 'Editar' button
+        editarSelecionadaBtn.disabled = selectedCount !== 1;
+
+        // Enable/disable 'Excluir' button
+        excluirSelecionadasBtn.disabled = selectedCount === 0;
+
+        // Enable/disable 'Pagar' button
+        let canPay = false;
+        if (selectedCount > 0) {
+            // Check if ALL selected items are not paid
+            canPay = selectedIds.every(id => {
+                const despesaDoc = allDespesas.find(d => d.id === id);
+                return despesaDoc && !despesaDoc.data().pago;
+            });
+        }
+        pagarSelecionadasBtn.disabled = !canPay;
+    }
+
+    if (despesasTableBody) {
+        despesasTableBody.addEventListener('change', e => {
+            if (e.target.classList.contains('despesa-checkbox')) {
+                updateActionButtonsState();
+            }
+        });
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            despesasTableBody.querySelectorAll('.despesa-checkbox').forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateActionButtonsState();
+        });
+    }
+
+    if (editarSelecionadaBtn) {
+        editarSelecionadaBtn.addEventListener('click', async () => {
+            const selectedIds = getSelectedDespesaIds();
+            if (selectedIds.length !== 1) return;
+            const id = selectedIds[0];
+            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+            if (!userId) return;
+            try {
+                const docRef = doc(db, 'users', userId, 'despesas', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('despesa-id').value = docSnap.id;
+                    document.getElementById('despesa-descricao').value = data.descricao;
+                    if (data.favorecidoTipo && data.favorecidoId) {
+                        favorecidoTipoSelect.value = data.favorecidoTipo;
+                        favorecidoTipoSelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => {
+                            favorecidoNomeSelect.value = data.favorecidoId;
+                        }, 150);
+                    } else if (data.fornecedorId) {
+                        favorecidoTipoSelect.value = 'fornecedores';
+                        favorecidoTipoSelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => {
+                            favorecidoNomeSelect.value = data.fornecedorId;
+                        }, 150);
+                    }
+                    document.getElementById('despesa-categoria').value = data.categoriaId;
+                    document.getElementById('despesa-valor').value = data.valor;
+                    document.getElementById('despesa-competencia').value = data.competencia;
+                    document.getElementById('despesa-vencimento').value = data.vencimento;
+                    document.getElementById('despesa-obs').value = data.obs || '';
+                    const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
+                    pagoCheckbox.checked = data.pago;
+                    const pagamentoInfoDiv = document.getElementById('pagamento-info');
+                    if (data.pago) {
+                        pagamentoInfoDiv.classList.remove('hidden');
+                        document.getElementById('pagamento-data').value = data.dataPagamento || '';
+                        document.getElementById('pagamento-valor').value = data.valorPago || '';
+                        document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
+                    } else {
+                        pagamentoInfoDiv.classList.add('hidden');
+                    }
+                    openModal(true);
+                }
+            } catch (error) {
+                console.error("Error getting document:", error);
+            }
+        });
+    }
+
+    if (pagarSelecionadasBtn) {
+        pagarSelecionadasBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedDespesaIds();
+            if (selectedIds.length === 0) return;
+            // The modal will be adapted to handle multiple payments if needed,
+            // but for now, it opens with the details of the first selected item.
+            // A more advanced implementation could show a summary.
+            openPagarModal(selectedIds); // Pass all selected IDs
+        });
+    }
+
+    if (excluirSelecionadasBtn) {
+        excluirSelecionadasBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedDespesaIds();
+            if (selectedIds.length === 0) return;
+            if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
+                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+                if (!userId) return;
+                selectedIds.forEach(id => {
+                    deleteDoc(doc(db, 'users', userId, 'despesas', id));
+                });
+                // Reset selection
+                selectAllCheckbox.checked = false;
+                updateActionButtonsState();
+            }
+        });
     }
 
     setupDropdown(financeiroNavLink, financeiroDropdown);
@@ -2389,24 +2655,43 @@
         }
     }
 
-    function openPagarModal(despesaId) {
-        if (!pagarModal) return;
+    function openPagarModal(despesaIds) {
+        if (!pagarModal || despesaIds.length === 0) return;
         const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
         if (!userId) return;
 
-        const docRef = doc(db, 'users', userId, 'despesas', despesaId);
-        getDoc(docRef).then(docSnap => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById('pagar-despesa-id').value = docSnap.id;
-                document.getElementById('pagar-valor').value = data.valor;
-                document.getElementById('pagar-data').value = new Date().toISOString().split('T')[0];
-                pagarModal.classList.remove('hidden');
+        // Store all IDs as a comma-separated string in the hidden input
+        document.getElementById('pagar-despesa-id').value = despesaIds.join(',');
+
+        // Calculate the total value of all selected expenses
+        let totalValor = 0;
+        const promises = despesaIds.map(id => getDoc(doc(db, 'users', userId, 'despesas', id)));
+
+        Promise.all(promises).then(docs => {
+            docs.forEach(docSnap => {
+                if (docSnap.exists()) {
+                    totalValor += docSnap.data().valor;
+                }
+            });
+
+            // Update the modal UI
+            const valorInput = document.getElementById('pagar-valor');
+            valorInput.value = totalValor.toFixed(2);
+            // Make the total value read-only to avoid partial payment complexity for batches
+            valorInput.readOnly = despesaIds.length > 1;
+
+            document.getElementById('pagar-data').value = new Date().toISOString().split('T')[0];
+            pagarModal.classList.remove('hidden');
+
+            // Update modal title
+            const modalTitle = pagarModal.querySelector('h3');
+            if (despesaIds.length > 1) {
+                modalTitle.textContent = `Registrar Pagamento de ${despesaIds.length} Contas`;
             } else {
-                console.error("No such document!");
+                modalTitle.textContent = 'Registrar Pagamento';
             }
         }).catch(error => {
-            console.error("Error getting document:", error);
+            console.error("Error getting documents for payment:", error);
         });
     }
 
@@ -2429,44 +2714,60 @@
                 return;
             }
 
-            const despesaId = document.getElementById('pagar-despesa-id').value;
-            const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
+            const despesaIds = document.getElementById('pagar-despesa-id').value.split(',');
+            const paymentDate = document.getElementById('pagar-data').value;
+            const paymentAccount = document.getElementById('pagar-conta-saida').value;
+            const paymentMethod = document.getElementById('pagar-meio-pagamento').value;
+            const totalPaid = parseFloat(document.getElementById('pagar-valor').value);
+
+            const paymentPromises = despesaIds.map(async (id) => {
+                const despesaRef = doc(db, 'users', userId, 'despesas', id);
+                try {
+                    const despesaSnap = await getDoc(despesaRef);
+                    if (!despesaSnap.exists()) {
+                        console.error(`Despesa com ID ${id} não encontrada!`);
+                        return; // Skip this one
+                    }
+                    const despesaData = despesaSnap.data();
+                    const valorPagoIndividual = despesaIds.length === 1 ? totalPaid : despesaData.valor;
+
+                    // 1. Create financial transaction record
+                    const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
+                    await addDoc(transacoesRef, {
+                        referenciaContaPagar: despesaRef,
+                        dataPagamento: paymentDate,
+                        dataCompetencia: despesaData.competencia,
+                        valorPago: valorPagoIndividual,
+                        referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', paymentAccount),
+                        referenciaFavorecido: {
+                            collection: despesaData.favorecidoTipo,
+                            id: despesaData.favorecidoId
+                        },
+                        referenciaPlanoDeContas: doc(db, 'users', userId, 'planosDeContas', despesaData.categoriaId),
+                        meioPagamento: paymentMethod,
+                        tipoTransacao: "DESPESA",
+                        createdAt: serverTimestamp()
+                    });
+
+                    // 2. Update the original expense
+                    await updateDoc(despesaRef, {
+                        pago: true,
+                        dataPagamento: paymentDate,
+                        valorPago: valorPagoIndividual
+                    });
+                } catch (error) {
+                    console.error(`Erro ao processar pagamento para a despesa ${id}:`, error);
+                }
+            });
 
             try {
-                const despesaSnap = await getDoc(despesaRef);
-                if (!despesaSnap.exists()) {
-                    console.error("Despesa original não encontrada!");
-                    return;
-                }
-                const despesaData = despesaSnap.data();
-
-                // 1. Criar a transação financeira
-                const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
-                await addDoc(transacoesRef, {
-                    referenciaContaPagar: despesaRef,
-                    dataPagamento: document.getElementById('pagar-data').value,
-                    dataCompetencia: despesaData.competencia,
-                    valorPago: parseFloat(document.getElementById('pagar-valor').value),
-                    referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', document.getElementById('pagar-conta-saida').value),
-                    referenciaFornecedor: doc(db, 'users', userId, 'fornecedores', despesaData.fornecedorId),
-                    referenciaPlanoDeContas: doc(db, 'users', userId, 'planosDeContas', despesaData.categoriaId),
-                    meioPagamento: document.getElementById('pagar-meio-pagamento').value,
-                    tipoTransacao: "DESPESA",
-                    createdAt: serverTimestamp()
-                    // Anexo pode ser adicionado aqui com o Firebase Storage
-                });
-
-                // 2. Atualizar a conta a pagar original
-                await updateDoc(despesaRef, {
-                    pago: true,
-                    dataPagamento: document.getElementById('pagar-data').value,
-                    valorPago: parseFloat(document.getElementById('pagar-valor').value)
-                });
-
+                await Promise.all(paymentPromises);
                 closePagarModal();
-
+                // Reset selection state in the main table
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.dispatchEvent(new Event('change')); // Trigger state update
             } catch (error) {
-                console.error("Erro ao registrar pagamento:", error);
+                console.error("Erro ao registrar um ou mais pagamentos:", error);
             }
         });
     }
