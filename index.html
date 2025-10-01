@@ -777,7 +777,11 @@
                                 </select>
                             </div>
                             <!-- Action Buttons -->
-                            <div class="flex items-end gap-2">
+                            <div class="flex items-end gap-4">
+                                <div class="flex items-center h-full pt-7">
+                                    <input id="include-paid-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
+                                    <label for="include-paid-checkbox" class="ml-2 block text-sm font-medium text-gray-900">Incluir Pagos</label>
+                                </div>
                                 <button id="filter-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Filtrar</button>
                                 <button id="clear-filters-btn" class="inline-flex items-center justify-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Limpar Filtros</button>
                             </div>
@@ -1170,6 +1174,7 @@
     const statusFilter = document.getElementById('status-filter');
     const filterBtn = document.getElementById('filter-btn');
     const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    const includePaidCheckbox = document.getElementById('include-paid-checkbox');
     let allDespesas = []; // Holds all expenses for client-side filtering
 
 
@@ -1712,11 +1717,17 @@
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
         const status = statusFilter.value;
+        const includePaid = includePaidCheckbox.checked;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         const filteredDocs = allDespesas.filter(doc => {
             const data = doc.data();
+
+            // Paid filter (primary filter)
+            if (!includePaid && data.pago) {
+                return false;
+            }
 
             // Status filter
             let statusMatch = true;
@@ -1753,12 +1764,14 @@
 
     if(filterBtn) filterBtn.addEventListener('click', applyFiltersAndRender);
     if(searchInput) searchInput.addEventListener('keyup', applyFiltersAndRender);
+    if(includePaidCheckbox) includePaidCheckbox.addEventListener('change', applyFiltersAndRender);
     if(clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', () => {
             searchInput.value = '';
             startDateInput.value = '';
             endDateInput.value = '';
             statusFilter.value = 'todas';
+            includePaidCheckbox.checked = false;
             applyFiltersAndRender();
         });
     }
