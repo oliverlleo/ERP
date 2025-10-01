@@ -32,10 +32,13 @@
         display: flex;
         opacity: 1;
     }
-    .tab-link.active, .tab-link-financeiro.active {
+    .tab-link.active, .tab-link-financeiro.active, .cliente-tab-link.active, .funcionario-tab-link.active {
         color: var(--primary-color);
         border-color: var(--primary-color);
         border-bottom-width: 2px;
+    }
+    .cliente-tab-link, .funcionario-tab-link {
+        border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
     }
   </style>
 </head>
@@ -481,19 +484,184 @@
                             </div>
                             <!-- Tab: Clientes -->
                             <div id="clientes-tab-comercial" class="tab-content-comercial hidden">
-                                <form id="cliente-form">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="cliente-nome">Nome do Cliente</label>
-                                            <input type="text" id="cliente-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                <form id="cliente-form" class="space-y-6">
+                                    <!-- Abas do Formulário de Cliente -->
+                                    <div class="border-b border-gray-200">
+                                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                            <a href="#" class="cliente-tab-link active" data-cliente-tab="cliente-dados-principais">Dados Principais</a>
+                                            <a href="#" class="cliente-tab-link" data-cliente-tab="cliente-contato">Contato</a>
+                                            <a href="#" class="cliente-tab-link" data-cliente-tab="cliente-enderecos">Endereços</a>
+                                            <a href="#" class="cliente-tab-link" data-cliente-tab="cliente-financeiro">Comercial/Financeiro</a>
+                                        </nav>
+                                    </div>
+
+                                    <!-- Conteúdo das Abas do Cliente -->
+                                    <div class="pt-4">
+                                        <!-- Tab: Dados Principais -->
+                                        <div id="cliente-dados-principais-tab" class="cliente-tab-content space-y-4">
+                                            <div>
+                                                <label for="cliente-tipo-pessoa" class="block text-sm font-medium text-gray-700">Tipo de Pessoa</label>
+                                                <select id="cliente-tipo-pessoa" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    <option value="fisica">Pessoa Física</option>
+                                                    <option value="juridica">Pessoa Jurídica</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Campos Pessoa Física -->
+                                            <div id="cliente-pessoa-fisica-fields" class="space-y-4">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="cliente-nome-completo" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                                                        <input type="text" id="cliente-nome-completo" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label for="cliente-cpf" class="block text-sm font-medium text-gray-700">CPF</label>
+                                                        <input type="text" id="cliente-cpf" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="cliente-rg" class="block text-sm font-medium text-gray-700">RG</label>
+                                                        <input type="text" id="cliente-rg" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label for="cliente-data-nascimento" class="block text-sm font-medium text-gray-700">Data de Nascimento</label>
+                                                        <input type="date" id="cliente-data-nascimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Campos Pessoa Jurídica -->
+                                            <div id="cliente-pessoa-juridica-fields" class="hidden space-y-4">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="cliente-razao-social" class="block text-sm font-medium text-gray-700">Razão Social</label>
+                                                        <input type="text" id="cliente-razao-social" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label for="cliente-nome-fantasia" class="block text-sm font-medium text-gray-700">Nome Fantasia</label>
+                                                        <input type="text" id="cliente-nome-fantasia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="cliente-cnpj" class="block text-sm font-medium text-gray-700">CNPJ</label>
+                                                        <input type="text" id="cliente-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label for="cliente-inscricao" class="block text-sm font-medium text-gray-700">Inscrição Estadual / Municipal</label>
+                                                        <input type="text" id="cliente-inscricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="cliente-cpf-cnpj">CPF / CNPJ</label>
-                                            <input type="text" id="cliente-cpf-cnpj" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+
+                                        <!-- Tab: Contato -->
+                                        <div id="cliente-contato-tab" class="cliente-tab-content hidden space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="cliente-telefone" class="block text-sm font-medium text-gray-700">Telefone Principal</label>
+                                                    <input type="tel" id="cliente-telefone" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                                <div>
+                                                    <label for="cliente-email" class="block text-sm font-medium text-gray-700">E-mail Principal</label>
+                                                    <input type="email" id="cliente-email" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                            </div>
+                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="cliente-website" class="block text-sm font-medium text-gray-700">Website/Rede Social</label>
+                                                    <input type="url" id="cliente-website" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                                 <div>
+                                                    <label for="cliente-contato-pessoa" class="block text-sm font-medium text-gray-700">Pessoa de Contato</label>
+                                                    <input type="text" id="cliente-contato-pessoa" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label for="cliente-email-financeiro" class="block text-sm font-medium text-gray-700">E-mail do Financeiro</label>
+                                                <input type="email" id="cliente-email-financeiro" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                            </div>
+                                        </div>
+
+                                        <!-- Tab: Endereços -->
+                                        <div id="cliente-enderecos-tab" class="cliente-tab-content hidden space-y-4">
+                                            <h4 class="text-md font-semibold text-gray-700">Endereço Principal</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label for="cliente-cep" class="block text-sm font-medium text-gray-700">CEP</label>
+                                                    <input type="text" id="cliente-cep" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <label for="cliente-logradouro" class="block text-sm font-medium text-gray-700">Logradouro</label>
+                                                    <input type="text" id="cliente-logradouro" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label for="cliente-numero" class="block text-sm font-medium text-gray-700">Número</label>
+                                                    <input type="text" id="cliente-numero" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                                <div>
+                                                    <label for="cliente-complemento" class="block text-sm font-medium text-gray-700">Complemento</label>
+                                                    <input type="text" id="cliente-complemento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                                <div>
+                                                    <label for="cliente-bairro" class="block text-sm font-medium text-gray-700">Bairro</label>
+                                                    <input type="text" id="cliente-bairro" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="cliente-cidade" class="block text-sm font-medium text-gray-700">Cidade</label>
+                                                    <input type="text" id="cliente-cidade" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                                <div>
+                                                    <label for="cliente-estado" class="block text-sm font-medium text-gray-700">Estado (UF)</label>
+                                                    <input type="text" id="cliente-estado" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                </div>
+                                            </div>
+                                            <!-- Adicionar lógica para múltiplos endereços se necessário -->
+                                        </div>
+
+                                        <!-- Tab: Comercial/Financeiro -->
+                                        <div id="cliente-financeiro-tab" class="cliente-tab-content hidden space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="cliente-vendedor" class="block text-sm font-medium text-gray-700">Vendedor Responsável</label>
+                                                    <select id="cliente-vendedor" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select>
+                                                </div>
+                                                <div>
+                                                    <label for="cliente-limite-credito" class="block text-sm font-medium text-gray-700">Limite de Crédito</label>
+                                                    <input type="number" id="cliente-limite-credito" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="cliente-condicao-pagamento" class="block text-sm font-medium text-gray-700">Condição de Pagamento Padrão</label>
+                                                    <select id="cliente-condicao-pagamento" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                        <option>À vista</option>
+                                                        <option>30 dias</option>
+                                                        <option>15/30/45 dias</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label for="cliente-tabela-precos" class="block text-sm font-medium text-gray-700">Tabela de Preços Padrão</label>
+                                                    <select id="cliente-tabela-precos" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                                        <option>Varejo</option>
+                                                        <option>Atacado</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label for="cliente-obs" class="block text-sm font-medium text-gray-700">Observações</label>
+                                                <textarea id="cliente-obs" rows="3" class="form-textarea mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                                            </div>
                                         </div>
                                     </div>
+
                                     <div id="cliente-form-feedback" class="text-sm mt-4"></div>
-                                    <div class="flex justify-end pt-4">
+                                    <div class="flex justify-end pt-4 border-t">
                                         <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Cliente</button>
                                     </div>
                                 </form>
@@ -503,8 +671,9 @@
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Cliente</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome / Razão Social</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF / CNPJ</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -638,31 +807,103 @@
                             </button>
                         </div>
                         <!-- Formulário de Funcionário -->
-                        <form id="funcionario-form">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700" for="funcionario-nome">Nome do Funcionário</label>
-                                    <input type="text" id="funcionario-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        <form id="funcionario-form" class="space-y-6">
+                            <!-- Abas do Formulário de Funcionário -->
+                            <div class="border-b border-gray-200">
+                                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                    <a href="#" class="funcionario-tab-link active" data-funcionario-tab="pessoal">Dados Pessoais</a>
+                                    <a href="#" class="funcionario-tab-link" data-funcionario-tab="contato">Contato e Endereço</a>
+                                    <a href="#" class="funcionario-tab-link" data-funcionario-tab="contratual">Dados Contratuais</a>
+                                    <a href="#" class="funcionario-tab-link" data-funcionario-tab="bancario">Dados Bancários</a>
+                                    <a href="#" class="funcionario-tab-link" data-funcionario-tab="acesso">Acesso ao Sistema</a>
+                                </nav>
+                            </div>
+
+                            <div class="pt-4">
+                                <!-- Tab: Dados Pessoais -->
+                                <div id="pessoal-tab" class="funcionario-tab-content space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label for="funcionario-nome-completo" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="funcionario-nome-completo" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-nome-social" class="block text-sm font-medium text-gray-700">Nome Social</label><input type="text" id="funcionario-nome-social" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="funcionario-data-nascimento" class="block text-sm font-medium text-gray-700">Data de Nascimento</label><input type="date" id="funcionario-data-nascimento" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-cpf-rh" class="block text-sm font-medium text-gray-700">CPF</label><input type="text" id="funcionario-cpf-rh" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-rg-rh" class="block text-sm font-medium text-gray-700">RG</label><input type="text" id="funcionario-rg-rh" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="funcionario-pis" class="block text-sm font-medium text-gray-700">PIS/PASEP</label><input type="text" id="funcionario-pis" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-estado-civil" class="block text-sm font-medium text-gray-700">Estado Civil</label><input type="text" id="funcionario-estado-civil" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-nacionalidade" class="block text-sm font-medium text-gray-700">Nacionalidade</label><input type="text" id="funcionario-nacionalidade" class="form-input mt-1 block w-full"></div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700" for="funcionario-cpf">CPF</label>
-                                    <input type="text" id="funcionario-cpf" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <!-- Tab: Contato e Endereço -->
+                                <div id="contato-tab" class="funcionario-tab-content hidden space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label for="funcionario-telefone" class="block text-sm font-medium text-gray-700">Telefone Pessoal</label><input type="tel" id="funcionario-telefone" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-email-pessoal" class="block text-sm font-medium text-gray-700">E-mail Pessoal</label><input type="email" id="funcionario-email-pessoal" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                    <div><label for="funcionario-contato-emergencia" class="block text-sm font-medium text-gray-700">Contato de Emergência (Nome e Telefone)</label><input type="text" id="funcionario-contato-emergencia" class="form-input mt-1 block w-full"></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                                        <div><label for="funcionario-cep" class="block text-sm font-medium text-gray-700">CEP</label><input type="text" id="funcionario-cep" class="form-input mt-1 block w-full"></div>
+                                        <div class="col-span-2"><label for="funcionario-logradouro" class="block text-sm font-medium text-gray-700">Logradouro</label><input type="text" id="funcionario-logradouro" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="funcionario-numero" class="block text-sm font-medium text-gray-700">Número</label><input type="text" id="funcionario-numero" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-complemento" class="block text-sm font-medium text-gray-700">Complemento</label><input type="text" id="funcionario-complemento" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-bairro" class="block text-sm font-medium text-gray-700">Bairro</label><input type="text" id="funcionario-bairro" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label for="funcionario-cidade" class="block text-sm font-medium text-gray-700">Cidade</label><input type="text" id="funcionario-cidade" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-estado" class="block text-sm font-medium text-gray-700">Estado (UF)</label><input type="text" id="funcionario-estado" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                </div>
+                                <!-- Tab: Dados Contratuais -->
+                                <div id="contratual-tab" class="funcionario-tab-content hidden space-y-4">
+                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="funcionario-matricula" class="block text-sm font-medium text-gray-700">Matrícula</label><input type="text" id="funcionario-matricula" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-admissao" class="block text-sm font-medium text-gray-700">Data de Admissão</label><input type="date" id="funcionario-admissao" class="form-input mt-1 block w-full"></div>
+                                         <div><label for="funcionario-desligamento" class="block text-sm font-medium text-gray-700">Data de Desligamento</label><input type="date" id="funcionario-desligamento" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label for="funcionario-cargo" class="block text-sm font-medium text-gray-700">Cargo</label><input type="text" id="funcionario-cargo" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-departamento" class="block text-sm font-medium text-gray-700">Departamento</label><input type="text" id="funcionario-departamento" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="funcionario-salario" class="block text-sm font-medium text-gray-700">Salário Base</label><input type="number" id="funcionario-salario" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-tipo-contrato" class="block text-sm font-medium text-gray-700">Tipo de Contrato</label><input type="text" id="funcionario-tipo-contrato" class="form-input mt-1 block w-full" placeholder="CLT, Estágio, PJ..."></div>
+                                        <div><label for="funcionario-jornada" class="block text-sm font-medium text-gray-700">Jornada de Trabalho</label><input type="text" id="funcionario-jornada" class="form-input mt-1 block w-full" placeholder="Ex: 44 horas semanais"></div>
+                                    </div>
+                                </div>
+                                <!-- Tab: Dados Bancários -->
+                                <div id="bancario-tab" class="funcionario-tab-content hidden space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="funcionario-banco" class="block text-sm font-medium text-gray-700">Banco</label><input type="text" id="funcionario-banco" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-agencia" class="block text-sm font-medium text-gray-700">Agência</label><input type="text" id="funcionario-agencia" class="form-input mt-1 block w-full"></div>
+                                        <div><label for="funcionario-conta" class="block text-sm font-medium text-gray-700">Conta Corrente</label><input type="text" id="funcionario-conta" class="form-input mt-1 block w-full"></div>
+                                    </div>
+                                </div>
+                                <!-- Tab: Acesso ao Sistema -->
+                                <div id="acesso-tab" class="funcionario-tab-content hidden space-y-4">
+                                    <div><label for="funcionario-usuario-sistema" class="block text-sm font-medium text-gray-700">Usuário do Sistema</label><select id="funcionario-usuario-sistema" class="form-select mt-1 block w-full"></select></div>
                                 </div>
                             </div>
+
                             <div id="funcionario-form-feedback" class="text-sm mt-4"></div>
-                            <div class="flex justify-end pt-4">
+                            <div class="flex justify-end pt-4 border-t">
                                 <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Funcionário</button>
                             </div>
                         </form>
                         <!-- Tabela de Funcionários -->
-                        <div class="mt-8 border-t pt-6">
+                         <div class="mt-8 border-t pt-6">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Funcionários Cadastrados</h3>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Funcionário</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargo</th>
                                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                         </tr>
                                     </thead>
@@ -1345,7 +1586,46 @@
         // Cadastros - Clientes
         const clientesQuery = query(collection(db, 'users', userId, 'clientes'));
         clientesUnsubscribe = onSnapshot(clientesQuery, (querySnapshot) => {
-            renderTable(clientesTableBody, querySnapshot.docs, ['nome', 'cpf_cnpj'], (id) => deleteItem('clientes', id));
+            if (!clientesTableBody) return;
+            clientesTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = clientesTableBody.insertRow();
+                const td = tr.insertCell();
+                td.colSpan = 4;
+                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+                td.textContent = 'Nenhum cliente cadastrado.';
+                return;
+            }
+
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                const tr = clientesTableBody.insertRow();
+                tr.setAttribute('data-id', doc.id);
+
+                const nome = data.nome || data.razaoSocial || 'N/A';
+                const cpfCnpj = data.cpf || data.cnpj || '';
+                const contato = data.contato?.telefone || data.contato?.email || '';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${nome}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cpfCnpj}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${contato}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                    </td>
+                `;
+            });
+
+            clientesTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                        deleteItem('clientes', id);
+                    }
+                });
+            });
+            // Add edit functionality here if needed
         });
 
         // Cadastros - Serviços
@@ -1357,7 +1637,49 @@
         // Cadastros - Funcionários
         const funcionariosQuery = query(collection(db, 'users', userId, 'funcionarios'));
         funcionariosUnsubscribe = onSnapshot(funcionariosQuery, (querySnapshot) => {
-            renderTable(funcionariosTableBody, querySnapshot.docs, ['nome', 'cpf'], (id) => deleteItem('funcionarios', id));
+        if (!funcionariosTableBody) return;
+        funcionariosTableBody.innerHTML = '';
+        if (querySnapshot.empty) {
+            const tr = funcionariosTableBody.insertRow();
+            const td = tr.insertCell();
+            td.colSpan = 4;
+            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
+            td.textContent = 'Nenhum funcionário cadastrado.';
+            return;
+        }
+
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            const tr = funcionariosTableBody.insertRow();
+            tr.setAttribute('data-id', doc.id);
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.matricula || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.pessoal?.nomeCompleto || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.cargo || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
+                </td>
+            `;
+        });
+
+        funcionariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (confirm('Tem certeza que deseja excluir este funcionário?')) {
+                    deleteItem('funcionarios', id);
+                }
+            });
+        });
+    });
+
+    // Populate user dropdown in employee form
+    const usuariosQueryForDropdown = query(collection(db, 'users', userId, 'usuarios'));
+    onSnapshot(usuariosQueryForDropdown, (querySnapshot) => {
+        const userSelect = document.getElementById('funcionario-usuario-sistema');
+        if (userSelect) {
+            populateDropdown(userSelect, querySnapshot.docs);
+        }
         });
 
         // --- Listener for Despesas Table ---
@@ -1656,6 +1978,23 @@
         });
     }
 
+    if (rhCadastroSection) {
+        const tabLinks = rhCadastroSection.querySelectorAll('.funcionario-tab-link');
+        const tabContents = rhCadastroSection.querySelectorAll('.funcionario-tab-content');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.funcionarioTab;
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
+                });
+            });
+        });
+    }
+
     if (geraisCadastroSection){
         const tabLinks = geraisCadastroSection.querySelectorAll('.tab-link');
         const tabContents = geraisCadastroSection.querySelectorAll('.tab-content');
@@ -1674,20 +2013,48 @@
     }
 
     if (comerciaisCadastroSection){
-        const tabLinks = comerciaisCadastroSection.querySelectorAll('.tab-link-comercial');
-        const tabContents = comerciaisCadastroSection.querySelectorAll('.tab-content-comercial');
+        // Main tabs: Fornecedores, Clientes, etc.
+        const mainTabLinks = comerciaisCadastroSection.querySelectorAll('.tab-link-comercial');
+        const mainTabContents = comerciaisCadastroSection.querySelectorAll('.tab-content-comercial');
 
-        tabLinks.forEach(link => {
+        mainTabLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                tabLinks.forEach(item => item.classList.remove('active'));
+                mainTabLinks.forEach(item => item.classList.remove('active'));
                 link.classList.add('active');
                 const tabId = link.dataset.tabComercial;
-                tabContents.forEach(content => {
+                mainTabContents.forEach(content => {
                     content.classList.toggle('hidden', content.id !== `${tabId}-tab-comercial`);
                 });
             });
         });
+
+        // Customer form-specific tabs
+        const clienteTabLinks = comerciaisCadastroSection.querySelectorAll('.cliente-tab-link');
+        const clienteTabContents = comerciaisCadastroSection.querySelectorAll('.cliente-tab-content');
+        const clienteTipoPessoaSelect = document.getElementById('cliente-tipo-pessoa');
+        const pessoaFisicaFields = document.getElementById('cliente-pessoa-fisica-fields');
+        const pessoaJuridicaFields = document.getElementById('cliente-pessoa-juridica-fields');
+
+        clienteTabLinks.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                clienteTabLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                const tabId = link.dataset.clienteTab;
+                clienteTabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `${tabId}-tab`);
+                });
+            });
+        });
+
+        if (clienteTipoPessoaSelect) {
+            clienteTipoPessoaSelect.addEventListener('change', () => {
+                const isFisica = clienteTipoPessoaSelect.value === 'fisica';
+                pessoaFisicaFields.classList.toggle('hidden', !isFisica);
+                pessoaJuridicaFields.classList.toggle('hidden', isFisica);
+            });
+        }
     }
 
     if (financeirosCadastroSection){
@@ -1714,9 +2081,101 @@
     fornecedorForm.addEventListener('submit', (e) => handleFormSubmit(e, 'fornecedores', { nome: document.getElementById('fornecedor-nome').value, cnpj: document.getElementById('fornecedor-cnpj').value }, 'fornecedor-form-feedback', fornecedorForm));
     planoContaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'planosDeContas', { nome: document.getElementById('plano-conta-nome').value }, 'plano-conta-form-feedback', planoContaForm));
     contaBancariaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contasBancarias', { nome: document.getElementById('conta-bancaria-nome').value }, 'conta-bancaria-form-feedback', contaBancariaForm));
-    clienteForm.addEventListener('submit', (e) => handleFormSubmit(e, 'clientes', { nome: document.getElementById('cliente-nome').value, cpf_cnpj: document.getElementById('cliente-cpf-cnpj').value }, 'cliente-form-feedback', clienteForm));
+
+    clienteForm.addEventListener('submit', (e) => {
+        const tipoPessoa = document.getElementById('cliente-tipo-pessoa').value;
+        let clienteData = {
+            tipoPessoa: tipoPessoa,
+            contato: {
+                telefone: document.getElementById('cliente-telefone').value,
+                email: document.getElementById('cliente-email').value,
+                website: document.getElementById('cliente-website').value,
+                pessoaContato: document.getElementById('cliente-contato-pessoa').value,
+                emailFinanceiro: document.getElementById('cliente-email-financeiro').value
+            },
+            endereco: {
+                cep: document.getElementById('cliente-cep').value,
+                logradouro: document.getElementById('cliente-logradouro').value,
+                numero: document.getElementById('cliente-numero').value,
+                complemento: document.getElementById('cliente-complemento').value,
+                bairro: document.getElementById('cliente-bairro').value,
+                cidade: document.getElementById('cliente-cidade').value,
+                estado: document.getElementById('cliente-estado').value,
+            },
+            financeiro: {
+                vendedorId: document.getElementById('cliente-vendedor').value,
+                limiteCredito: parseFloat(document.getElementById('cliente-limite-credito').value) || 0,
+                condicaoPagamento: document.getElementById('cliente-condicao-pagamento').value,
+                tabelaPrecos: document.getElementById('cliente-tabela-precos').value,
+            },
+            obs: document.getElementById('cliente-obs').value
+        };
+
+        if (tipoPessoa === 'fisica') {
+            clienteData.nome = document.getElementById('cliente-nome-completo').value;
+            clienteData.cpf = document.getElementById('cliente-cpf').value;
+            clienteData.rg = document.getElementById('cliente-rg').value;
+            clienteData.dataNascimento = document.getElementById('cliente-data-nascimento').value;
+        } else {
+            clienteData.nome = document.getElementById('cliente-razao-social').value;
+            clienteData.nomeFantasia = document.getElementById('cliente-nome-fantasia').value;
+            clienteData.cnpj = document.getElementById('cliente-cnpj').value;
+            clienteData.inscricaoEstadual = document.getElementById('cliente-inscricao').value;
+        }
+
+        // Use the generic handler
+        handleFormSubmit(e, 'clientes', clienteData, 'cliente-form-feedback', clienteForm);
+    });
+
     servicoForm.addEventListener('submit', (e) => handleFormSubmit(e, 'servicos', { nome: document.getElementById('servico-nome').value }, 'servico-form-feedback', servicoForm));
-    funcionarioForm.addEventListener('submit', (e) => handleFormSubmit(e, 'funcionarios', { nome: document.getElementById('funcionario-nome').value, cpf: document.getElementById('funcionario-cpf').value }, 'funcionario-form-feedback', funcionarioForm));
+
+    funcionarioForm.addEventListener('submit', (e) => {
+        const funcionarioData = {
+            pessoal: {
+                nomeCompleto: document.getElementById('funcionario-nome-completo').value,
+                nomeSocial: document.getElementById('funcionario-nome-social').value,
+                dataNascimento: document.getElementById('funcionario-data-nascimento').value,
+                cpf: document.getElementById('funcionario-cpf-rh').value,
+                rg: document.getElementById('funcionario-rg-rh').value,
+                pis: document.getElementById('funcionario-pis').value,
+                estadoCivil: document.getElementById('funcionario-estado-civil').value,
+                nacionalidade: document.getElementById('funcionario-nacionalidade').value,
+            },
+            contato: {
+                telefone: document.getElementById('funcionario-telefone').value,
+                emailPessoal: document.getElementById('funcionario-email-pessoal').value,
+                contatoEmergencia: document.getElementById('funcionario-contato-emergencia').value,
+                endereco: {
+                    cep: document.getElementById('funcionario-cep').value,
+                    logradouro: document.getElementById('funcionario-logradouro').value,
+                    numero: document.getElementById('funcionario-numero').value,
+                    complemento: document.getElementById('funcionario-complemento').value,
+                    bairro: document.getElementById('funcionario-bairro').value,
+                    cidade: document.getElementById('funcionario-cidade').value,
+                    estado: document.getElementById('funcionario-estado').value,
+                }
+            },
+            contratual: {
+                matricula: document.getElementById('funcionario-matricula').value,
+                dataAdmissao: document.getElementById('funcionario-admissao').value,
+                dataDesligamento: document.getElementById('funcionario-desligamento').value,
+                cargo: document.getElementById('funcionario-cargo').value,
+                departamento: document.getElementById('funcionario-departamento').value,
+                salarioBase: parseFloat(document.getElementById('funcionario-salario').value) || 0,
+                tipoContrato: document.getElementById('funcionario-tipo-contrato').value,
+                jornadaTrabalho: document.getElementById('funcionario-jornada').value,
+            },
+            bancario: {
+                banco: document.getElementById('funcionario-banco').value,
+                agencia: document.getElementById('funcionario-agencia').value,
+                conta: document.getElementById('funcionario-conta').value,
+            },
+            acesso: {
+                usuarioId: document.getElementById('funcionario-usuario-sistema').value,
+            }
+        };
+        handleFormSubmit(e, 'funcionarios', funcionarioData, 'funcionario-form-feedback', funcionarioForm);
+    });
 
     // --- Lógica da Tela Financeiro ---
     function applyFiltersAndRender() {
