@@ -2135,75 +2135,57 @@
         if (document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').value = 'mensal';
     }
 
-    function handleRecurrenceInteraction() {
-        const dueDateValue = despesaVencimentoInput.value;
-        const occurrencesValue = recorrenciaFimOcorrenciasInput.value;
-        const endDateValue = recorrenciaFimDataInput.value;
-        const freq = document.getElementById('recorrencia-frequencia').value;
+    function getRecurrenceMultiplier(freq) {
+        switch (freq) {
+            case 'bimestral': return 2;
+            case 'trimestral': return 3;
+            case 'semestral': return 6;
+            case 'anual': return 12;
+            default: return 1; // mensal
+        }
+    }
 
+    function handleRecurrenceInteraction() {
+        const dueDateInput = despesaVencimentoInput;
+        const occurrencesInput = recorrenciaFimOcorrenciasInput;
+        const endDateInput = recorrenciaFimDataInput;
+        const freq = document.getElementById('recorrencia-frequencia').value;
+        const multiplier = getRecurrenceMultiplier(freq);
         const activeEl = document.activeElement;
 
-        // Clear validation border when due date is filled
-        if (dueDateValue) {
-            despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
-        }
+        // Always remove validation error when user interacts
+        dueDateInput.classList.remove('border-red-500', 'ring-red-500');
 
-        // Scenario 1: User types in "Após:" (Occurrences)
-        if (activeEl === recorrenciaFimOcorrenciasInput) {
-            recorrenciaFimOcorrenciasRadio.checked = true;
-            recorrenciaFimDataInput.value = ''; // Clear conflicting field
-            if (!dueDateValue) {
-                despesaVencimentoInput.classList.add('border-red-500', 'ring-red-500');
-                return;
-            }
-            const numOccurrences = parseInt(occurrencesValue, 10);
-            if (!isNaN(numOccurrences) && numOccurrences > 0) {
-                const startDate = new Date(dueDateValue + 'T00:00:00');
-                let multiplier = 1;
-                if (freq === 'bimestral') multiplier = 2;
-                else if (freq === 'trimestral') multiplier = 3;
-                else if (freq === 'semestral') multiplier = 6;
-                else if (freq === 'anual') multiplier = 12;
+        const dueDate = dueDateInput.value ? new Date(dueDateInput.value + 'T00:00:00') : null;
+        const occurrences = occurrencesInput.value ? parseInt(occurrencesInput.value, 10) : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T00:00:00') : null;
 
-                const finalDate = new Date(startDate.setMonth(startDate.getMonth() + (multiplier * (numOccurrences - 1))));
-                recorrenciaFimDataInput.value = finalDate.toISOString().split('T')[0];
+        // Scenario 1: User provides Due Date and Occurrences -> Calculate End Date
+        if (activeEl === dueDateInput || activeEl === occurrencesInput || activeEl === document.getElementById('recorrencia-frequencia')) {
+            if (dueDate && occurrences) {
+                recorrenciaFimOcorrenciasRadio.checked = true;
+                const calculatedEndDate = new Date(dueDate.getTime());
+                calculatedEndDate.setMonth(calculatedEndDate.getMonth() + (multiplier * (occurrences - 1)));
+                endDateInput.value = calculatedEndDate.toISOString().split('T')[0];
             }
         }
 
-        // Scenario 2: User selects "Em:" (End Date)
-        if (activeEl === recorrenciaFimDataInput) {
-            recorrenciaFimDataRadio.checked = true;
-            recorrenciaFimOcorrenciasInput.value = ''; // Clear conflicting field
-            if (!dueDateValue) {
-                despesaVencimentoInput.classList.add('border-red-500', 'ring-red-500');
-                return;
-            }
-            if (endDateValue) {
-                const startDate = new Date(dueDateValue + 'T00:00:00');
-                const endDate = new Date(endDateValue + 'T00:00:00');
-
-                if (endDate < startDate) return;
-
-                const yearDiff = endDate.getFullYear() - startDate.getFullYear();
-                const monthDiff = (yearDiff * 12) + (endDate.getMonth() - startDate.getMonth());
-
-                let multiplier = 1;
-                if (freq === 'bimestral') multiplier = 2;
-                else if (freq === 'trimestral') multiplier = 3;
-                else if (freq === 'semestral') multiplier = 6;
-                else if (freq === 'anual') multiplier = 12;
-
-                const numOccurrences = Math.floor(monthDiff / multiplier) + 1;
-                recorrenciaFimOcorrenciasInput.value = numOccurrences;
+        // Scenario 2: User provides Due Date and End Date -> Calculate Occurrences
+        if (activeEl === dueDateInput || activeEl === endDateInput || activeEl === document.getElementById('recorrencia-frequencia')) {
+             if (dueDate && endDate && endDate >= dueDate) {
+                recorrenciaFimDataRadio.checked = true;
+                const monthDiff = (endDate.getFullYear() - dueDate.getFullYear()) * 12 + (endDate.getMonth() - dueDate.getMonth());
+                const calculatedOccurrences = Math.floor(monthDiff / multiplier) + 1;
+                occurrencesInput.value = calculatedOccurrences > 0 ? calculatedOccurrences : '';
             }
         }
 
-        // Recalculate if frequency or due date changes
-        if (activeEl === document.getElementById('recorrencia-frequencia') || activeEl === despesaVencimentoInput) {
-            if (recorrenciaFimOcorrenciasRadio.checked) {
-                recorrenciaFimOcorrenciasInput.dispatchEvent(new Event('input', { bubbles:true }));
-            } else if (recorrenciaFimDataRadio.checked) {
-                recorrenciaFimDataInput.dispatchEvent(new Event('change', { bubbles:true }));
+        // Scenario 3: User provides Occurrences and End Date -> Calculate Due Date
+        if (activeEl === occurrencesInput || activeEl === endDateInput || activeEl === document.getElementById('recorrencia-frequencia')) {
+            if (occurrences && endDate) {
+                const calculatedStartDate = new Date(endDate.getTime());
+                calculatedStartDate.setMonth(calculatedStartDate.getMonth() - (multiplier * (occurrences - 1)));
+                dueDateInput.value = calculatedStartDate.toISOString().split('T')[0];
             }
         }
     }
