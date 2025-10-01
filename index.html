@@ -1167,6 +1167,13 @@
     const pagarForm = document.getElementById('pagar-form');
     const pagarContaSaidaSelect = document.getElementById('pagar-conta-saida');
 
+    // --- Elementos de Recorrência Inteligente ---
+    const despesaVencimentoInput = document.getElementById('despesa-vencimento');
+    const recorrenciaFimDataRadio = document.getElementById('recorrencia-fim-data-radio');
+    const recorrenciaFimDataInput = document.getElementById('recorrencia-fim-data');
+    const recorrenciaFimOcorrenciasRadio = document.getElementById('recorrencia-fim-ocorrencias-radio');
+    const recorrenciaFimOcorrenciasInput = document.getElementById('recorrencia-fim-ocorrencias');
+
     // --- Elementos do Filtro ---
     const searchInput = document.getElementById('search-input');
     const startDateInput = document.getElementById('start-date-input');
@@ -2116,6 +2123,56 @@
 
     // Expose functions for testing
     window.testHooks = { setupListeners, auth };
+
+    // --- Lógica de Recorrência Inteligente ---
+    function handleRecurrenceInteraction() {
+        const dueDate = despesaVencimentoInput.value;
+        const occurrences = recorrenciaFimOcorrenciasInput.value;
+        const endDate = recorrenciaFimDataInput.value;
+
+        // Auto-calculate end date from occurrences
+        if (document.activeElement === recorrenciaFimOcorrenciasInput && occurrences) {
+            recorrenciaFimOcorrenciasRadio.checked = true;
+            if (!dueDate) {
+                despesaVencimentoInput.classList.add('border-red-500', 'ring-red-500');
+                recorrenciaFimDataInput.value = '';
+            } else {
+                despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
+                const startDate = new Date(dueDate + 'T00:00:00');
+                const freq = document.getElementById('recorrencia-frequencia').value;
+                const numOccurrences = parseInt(occurrences, 10);
+
+                if (!isNaN(numOccurrences)) {
+                    let multiplier = 1;
+                    if (freq === 'bimestral') multiplier = 2;
+                    else if (freq === 'trimestral') multiplier = 3;
+                    else if (freq === 'semestral') multiplier = 6;
+                    else if (freq === 'anual') multiplier = 12;
+
+                    const finalDate = new Date(startDate.setMonth(startDate.getMonth() + (multiplier * (numOccurrences -1) ) ));
+                    recorrenciaFimDataInput.value = finalDate.toISOString().split('T')[0];
+                }
+            }
+        }
+
+        // Auto-select radio when end date is chosen
+        if (document.activeElement === recorrenciaFimDataInput && endDate) {
+            recorrenciaFimDataRadio.checked = true;
+            recorrenciaFimOcorrenciasInput.value = '';
+        }
+
+        // Re-calculate if due date is filled in later
+        if (document.activeElement === despesaVencimentoInput && dueDate && recorrenciaFimOcorrenciasRadio.checked) {
+            despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
+            recorrenciaFimOcorrenciasInput.dispatchEvent(new Event('input')); // Re-trigger calculation
+        }
+    }
+
+    if(despesaVencimentoInput) despesaVencimentoInput.addEventListener('change', handleRecurrenceInteraction);
+    if(recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.addEventListener('input', handleRecurrenceInteraction);
+    if(recorrenciaFimDataInput) recorrenciaFimDataInput.addEventListener('change', handleRecurrenceInteraction);
+    if(document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').addEventListener('change', handleRecurrenceInteraction);
+
   </script>
 
 </body>
