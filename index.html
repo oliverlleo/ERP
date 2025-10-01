@@ -2160,7 +2160,7 @@
             favorecidoTipoSelect.addEventListener('change', () => {
                 const tipo = favorecidoTipoSelect.value;
                 if (tipo && favorecidoData[tipo]) {
-                    populateDropdown(favorecidoNomeSelect, favorecidoData[tipo]);
+                    populateDropdown(favorecidoNomeSelect, favorecidoData[tipo], tipo);
                 } else {
                     favorecidoNomeSelect.innerHTML = '<option value="">Selecione um tipo primeiro</option>';
                 }
@@ -2194,14 +2194,29 @@
         if (despesasUnsubscribe) despesasUnsubscribe();
     }
 
-    function populateDropdown(selectElement, docs) {
+    function populateDropdown(selectElement, docs, collectionName = '') {
         if (!selectElement) return;
         const currentVal = selectElement.value;
         selectElement.innerHTML = '<option value="">Selecione uma opção</option>';
+
+        const getName = (data, collection) => {
+            switch(collection) {
+                case 'fornecedores':
+                    return data.dadosPrincipais?.razaoSocial || data.dadosPrincipais?.nomeCompleto || data.nome || 'Nome não encontrado';
+                case 'funcionarios':
+                    return data.pessoal?.nomeCompleto || data.nome || 'Nome não encontrado';
+                case 'clientes':
+                     return data.nome || data.razaoSocial || 'Nome não encontrado';
+                default:
+                    return data.nome || 'Nome não encontrado';
+            }
+        };
+
         docs.forEach(doc => {
+            const data = doc.data();
             const option = document.createElement('option');
             option.value = doc.id;
-            option.textContent = doc.data().nome;
+            option.textContent = getName(data, collectionName);
             selectElement.appendChild(option);
         });
         selectElement.value = currentVal;
