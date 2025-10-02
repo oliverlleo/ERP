@@ -9,7 +9,9 @@
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css' rel='stylesheet' />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
   <style type="text/tailwindcss">
     :root {
       --brand-primary: #3B82F6;
@@ -333,6 +335,7 @@
                             <!-- Tab: Empresas -->
                             <div id="empresas-tab" class="tab-content">
                                 <form id="empresa-form">
+                                    <input type="hidden" id="empresa-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="empresa-nome">Nome da Empresa</label>
@@ -371,6 +374,7 @@
                             <!-- Tab: Usuários -->
                             <div id="usuarios-tab" class="tab-content hidden">
                                 <form id="usuario-form">
+                                    <input type="hidden" id="usuario-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="usuario-funcionario-select">Funcionário</label>
@@ -404,6 +408,7 @@
                             <!-- Tab: Acessos de Usuário -->
                             <div id="perfis-tab" class="tab-content hidden">
                                  <form id="perfil-form" >
+                                     <input type="hidden" id="perfil-id">
                                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="acesso-usuario-select">Usuário do Sistema</label>
@@ -419,7 +424,7 @@
                                     </div>
                                     <div id="perfil-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Criar Acesso</button>
+                                        <button id="perfil-form-button" type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Criar Acesso</button>
                                     </div>
                                 </form>
                                 <div class="mt-8 border-t pt-6">
@@ -468,6 +473,7 @@
                             <!-- Tab: Fornecedores -->
                             <div id="fornecedores-tab-comercial" class="tab-content-comercial">
                                 <form id="fornecedor-form" class="space-y-6">
+                                    <input type="hidden" id="fornecedor-id">
                                     <!-- Abas do Formulário de Fornecedor -->
                                     <div class="border-b border-gray-200">
                                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -570,6 +576,7 @@
                             <!-- Tab: Clientes -->
                             <div id="clientes-tab-comercial" class="tab-content-comercial hidden">
                                 <form id="cliente-form" class="space-y-6">
+                                    <input type="hidden" id="cliente-id">
                                     <!-- Abas do Formulário de Cliente -->
                                     <div class="border-b border-gray-200">
                                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -770,6 +777,7 @@
                              <!-- Tab: Serviços -->
                             <div id="servicos-tab-comercial" class="tab-content-comercial hidden">
                                 <form id="servico-form">
+                                    <input type="hidden" id="servico-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="servico-nome">Nome do Serviço</label>
@@ -823,6 +831,7 @@
                             <!-- Tab: Planos de Contas -->
                             <div id="planos-de-contas-tab-financeiro" class="tab-content-financeiro">
                                 <form id="plano-conta-form">
+                                    <input type="hidden" id="plano-conta-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="plano-conta-nome">Nome da Categoria</label>
@@ -852,6 +861,7 @@
                             <!-- Tab: Contas Bancárias -->
                             <div id="contas-bancarias-tab-financeiro" class="tab-content-financeiro hidden">
                                 <form id="conta-bancaria-form">
+                                    <input type="hidden" id="conta-bancaria-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="conta-bancaria-nome">Nome da Conta</label>
@@ -893,6 +903,7 @@
                         </div>
                         <!-- Formulário de Funcionário -->
                         <form id="funcionario-form" class="space-y-6">
+                            <input type="hidden" id="funcionario-id">
                             <!-- Abas do Formulário de Funcionário -->
                             <div class="border-b border-gray-200">
                                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -1076,88 +1087,95 @@
                     </div>
 
                     <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
-                        <div class="flex justify-between items-center mb-4">
+                        <!-- Cabeçalho com Título e Botões de Visualização -->
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b">
                             <h2 class="text-gray-900 text-xl font-semibold">Contas a Pagar</h2>
-                            <div class="flex items-center gap-2">
-                                <button id="pagar-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">payments</span>
-                                    Pagar
-                                </button>
-                                <button id="visualizar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">visibility</span>
-                                    Visualizar
-                                </button>
-                                <button id="editar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">edit</span>
-                                    Editar
-                                </button>
-                                <button id="excluir-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="material-symbols-outlined text-base">delete</span>
-                                    Excluir
-                                </button>
-                                <button id="lancar-despesa-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                                    + Lançar Nova Despesa
-                                </button>
+                            <div class="flex items-center gap-2" id="view-toggle-buttons">
+                                <button id="lista-view-btn" class="px-3 py-1 text-sm font-medium rounded-md bg-blue-100 text-blue-700">Lista</button>
+                                <button id="calendario-view-btn" class="px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100">Calendário</button>
                             </div>
                         </div>
 
-                        <!-- Toolbar de Filtros e Busca -->
-                        <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                            <!-- Search Input -->
-                            <div class="flex-grow min-w-[200px]">
-                                <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
-                                <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                            </div>
-                            <!-- Date Filters -->
-                            <div>
-                                <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
-                                <input type="date" id="start-date-input" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                            </div>
-                            <div>
-                                <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
-                                <input type="date" id="end-date-input" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                            </div>
-                            <!-- Status Filter -->
-                            <div>
-                                <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
-                                <select id="status-filter" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
-                                    <option value="todas">Todas</option>
-                                    <option value="pendente">Pendente</option>
-                                    <option value="pago">Pago</option>
-                                    <option value="vencido">Vencido</option>
-                                </select>
-                            </div>
-                            <!-- Action Buttons -->
-                            <div class="flex items-end gap-4">
+                        <!-- Barra de Ferramentas com Botões de Ação -->
+                        <div class="flex items-center gap-2 mb-4">
+                             <button id="lancar-despesa-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                                Novo
+                            </button>
+                            <button id="pagar-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">payments</span> Pagar
+                            </button>
+                            <button id="visualizar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">visibility</span> Visualizar
+                            </button>
+                            <button id="editar-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">edit</span> Editar
+                            </button>
+                            <button id="excluir-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">delete</span> Excluir
+                            </button>
+                        </div>
+
+                        <!-- Container da Visualização de Lista -->
+                        <div id="lista-view">
+                             <!-- Toolbar de Filtros e Busca -->
+                            <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                                <div class="flex-grow min-w-[200px]">
+                                    <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
+                                    <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full">
+                                </div>
+                                <div>
+                                    <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
+                                    <input type="date" id="start-date-input" class="form-input mt-1 block w-full">
+                                </div>
+                                <div>
+                                    <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
+                                    <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
+                                </div>
+                                <div>
+                                    <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
+                                    <select id="status-filter" class="form-select mt-1 block w-full">
+                                        <option value="todas">Todas</option>
+                                        <option value="pendente">Pendente</option>
+                                        <option value="pago">Pago</option>
+                                        <option value="vencido">Vencido</option>
+                                    </select>
+                                </div>
                                 <div class="flex items-center h-full pt-7">
                                     <input id="include-paid-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
                                     <label for="include-paid-checkbox" class="ml-2 block text-sm font-medium text-gray-900">Incluir Pagos</label>
                                 </div>
-                                <button id="filter-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">Filtrar</button>
-                                <button id="clear-filters-btn" class="inline-flex items-center justify-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Limpar Filtros</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="p-4"><input id="select-all-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="despesas-table-body" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="p-4">
-                                            <div class="flex items-center">
-                                                <input id="select-all-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
-                                            </div>
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="despesas-table-body" class="bg-white divide-y divide-gray-200">
-                                </tbody>
-                            </table>
+                        <!-- Container da Visualização de Calendário (inicia oculto) -->
+                        <div id="calendario-view" class="hidden">
+                            <div id="calendar-filters" class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg border">
+                                <label for="calendar-status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Status:</label>
+                                <select id="calendar-status-filter" class="form-select rounded-md border-gray-300 shadow-sm">
+                                    <option value="todas">Mostrar Todas</option>
+                                    <option value="pendente">Apenas Pendentes</option>
+                                    <option value="pago">Apenas Pagas</option>
+                                    <option value="vencido">Apenas Vencidas</option>
+                                </select>
+                            </div>
+                            <div id="calendar" class="w-full"></div>
                         </div>
                     </div>
                 </div>
@@ -1693,6 +1711,15 @@
     const includePaidCheckbox = document.getElementById('include-paid-checkbox');
     let allDespesas = []; // Holds all expenses for client-side filtering
 
+    // --- Elementos da Visualização de Calendário ---
+    const listaViewBtn = document.getElementById('lista-view-btn');
+    const calendarioViewBtn = document.getElementById('calendario-view-btn');
+    const listaView = document.getElementById('lista-view');
+    const calendarioView = document.getElementById('calendario-view');
+    const calendarEl = document.getElementById('calendar');
+    const calendarStatusFilter = document.getElementById('calendar-status-filter');
+    let calendarInstance = null;
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
@@ -1702,6 +1729,120 @@
         if(geraisCadastroSection) geraisCadastroSection.classList.add('hidden');
         if(comerciaisCadastroSection) comerciaisCadastroSection.classList.add('hidden');
         if(financeirosCadastroSection) financeirosCadastroSection.classList.add('hidden');
+
+        if (viewId === 'contas-a-pagar-page') {
+            const savedView = localStorage.getItem('contasView') || 'lista';
+            setContasView(savedView);
+        }
+    }
+
+    async function openUsuarioForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'systemUsers', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('usuario-id').value = docSnap.id;
+                document.getElementById('usuario-funcionario-select').value = data.funcionarioId;
+                document.querySelector('#usuario-form button[type="submit"]').textContent = 'Atualizar Usuário';
+
+                geraisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.tab-link[data-tab="usuarios"]').click();
+            }
+        } catch (error) {
+            console.error("Erro ao buscar usuário para edição:", error);
+        }
+    }
+
+    // --- Lógica de Alternância de Visualização (Lista/Calendário) ---
+    function setContasView(viewName) {
+        if (viewName === 'calendario') {
+            listaView.classList.add('hidden');
+            calendarioView.classList.remove('hidden');
+            listaViewBtn.classList.remove('bg-blue-100', 'text-blue-700');
+            listaViewBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            calendarioViewBtn.classList.add('bg-blue-100', 'text-blue-700');
+            calendarioViewBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            if (!calendarInstance) {
+                initializeCalendar();
+            }
+            // Ao trocar para a visualização de calendário, os dados já carregados
+            // são processados e renderizados. A chamada onSnapshot cuidará das
+            // atualizações subsequentes.
+            processAndRenderCalendarEvents(allDespesas);
+        } else { // 'lista'
+            listaView.classList.remove('hidden');
+            calendarioView.classList.add('hidden');
+            calendarioViewBtn.classList.remove('bg-blue-100', 'text-blue-700');
+            calendarioViewBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            listaViewBtn.classList.add('bg-blue-100', 'text-blue-700');
+            listaViewBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+        }
+        localStorage.setItem('contasView', viewName);
+    }
+
+    function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        calendarInstance = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek'
+            },
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            buttonText: {
+                today:    'Hoje',
+                month:    'Mês',
+                week:     'Semana',
+                day:      'Dia',
+            },
+            eventDidMount: function(info) {
+                // Tooltip logic can be added here later if needed
+            },
+            eventClick: function(info) {
+                const despesaId = info.event.id;
+                if(despesaId) {
+                    openVisualizarModal(despesaId);
+                }
+            }
+        });
+        calendarInstance.render();
+    }
+
+    function processAndRenderCalendarEvents(docs) {
+        if (!calendarInstance) return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const events = docs.map(doc => {
+            const data = doc.data();
+            const vencimento = new Date(data.vencimento + 'T00:00:00');
+
+            let eventColor = '#f59e0b'; // Amarelo para Pendente
+            if (data.pago) {
+                eventColor = '#16a34a'; // Verde para Pago
+            } else if (vencimento < today) {
+                eventColor = '#dc2626'; // Vermelho para Vencido
+            }
+
+            return {
+                id: doc.id,
+                title: `${data.favorecidoNome}: ${formatCurrency(data.valor)}`,
+                start: data.vencimento,
+                backgroundColor: eventColor,
+                borderColor: eventColor,
+                extendedProps: {
+                    status: data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente')
+                }
+            };
+        });
+
+        calendarInstance.getEventSources().forEach(source => source.remove());
+        calendarInstance.addEventSource(events);
     }
 
     function formatCurrency(value) {
@@ -1861,15 +2002,22 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.cnpj}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">${data.codigo}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="edit-empresa-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                                 <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                             </td>
                         `;
                     });
+
+                    empresasTableBody.querySelectorAll('.edit-empresa-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            openEmpresaForEdit(e.currentTarget.dataset.id);
+                        });
+                    });
                     empresasTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                        button.addEventListener('click', async (e) => {
+                        button.addEventListener('click', (e) => {
                             const id = e.currentTarget.dataset.id;
                             if (confirm('Tem certeza que deseja excluir esta empresa? A ação não pode ser desfeita.')) {
-                                await deleteDoc(doc(db, "empresas", id));
+                                deleteDoc(doc(db, "empresas", id));
                             }
                         });
                     });
@@ -1904,10 +2052,18 @@
                     tr.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-usuario-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-collection="systemUsers" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
                 });
+
+                usuariosTableBody.querySelectorAll('.edit-usuario-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        openUsuarioForEdit(e.currentTarget.dataset.id);
+                    });
+                });
+
                 usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.currentTarget.dataset.id;
@@ -1939,21 +2095,25 @@
                             <button class="view-password-btn bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs" data-password="${data.senha}">Ver Senha</button>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-acesso-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
                 });
-                perfisTableBody.querySelectorAll('.view-password-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        alert(`A senha temporária é: ${e.currentTarget.dataset.password}`);
-                    });
+                perfisTableBody.querySelectorAll('.view-password-btn').forEach(btn => {
+                    btn.addEventListener('click', () => alert(`A senha temporária é: ${btn.dataset.password}`));
                 });
-                perfisTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', async (e) => {
-                        const id = e.currentTarget.dataset.id;
+                perfisTableBody.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const id = btn.dataset.id;
                         if (confirm('Tem certeza que deseja excluir este acesso? O usuário não poderá mais logar.')) {
                            await deleteDoc(doc(db, "acessos", id));
                         }
+                    });
+                });
+                perfisTableBody.querySelectorAll('.edit-acesso-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        openAcessoForEdit(btn.dataset.id);
                     });
                 });
             }
@@ -1987,10 +2147,15 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cpfCnpj}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${contato}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                        <button class="edit-fornecedor-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                         <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                     </td>
                 `;
+            });
+            fornecedoresTableBody.querySelectorAll('.edit-fornecedor-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    openFornecedorForEdit(e.currentTarget.dataset.id);
+                });
             });
             fornecedoresTableBody.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -2005,14 +2170,78 @@
         // Cadastros - Planos de Contas
         const planosContasQuery = query(collection(db, 'users', userId, 'planosDeContas'));
         planosDeContasUnsubscribe = onSnapshot(planosContasQuery, (querySnapshot) => {
-            renderTable(planosContasTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('planosDeContas', id));
+            if (!planosContasTableBody) return;
+            planosContasTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = planosContasTableBody.insertRow();
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhuma categoria cadastrada.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = planosContasTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-plano-conta-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="planosDeContas" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+            }
         });
+
+        if (planosContasTableBody && !planosContasTableBody.dataset.listenerAttached) {
+            planosContasTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-plano-conta-btn')) {
+                    openPlanoContaForEdit(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
+                        deleteItem('planosDeContas', e.target.dataset.id);
+                    }
+                }
+            });
+            planosContasTableBody.dataset.listenerAttached = 'true';
+        }
 
         // Cadastros - Contas Bancárias
         const contasBancariasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
         contasBancariasUnsubscribe = onSnapshot(contasBancariasQuery, (querySnapshot) => {
-            renderTable(contasBancariasTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('contasBancarias', id));
+            if (!contasBancariasTableBody) return;
+            contasBancariasTableBody.innerHTML = '';
+             if (querySnapshot.empty) {
+                const tr = contasBancariasTableBody.insertRow();
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhuma conta cadastrada.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = contasBancariasTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-conta-bancaria-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="contasBancarias" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+            }
         });
+
+        if (contasBancariasTableBody && !contasBancariasTableBody.dataset.listenerAttached) {
+            contasBancariasTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-conta-bancaria-btn')) {
+                    openContaBancariaForEdit(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir esta conta bancária?')) {
+                        deleteItem('contasBancarias', e.target.dataset.id);
+                    }
+                }
+            });
+            contasBancariasTableBody.dataset.listenerAttached = 'true';
+        }
 
         // Cadastros - Clientes
         const clientesQuery = query(collection(db, 'users', userId, 'clientes'));
@@ -2042,12 +2271,17 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cpfCnpj}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${contato}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                        <button class="edit-cliente-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                         <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                     </td>
                 `;
             });
 
+            clientesTableBody.querySelectorAll('.edit-cliente-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    openClienteForEdit(e.currentTarget.dataset.id);
+                });
+            });
             clientesTableBody.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const id = e.currentTarget.dataset.id;
@@ -2056,14 +2290,45 @@
                     }
                 });
             });
-            // Add edit functionality here if needed
         });
 
         // Cadastros - Serviços
         const servicosQuery = query(collection(db, 'users', userId, 'servicos'));
         servicosUnsubscribe = onSnapshot(servicosQuery, (querySnapshot) => {
-            renderTable(servicosTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('servicos', id));
+            if (!servicosTableBody) return;
+            servicosTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = servicosTableBody.insertRow();
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhum serviço cadastrado.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = servicosTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-servico-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="servicos" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+            }
         });
+
+        if (servicosTableBody && !servicosTableBody.dataset.listenerAttached) {
+            servicosTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-servico-btn')) {
+                    openServicoForEdit(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir este serviço?')) {
+                        deleteItem('servicos', e.target.dataset.id);
+                    }
+                }
+            });
+            servicosTableBody.dataset.listenerAttached = 'true';
+        }
 
         // Cadastros - Funcionários
         const funcionariosQuery = query(collection(db, 'users', userId, 'funcionarios'));
@@ -2101,10 +2366,15 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.pessoal?.nomeCompleto || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.cargo || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                            <button class="edit-funcionario-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
+                });
+                funcionariosTableBody.querySelectorAll('.edit-funcionario-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        openFuncionarioForEdit(e.currentTarget.dataset.id);
+                    });
                 });
                 funcionariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -2130,9 +2400,12 @@
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
         despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
             allDespesas = querySnapshot.docs; // Store all documents
-            applyFiltersAndRender(); // Apply current filters and render
+            applyFiltersAndRender(); // Apply current filters and render for the list
             updateSummaryCards(allDespesas);
             updateDashboardIndicators(allDespesas);
+            if (calendarInstance) {
+                processAndRenderCalendarEvents(allDespesas); // Process for calendar
+            }
         });
 
         // --- Listeners for Modal Dropdowns ---
@@ -2740,31 +3013,314 @@
     }
 
     // --- Lógica dos Formulários de Cadastro ---
+    async function openAcessoForEdit(id) {
+        try {
+            const docRef = doc(db, 'acessos', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('perfil-id').value = docSnap.id;
+                document.getElementById('acesso-login-nome').value = data.login || '';
+
+                const usuarioSelect = document.getElementById('acesso-usuario-select');
+                usuarioSelect.value = data.systemUserId || '';
+                usuarioSelect.disabled = true; // Prevent changing the user during an edit
+
+                document.getElementById('perfil-form-button').textContent = 'Atualizar Acesso';
+
+                geraisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.tab-link[data-tab="perfis"]').click();
+            }
+        } catch (error) {
+            console.error("Erro ao buscar acesso para edição:", error);
+        }
+    }
+
+    async function openEmpresaForEdit(id) {
+        try {
+            const docRef = doc(db, 'empresas', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('empresa-id').value = docSnap.id;
+                document.getElementById('empresa-nome').value = data.nome || '';
+                document.getElementById('empresa-cnpj').value = data.cnpj || '';
+                geraisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.tab-link[data-tab="empresas"]').click();
+            }
+        } catch (error) {
+            console.error("Erro ao buscar empresa para edição:", error);
+        }
+    }
+
+    // Edit Funcionario Logic
+    async function openFuncionarioForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'funcionarios', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('funcionario-id').value = docSnap.id;
+
+                // Pessoal
+                document.getElementById('funcionario-nome-completo').value = data.pessoal?.nomeCompleto || '';
+                document.getElementById('funcionario-nome-social').value = data.pessoal?.nomeSocial || '';
+                document.getElementById('funcionario-data-nascimento').value = data.pessoal?.dataNascimento || '';
+                document.getElementById('funcionario-cpf-rh').value = data.pessoal?.cpf || '';
+                document.getElementById('funcionario-rg-rh').value = data.pessoal?.rg || '';
+                document.getElementById('funcionario-pis').value = data.pessoal?.pis || '';
+                document.getElementById('funcionario-estado-civil').value = data.pessoal?.estadoCivil || '';
+                document.getElementById('funcionario-nacionalidade').value = data.pessoal?.nacionalidade || '';
+                document.getElementById('funcionario-empresa').value = data.empresa?.id || '';
+
+                // Contato
+                document.getElementById('funcionario-telefone').value = data.contato?.telefone || '';
+                document.getElementById('funcionario-email-pessoal').value = data.contato?.emailPessoal || '';
+                document.getElementById('funcionario-contato-emergencia').value = data.contato?.contatoEmergencia || '';
+                document.getElementById('funcionario-cep').value = data.contato?.endereco?.cep || '';
+                document.getElementById('funcionario-logradouro').value = data.contato?.endereco?.logradouro || '';
+                document.getElementById('funcionario-numero').value = data.contato?.endereco?.numero || '';
+                document.getElementById('funcionario-complemento').value = data.contato?.endereco?.complemento || '';
+                document.getElementById('funcionario-bairro').value = data.contato?.endereco?.bairro || '';
+                document.getElementById('funcionario-cidade').value = data.contato?.endereco?.cidade || '';
+                document.getElementById('funcionario-estado').value = data.contato?.endereco?.estado || '';
+
+                // Contratual
+                document.getElementById('funcionario-matricula').value = data.contratual?.matricula || '';
+                document.getElementById('funcionario-admissao').value = data.contratual?.dataAdmissao || '';
+                document.getElementById('funcionario-desligamento').value = data.contratual?.dataDesligamento || '';
+                document.getElementById('funcionario-cargo').value = data.contratual?.cargo || '';
+                document.getElementById('funcionario-departamento').value = data.contratual?.departamento || '';
+                document.getElementById('funcionario-salario').value = data.contratual?.salarioBase || '';
+                document.getElementById('funcionario-tipo-contrato').value = data.contratual?.tipoContrato || '';
+                document.getElementById('funcionario-jornada').value = data.contratual?.jornadaTrabalho || '';
+
+                // Bancario
+                document.getElementById('funcionario-banco').value = data.bancario?.banco || '';
+                document.getElementById('funcionario-agencia').value = data.bancario?.agencia || '';
+                document.getElementById('funcionario-conta').value = data.bancario?.conta || '';
+
+                // Acesso
+                document.getElementById('funcionario-usuario-sistema').value = data.acesso?.usuarioId || '';
+
+                document.querySelector('.funcionario-tab-link[data-funcionario-tab="pessoal"]').click();
+                rhCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar funcionário para edição:", error);
+        }
+    }
+
+    async function openServicoForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'servicos', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('servico-id').value = docSnap.id;
+                document.getElementById('servico-nome').value = data.nome || '';
+
+                comerciaisCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-comercial[data-tab-comercial="servicos"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar serviço para edição:", error);
+        }
+    }
+
+    async function openPlanoContaForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'planosDeContas', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('plano-conta-id').value = docSnap.id;
+                document.getElementById('plano-conta-nome').value = data.nome || '';
+
+                financeirosCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-financeiro[data-tab-financeiro="planos-de-contas"]').click();
+                financeirosCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar plano de conta para edição:", error);
+        }
+    }
+
+    async function openContaBancariaForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'contasBancarias', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('conta-bancaria-id').value = docSnap.id;
+                document.getElementById('conta-bancaria-nome').value = data.nome || '';
+
+                financeirosCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-financeiro[data-tab-financeiro="contas-bancarias"]').click();
+                financeirosCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar conta bancária para edição:", error);
+        }
+    }
+
+
+    // Edit Cliente Logic
+    async function openClienteForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'clientes', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('cliente-id').value = docSnap.id;
+
+                // Dados Principais
+                document.getElementById('cliente-tipo-pessoa').value = data.tipoPessoa || 'fisica';
+                document.getElementById('cliente-tipo-pessoa').dispatchEvent(new Event('change'));
+
+                if (data.tipoPessoa === 'fisica') {
+                    document.getElementById('cliente-nome-completo').value = data.nome || '';
+                    document.getElementById('cliente-cpf').value = data.cpf || '';
+                    document.getElementById('cliente-rg').value = data.rg || '';
+                    document.getElementById('cliente-data-nascimento').value = data.dataNascimento || '';
+                } else {
+                    document.getElementById('cliente-razao-social').value = data.nome || ''; // Note: mapping 'nome' to 'razaoSocial' for edit
+                    document.getElementById('cliente-nome-fantasia').value = data.nomeFantasia || '';
+                    document.getElementById('cliente-cnpj').value = data.cnpj || '';
+                    document.getElementById('cliente-inscricao').value = data.inscricaoEstadual || '';
+                }
+
+                // Contato
+                document.getElementById('cliente-telefone').value = data.contato?.telefone || '';
+                document.getElementById('cliente-email').value = data.contato?.email || '';
+                document.getElementById('cliente-website').value = data.contato?.website || '';
+                document.getElementById('cliente-contato-pessoa').value = data.contato?.pessoaContato || '';
+                document.getElementById('cliente-email-financeiro').value = data.contato?.emailFinanceiro || '';
+
+                // Endereço
+                document.getElementById('cliente-cep').value = data.endereco?.cep || '';
+                document.getElementById('cliente-logradouro').value = data.endereco?.logradouro || '';
+                document.getElementById('cliente-numero').value = data.endereco?.numero || '';
+                document.getElementById('cliente-complemento').value = data.endereco?.complemento || '';
+                document.getElementById('cliente-bairro').value = data.endereco?.bairro || '';
+                document.getElementById('cliente-cidade').value = data.endereco?.cidade || '';
+                document.getElementById('cliente-estado').value = data.endereco?.estado || '';
+
+                // Financeiro
+                document.getElementById('cliente-vendedor').value = data.financeiro?.vendedorId || '';
+                document.getElementById('cliente-limite-credito').value = data.financeiro?.limiteCredito || '';
+                document.getElementById('cliente-condicao-pagamento').value = data.financeiro?.condicaoPagamento || '';
+                document.getElementById('cliente-tabela-precos').value = data.financeiro?.tabelaPrecos || '';
+                document.getElementById('cliente-obs').value = data.obs || '';
+
+                // Mudar para a aba correta e rolar para a visualização
+                comerciaisCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-comercial[data-tab-comercial="clientes"]').click();
+                document.querySelector('.cliente-tab-link[data-cliente-tab="cliente-dados-principais"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar cliente para edição:", error);
+        }
+    }
+
+    // Edit Fornecedor Logic
+    async function openFornecedorForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'fornecedores', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                // Preencher o formulário
+                document.getElementById('fornecedor-id').value = docSnap.id;
+                document.getElementById('fornecedor-tipo-pessoa').value = data.tipoPessoa || 'juridica';
+                document.getElementById('fornecedor-tipo-pessoa').dispatchEvent(new Event('change'));
+
+                // Dados Principais
+                if (data.tipoPessoa === 'fisica') {
+                    document.getElementById('fornecedor-nome-completo').value = data.dadosPrincipais?.nomeCompleto || '';
+                    document.getElementById('fornecedor-cpf').value = data.dadosPrincipais?.cpf || '';
+                } else {
+                    document.getElementById('fornecedor-razao-social').value = data.dadosPrincipais?.razaoSocial || '';
+                    document.getElementById('fornecedor-nome-fantasia').value = data.dadosPrincipais?.nomeFantasia || '';
+                    document.getElementById('fornecedor-cnpj').value = data.dadosPrincipais?.cnpj || '';
+                    document.getElementById('fornecedor-inscricao').value = data.dadosPrincipais?.inscricaoEstadual || '';
+                }
+
+                // Contato
+                document.getElementById('fornecedor-telefone').value = data.contato?.telefone || '';
+                document.getElementById('fornecedor-email').value = data.contato?.email || '';
+                document.getElementById('fornecedor-website').value = data.contato?.website || '';
+                document.getElementById('fornecedor-contato-principal').value = data.contato?.contatoPrincipal || '';
+
+                // Endereço
+                document.getElementById('fornecedor-cep').value = data.endereco?.cep || '';
+                document.getElementById('fornecedor-logradouro').value = data.endereco?.logradouro || '';
+                document.getElementById('fornecedor-numero').value = data.endereco?.numero || '';
+                document.getElementById('fornecedor-complemento').value = data.endereco?.complemento || '';
+                document.getElementById('fornecedor-bairro').value = data.endereco?.bairro || '';
+                document.getElementById('fornecedor-cidade').value = data.endereco?.cidade || '';
+                document.getElementById('fornecedor-estado').value = data.endereco?.estado || '';
+
+                // Financeiro
+                document.getElementById('fornecedor-banco').value = data.financeiro?.banco || '';
+                document.getElementById('fornecedor-agencia').value = data.financeiro?.agencia || '';
+                document.getElementById('fornecedor-conta').value = data.financeiro?.conta || '';
+                document.getElementById('fornecedor-pix').value = data.financeiro?.pix || '';
+                document.getElementById('fornecedor-condicao-pagamento').value = data.financeiro?.condicaoPagamento || '';
+                document.getElementById('fornecedor-prazo-entrega').value = data.financeiro?.prazoEntrega || '';
+                document.getElementById('fornecedor-obs').value = data.obs || '';
+
+                // Mudar para a aba correta e rolar para a visualização
+                document.querySelector('.fornecedor-tab-link[data-fornecedor-tab="fornecedor-dados-principais"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar fornecedor para edição:", error);
+        }
+    }
+
     empresaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'empresa-form-feedback';
-        const adminId = auth.currentUser?.uid;
+        const adminId = effectiveUserId;
         if (!adminId) {
             showFeedback(feedbackId, "Administrador não autenticado.", true);
             return;
         }
+        const empresaId = document.getElementById('empresa-id').value;
         const empresaData = {
             nome: document.getElementById('empresa-nome').value,
             cnpj: document.getElementById('empresa-cnpj').value,
-            codigo: generateCompanyCode(),
             adminId: adminId,
-            createdAt: serverTimestamp()
         };
+
         try {
-            await addDoc(collection(db, 'empresas'), empresaData);
-            showFeedback(feedbackId, "Empresa salva com sucesso!", false);
+            if (empresaId) {
+                const docRef = doc(db, 'empresas', empresaId);
+                await updateDoc(docRef, empresaData);
+                showFeedback(feedbackId, "Empresa atualizada com sucesso!", false);
+            } else {
+                empresaData.codigo = generateCompanyCode();
+                empresaData.createdAt = serverTimestamp();
+                await addDoc(collection(db, 'empresas'), empresaData);
+                showFeedback(feedbackId, "Empresa salva com sucesso!", false);
+            }
             empresaForm.reset();
+            document.getElementById('empresa-id').value = '';
         } catch (error) {
             console.error(`Erro ao salvar empresa:`, error);
             showFeedback(feedbackId, "Erro ao salvar empresa. Tente novamente.", true);
         }
     });
-    // Lógica para o formulário de criação de Usuários do Sistema
+    // Lógica para o formulário de criação/edição de Usuários do Sistema
     usuarioForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'usuario-form-feedback';
@@ -2774,9 +3330,11 @@
             return;
         }
 
+        const usuarioId = document.getElementById('usuario-id').value;
         const funcionarioSelect = document.getElementById('usuario-funcionario-select');
         const funcionarioId = funcionarioSelect.value;
         const funcionarioNome = funcionarioSelect.options[funcionarioSelect.selectedIndex].text;
+        const submitButton = document.querySelector('#usuario-form button[type="submit"]');
 
         if (!funcionarioId) {
             showFeedback(feedbackId, "Por favor, selecione um funcionário.", true);
@@ -2784,88 +3342,129 @@
         }
 
         try {
-            // Get the employee's company data first
-            const funcionarioDocRef = doc(db, 'users', adminId, 'funcionarios', funcionarioId);
-            const funcionarioDoc = await getDoc(funcionarioDocRef);
+            if (usuarioId) {
+                // Update logic
+                const docRef = doc(db, 'users', adminId, 'systemUsers', usuarioId);
+                await updateDoc(docRef, {
+                    funcionarioId: funcionarioId,
+                    nome: funcionarioNome
+                });
+                showFeedback(feedbackId, `Usuário '${funcionarioNome}' atualizado com sucesso!`, false);
 
-            if (!funcionarioDoc.exists() || !funcionarioDoc.data().empresa) {
-                showFeedback(feedbackId, "Erro: A empresa do funcionário selecionado não foi encontrada.", true);
-                return;
+            } else {
+                // Create logic
+                const funcionarioDocRef = doc(db, 'users', adminId, 'funcionarios', funcionarioId);
+                const funcionarioDoc = await getDoc(funcionarioDocRef);
+
+                if (!funcionarioDoc.exists() || !funcionarioDoc.data().empresa) {
+                    showFeedback(feedbackId, "Erro: A empresa do funcionário selecionado não foi encontrada.", true);
+                    return;
+                }
+                const empresaData = funcionarioDoc.data().empresa;
+
+                const userData = {
+                    funcionarioId,
+                    nome: funcionarioNome,
+                    empresa: empresaData, // Store the company object
+                    adminId,
+                    createdAt: serverTimestamp()
+                };
+                const userRef = collection(db, 'users', adminId, 'systemUsers');
+                await addDoc(userRef, userData);
+                showFeedback(feedbackId, `Usuário '${funcionarioNome}' criado com sucesso!`, false);
             }
-            const empresaData = funcionarioDoc.data().empresa;
 
-            const userData = {
-                funcionarioId,
-                nome: funcionarioNome,
-                empresa: empresaData, // Store the company object
-                adminId,
-                createdAt: serverTimestamp()
-            };
-
-            // Creates a "system user" from an employee.
-            const userRef = collection(db, 'users', adminId, 'systemUsers');
-            await addDoc(userRef, userData);
-            showFeedback(feedbackId, `Usuário '${funcionarioNome}' criado com sucesso!`, false);
+            // Reset form for both cases
             usuarioForm.reset();
+            document.getElementById('usuario-id').value = '';
+            submitButton.textContent = 'Criar Usuário';
+
         } catch (error) {
             console.error(`Erro ao salvar usuário do sistema:`, error);
-            showFeedback(feedbackId, "Erro ao criar usuário. Tente novamente.", true);
+            showFeedback(feedbackId, "Erro ao salvar usuário. Tente novamente.", true);
         }
     });
 
-    // Lógica para o formulário de criação de Acessos de Usuário
+    // Lógica para o formulário de criação/edição de Acessos de Usuário
     perfilForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'perfil-form-feedback';
-        const adminId = auth.currentUser?.uid;
+        const adminId = effectiveUserId;
         if (!adminId) {
             showFeedback(feedbackId, "Administrador não autenticado.", true);
             return;
         }
 
-        const usuarioSelect = document.getElementById('acesso-usuario-select');
-        const systemUserId = usuarioSelect.value;
-        const nomeUsuario = usuarioSelect.options[usuarioSelect.selectedIndex].text;
+        const acessoId = document.getElementById('perfil-id').value;
         const login = document.getElementById('acesso-login-nome').value;
+        const usuarioSelect = document.getElementById('acesso-usuario-select');
 
-        if (!systemUserId || !login) {
-            showFeedback(feedbackId, "Por favor, selecione um usuário e defina um login.", true);
+        if (!login) {
+            showFeedback(feedbackId, "Por favor, forneça um nome de login.", true);
             return;
         }
 
         try {
-            // Precisamos buscar a empresa do usuário do sistema para vincular ao acesso
-            const systemUserDocRef = doc(db, 'users', adminId, 'systemUsers', systemUserId);
-            const systemUserDoc = await getDoc(systemUserDocRef);
-            if (!systemUserDoc.exists() || !systemUserDoc.data().empresa) {
-                 showFeedback(feedbackId, "Erro: Usuário do sistema ou empresa não encontrados.", true);
-                 return;
+            if (acessoId) {
+                // Lógica de Atualização
+                const docRef = doc(db, 'acessos', acessoId);
+                await updateDoc(docRef, { login: login });
+                showFeedback(feedbackId, "Acesso atualizado com sucesso!", false);
+            } else {
+                // Lógica de Criação
+                const systemUserId = usuarioSelect.value;
+                if (!systemUserId) {
+                    showFeedback(feedbackId, "Por favor, selecione um usuário do sistema.", true);
+                    return;
+                }
+                const nomeUsuario = usuarioSelect.options[usuarioSelect.selectedIndex].text;
+
+                const systemUserDocRef = doc(db, 'users', adminId, 'systemUsers', systemUserId);
+                const systemUserDoc = await getDoc(systemUserDocRef);
+                if (!systemUserDoc.exists() || !systemUserDoc.data().empresa) {
+                     showFeedback(feedbackId, "Erro: Usuário do sistema ou empresa não encontrados.", true);
+                     return;
+                }
+                const empresa = systemUserDoc.data().empresa;
+
+                const tempPassword = generateRandomPassword(6, true);
+
+                const acessoData = {
+                    login,
+                    senha: tempPassword,
+                    primeiroAcesso: true,
+                    systemUserId,
+                    nomeUsuario,
+                    empresaId: empresa.id,
+                    adminId,
+                    createdAt: serverTimestamp()
+                };
+
+                await addDoc(collection(db, 'acessos'), acessoData);
+                showFeedback(feedbackId, `Acesso para '${nomeUsuario}' criado! Login: ${login}, Senha Temporária: ${tempPassword}`, false, true);
             }
-            const empresa = systemUserDoc.data().empresa;
 
-            const tempPassword = generateRandomPassword(6, true);
-
-            const acessoData = {
-                login,
-                senha: tempPassword,
-                primeiroAcesso: true,
-                systemUserId,
-                nomeUsuario,
-                empresaId: empresa.id,
-                adminId,
-                createdAt: serverTimestamp()
-            };
-
-            await addDoc(collection(db, 'acessos'), acessoData);
-            showFeedback(feedbackId, `Acesso para '${nomeUsuario}' criado! Login: ${login}, Senha Temporária: ${tempPassword}`, false, true);
+            // Resetar o formulário em ambos os casos
             perfilForm.reset();
+            document.getElementById('perfil-id').value = '';
+            usuarioSelect.disabled = false;
+            document.getElementById('perfil-form-button').textContent = 'Criar Acesso';
 
         } catch (error) {
-            console.error(`Erro ao criar acesso:`, error);
-            showFeedback(feedbackId, "Erro ao criar acesso. Tente novamente.", true);
+            console.error(`Erro ao salvar acesso:`, error);
+            showFeedback(feedbackId, "Erro ao salvar acesso. Tente novamente.", true);
         }
     });
-    fornecedorForm.addEventListener('submit', (e) => {
+    fornecedorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'fornecedor-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const fornecedorId = document.getElementById('fornecedor-id').value;
         const tipoPessoa = document.getElementById('fornecedor-tipo-pessoa').value;
         let fornecedorData = {
             tipoPessoa: tipoPessoa,
@@ -2899,23 +3498,101 @@
         if (tipoPessoa === 'fisica') {
             fornecedorData.dadosPrincipais.nomeCompleto = document.getElementById('fornecedor-nome-completo').value;
             fornecedorData.dadosPrincipais.cpf = document.getElementById('fornecedor-cpf').value;
-            // Use nomeCompleto for top-level 'nome' for consistent display
             fornecedorData.nome = fornecedorData.dadosPrincipais.nomeCompleto;
-        } else { // 'juridica'
+        } else {
             fornecedorData.dadosPrincipais.razaoSocial = document.getElementById('fornecedor-razao-social').value;
             fornecedorData.dadosPrincipais.nomeFantasia = document.getElementById('fornecedor-nome-fantasia').value;
             fornecedorData.dadosPrincipais.cnpj = document.getElementById('fornecedor-cnpj').value;
             fornecedorData.dadosPrincipais.inscricaoEstadual = document.getElementById('fornecedor-inscricao').value;
-            // Use razaoSocial for top-level 'nome' for consistent display
             fornecedorData.nome = fornecedorData.dadosPrincipais.razaoSocial;
         }
 
-        handleFormSubmit(e, 'fornecedores', fornecedorData, 'fornecedor-form-feedback', fornecedorForm);
+        try {
+            if (fornecedorId) {
+                // Update
+                const docRef = doc(db, 'users', userId, 'fornecedores', fornecedorId);
+                await updateDoc(docRef, fornecedorData);
+                showFeedback(feedbackId, "Fornecedor atualizado com sucesso!", false);
+            } else {
+                // Create
+                const userRef = collection(db, 'users', userId, 'fornecedores');
+                await addDoc(userRef, { ...fornecedorData, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Fornecedor salvo com sucesso!", false);
+            }
+            fornecedorForm.reset();
+            document.getElementById('fornecedor-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar fornecedor:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
     });
-    planoContaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'planosDeContas', { nome: document.getElementById('plano-conta-nome').value }, 'plano-conta-form-feedback', planoContaForm));
-    contaBancariaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contasBancarias', { nome: document.getElementById('conta-bancaria-nome').value }, 'conta-bancaria-form-feedback', contaBancariaForm));
+    planoContaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'plano-conta-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
 
-    clienteForm.addEventListener('submit', (e) => {
+        const planoId = document.getElementById('plano-conta-id').value;
+        const data = { nome: document.getElementById('plano-conta-nome').value };
+
+        try {
+            if (planoId) {
+                const docRef = doc(db, 'users', userId, 'planosDeContas', planoId);
+                await updateDoc(docRef, data);
+                showFeedback(feedbackId, "Categoria atualizada com sucesso!", false);
+            } else {
+                await addDoc(collection(db, 'users', userId, 'planosDeContas'), { ...data, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Categoria salva com sucesso!", false);
+            }
+            planoContaForm.reset();
+            document.getElementById('plano-conta-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar plano de conta:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+    contaBancariaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'conta-bancaria-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const contaId = document.getElementById('conta-bancaria-id').value;
+        const data = { nome: document.getElementById('conta-bancaria-nome').value };
+
+        try {
+            if (contaId) {
+                const docRef = doc(db, 'users', userId, 'contasBancarias', contaId);
+                await updateDoc(docRef, data);
+                showFeedback(feedbackId, "Conta atualizada com sucesso!", false);
+            } else {
+                await addDoc(collection(db, 'users', userId, 'contasBancarias'), { ...data, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Conta salva com sucesso!", false);
+            }
+            contaBancariaForm.reset();
+            document.getElementById('conta-bancaria-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar conta bancária:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+
+    clienteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'cliente-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const clienteId = document.getElementById('cliente-id').value;
         const tipoPessoa = document.getElementById('cliente-tipo-pessoa').value;
         let clienteData = {
             tipoPessoa: tipoPessoa,
@@ -2956,30 +3633,74 @@
             clienteData.inscricaoEstadual = document.getElementById('cliente-inscricao').value;
         }
 
-        // Use the generic handler
-        handleFormSubmit(e, 'clientes', clienteData, 'cliente-form-feedback', clienteForm);
+        try {
+            if (clienteId) {
+                const docRef = doc(db, 'users', userId, 'clientes', clienteId);
+                await updateDoc(docRef, clienteData);
+                showFeedback(feedbackId, "Cliente atualizado com sucesso!", false);
+            } else {
+                const userRef = collection(db, 'users', userId, 'clientes');
+                await addDoc(userRef, { ...clienteData, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Cliente salvo com sucesso!", false);
+            }
+            clienteForm.reset();
+            document.getElementById('cliente-id').value = '';
+            document.getElementById('cliente-tipo-pessoa').dispatchEvent(new Event('change'));
+        } catch (error) {
+            console.error("Erro ao salvar cliente:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
     });
 
-    servicoForm.addEventListener('submit', (e) => handleFormSubmit(e, 'servicos', { nome: document.getElementById('servico-nome').value }, 'servico-form-feedback', servicoForm));
-
-    funcionarioForm.addEventListener('submit', (e) => {
-        const empresaSelect = document.getElementById('funcionario-empresa');
-        const empresaId = empresaSelect.value;
-        const feedbackId = 'funcionario-form-feedback';
-
-        if (!empresaId) {
-            showFeedback(feedbackId, "O campo 'Empresa' é obrigatório.", true);
-            e.preventDefault();
+    servicoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'servico-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
             return;
         }
 
+        const servicoId = document.getElementById('servico-id').value;
+        const data = { nome: document.getElementById('servico-nome').value };
+
+        try {
+            if (servicoId) {
+                const docRef = doc(db, 'users', userId, 'servicos', servicoId);
+                await updateDoc(docRef, data);
+                showFeedback(feedbackId, "Serviço atualizado com sucesso!", false);
+            } else {
+                await addDoc(collection(db, 'users', userId, 'servicos'), { ...data, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Serviço salvo com sucesso!", false);
+            }
+            servicoForm.reset();
+            document.getElementById('servico-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar serviço:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+
+    funcionarioForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'funcionario-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const funcionarioId = document.getElementById('funcionario-id').value;
+        const empresaSelect = document.getElementById('funcionario-empresa');
+        const empresaId = empresaSelect.value;
+        if (!empresaId) {
+            showFeedback(feedbackId, "O campo 'Empresa' é obrigatório.", true);
+            return;
+        }
         const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
 
         const funcionarioData = {
-            empresa: {
-                id: empresaId,
-                nome: empresaNome
-            },
+             empresa: { id: empresaId, nome: empresaNome },
             pessoal: {
                 nomeCompleto: document.getElementById('funcionario-nome-completo').value,
                 nomeSocial: document.getElementById('funcionario-nome-social').value,
@@ -3023,7 +3744,25 @@
                 usuarioId: document.getElementById('funcionario-usuario-sistema').value,
             }
         };
-        handleFormSubmit(e, 'funcionarios', funcionarioData, 'funcionario-form-feedback', funcionarioForm);
+
+        try {
+            if (funcionarioId) {
+                // Update
+                const docRef = doc(db, 'users', userId, 'funcionarios', funcionarioId);
+                await updateDoc(docRef, funcionarioData);
+                showFeedback(feedbackId, "Funcionário atualizado com sucesso!", false);
+            } else {
+                // Create
+                const userRef = collection(db, 'users', userId, 'funcionarios');
+                await addDoc(userRef, { ...funcionarioData, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Funcionário salvo com sucesso!", false);
+            }
+            funcionarioForm.reset();
+            document.getElementById('funcionario-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar funcionário:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
     });
 
     // --- Lógica da Tela Financeiro ---
@@ -3622,6 +4361,32 @@
 
     // Expose functions for testing
     window.testHooks = { setupListeners, auth };
+
+    if(listaViewBtn) {
+        listaViewBtn.addEventListener('click', () => setContasView('lista'));
+    }
+    if(calendarioViewBtn) {
+        calendarioViewBtn.addEventListener('click', () => setContasView('calendario'));
+    }
+
+    if(calendarStatusFilter) {
+        calendarStatusFilter.addEventListener('change', () => {
+            const status = calendarStatusFilter.value;
+            if (status === 'todas') {
+                processAndRenderCalendarEvents(allDespesas);
+            } else {
+                const filteredDespesas = allDespesas.filter(doc => {
+                    const data = doc.data();
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const vencimento = new Date(data.vencimento + 'T00:00:00');
+                    const docStatus = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
+                    return docStatus === status;
+                });
+                processAndRenderCalendarEvents(filteredDespesas);
+            }
+        });
+    }
 
     // --- Lógica de Recorrência Inteligente ---
     function resetRecurrenceFields() {
