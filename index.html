@@ -1746,9 +1746,10 @@
             if (!calendarInstance) {
                 initializeCalendar();
             }
-            // Processa os dados já existentes ao trocar para a visualização de calendário
+            // Ao trocar para a visualização de calendário, os dados já carregados
+            // são processados e renderizados. A chamada onSnapshot cuidará das
+            // atualizações subsequentes.
             processAndRenderCalendarEvents(allDespesas);
-            calendarInstance.render();
         } else { // 'lista'
             listaView.classList.remove('hidden');
             calendarioView.classList.add('hidden');
