@@ -1988,20 +1988,19 @@
                         `;
                     });
 
-                    if (!empresasTableBody.dataset.listenerAttached) {
-                        empresasTableBody.addEventListener('click', (e) => {
-                            if (e.target.classList.contains('edit-empresa-btn')) {
-                                openEmpresaForEdit(e.target.dataset.id);
-                            }
-                            if (e.target.classList.contains('delete-btn')) {
-                               const id = e.target.dataset.id;
-                                if (confirm('Tem certeza que deseja excluir esta empresa? A ação não pode ser desfeita.')) {
-                                    deleteDoc(doc(db, "empresas", id));
-                                }
+                    empresasTableBody.querySelectorAll('.edit-empresa-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            openEmpresaForEdit(e.currentTarget.dataset.id);
+                        });
+                    });
+                    empresasTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            const id = e.currentTarget.dataset.id;
+                            if (confirm('Tem certeza que deseja excluir esta empresa? A ação não pode ser desfeita.')) {
+                                deleteDoc(doc(db, "empresas", id));
                             }
                         });
-                        empresasTableBody.dataset.listenerAttached = 'true';
-                    }
+                    });
                 }
             }
 
@@ -2073,24 +2072,22 @@
                         </td>
                     `;
                 });
-                if (!perfisTableBody.dataset.listenerAttached) {
-                    perfisTableBody.addEventListener('click', async (e) => {
-                        if (e.target.classList.contains('view-password-btn')) {
-                            alert(`A senha temporária é: ${e.target.dataset.password}`);
-                        }
-                        if (e.target.classList.contains('delete-btn')) {
-                            const id = e.target.dataset.id;
-                            if (confirm('Tem certeza que deseja excluir este acesso? O usuário não poderá mais logar.')) {
-                               await deleteDoc(doc(db, "acessos", id));
-                            }
-                        }
-                        if (e.target.classList.contains('edit-acesso-btn')) {
-                            const id = e.target.dataset.id;
-                            openAcessoForEdit(id);
+                perfisTableBody.querySelectorAll('.view-password-btn').forEach(btn => {
+                    btn.addEventListener('click', () => alert(`A senha temporária é: ${btn.dataset.password}`));
+                });
+                perfisTableBody.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const id = btn.dataset.id;
+                        if (confirm('Tem certeza que deseja excluir este acesso? O usuário não poderá mais logar.')) {
+                           await deleteDoc(doc(db, "acessos", id));
                         }
                     });
-                    perfisTableBody.dataset.listenerAttached = 'true';
-                }
+                });
+                perfisTableBody.querySelectorAll('.edit-acesso-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        openAcessoForEdit(btn.dataset.id);
+                    });
+                });
             }
         });
 
@@ -2126,6 +2123,11 @@
                         <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                     </td>
                 `;
+            });
+            fornecedoresTableBody.querySelectorAll('.edit-fornecedor-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    openFornecedorForEdit(e.currentTarget.dataset.id);
+                });
             });
             fornecedoresTableBody.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -2247,21 +2249,19 @@
                 `;
             });
 
-            if (!clientesTableBody.dataset.listenerAttached) {
-                 clientesTableBody.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('delete-btn')) {
-                        const id = e.target.dataset.id;
-                        if (confirm('Tem certeza que deseja excluir este cliente?')) {
-                            deleteItem('clientes', id);
-                        }
-                    }
-                    if (e.target.classList.contains('edit-cliente-btn')) {
-                        const id = e.target.dataset.id;
-                        openClienteForEdit(id);
+            clientesTableBody.querySelectorAll('.edit-cliente-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    openClienteForEdit(e.currentTarget.dataset.id);
+                });
+            });
+            clientesTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                        deleteItem('clientes', id);
                     }
                 });
-                clientesTableBody.dataset.listenerAttached = 'true';
-            }
+            });
         });
 
         // Cadastros - Serviços
@@ -2342,6 +2342,11 @@
                             <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
+                });
+                funcionariosTableBody.querySelectorAll('.edit-funcionario-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        openFuncionarioForEdit(e.currentTarget.dataset.id);
+                    });
                 });
                 funcionariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -2980,6 +2985,28 @@
     }
 
     // --- Lógica dos Formulários de Cadastro ---
+    async function openAcessoForEdit(id) {
+        try {
+            const docRef = doc(db, 'acessos', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('perfil-id').value = docSnap.id;
+                document.getElementById('acesso-login-nome').value = data.login || '';
+
+                const usuarioSelect = document.getElementById('acesso-usuario-select');
+                usuarioSelect.value = data.systemUserId || '';
+                usuarioSelect.disabled = true; // Prevent changing the user during an edit
+
+                document.getElementById('perfil-form-button').textContent = 'Atualizar Acesso';
+
+                geraisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.tab-link[data-tab="perfis"]').click();
+            }
+        } catch (error) {
+            console.error("Erro ao buscar acesso para edição:", error);
+        }
+    }
 
     async function openEmpresaForEdit(id) {
         try {
