@@ -1388,8 +1388,20 @@
                           <input type="date" id="pagar-data" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                       </div>
                       <div>
-                          <label for="pagar-valor" class="block text-sm font-medium text-gray-700">Valor Efetivamente Pago (R$)</label>
+                          <label for="pagar-valor" class="block text-sm font-medium text-gray-700">Valor Original da Dívida (R$)</label>
                           <input type="number" id="pagar-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-descontos" class="block text-sm font-medium text-gray-700">Descontos Concedidos (R$)</label>
+                          <input type="number" id="pagar-descontos" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-juros-multa" class="block text-sm font-medium text-gray-700">Juros / Multa (R$)</label>
+                          <input type="number" id="pagar-juros-multa" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-valor-final" class="block text-sm font-medium text-gray-700">Valor Final Pago (R$)</label>
+                          <input type="number" id="pagar-valor-final" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly>
                       </div>
                       <div>
                           <label for="pagar-conta-saida" class="block text-sm font-medium text-gray-700">Conta de Saída</label>
@@ -1469,7 +1481,9 @@
                   <div id="view-pagamento-info" class="hidden space-y-4 border-t pt-4">
                       <h5 class="text-md font-semibold text-gray-700">Informações do Pagamento</h5>
                       <div><p class="text-sm text-gray-500">Data do Pagamento</p><p id="view-despesa-data-pagamento" class="text-base font-medium text-gray-800"></p></div>
-                      <div><p class="text-sm text-gray-500">Valor Pago</p><p id="view-despesa-valor-pago" class="text-base font-bold text-green-600"></p></div>
+                      <div id="view-despesa-descontos-container" class="hidden"><p class="text-sm text-gray-500">Descontos Concedidos</p><p id="view-despesa-descontos" class="text-base font-medium text-blue-600"></p></div>
+                      <div id="view-despesa-juros-multa-container" class="hidden"><p class="text-sm text-gray-500">Juros / Multa Pagos</p><p id="view-despesa-juros-multa" class="text-base font-medium text-red-600"></p></div>
+                      <div><p class="text-sm text-gray-500">Valor Final Pago</p><p id="view-despesa-valor-pago" class="text-base font-bold text-green-600"></p></div>
                       <div><p class="text-sm text-gray-500">Conta de Saída</p><p id="view-despesa-conta-saida" class="text-base font-medium text-gray-800"></p></div>
                   </div>
               </div>
@@ -4152,10 +4166,30 @@
 
             // Payment info section
             const pagamentoInfoEl = document.getElementById('view-pagamento-info');
+            const descontosContainer = document.getElementById('view-despesa-descontos-container');
+            const jurosMultaContainer = document.getElementById('view-despesa-juros-multa-container');
+
             if (data.pago) {
                 document.getElementById('view-despesa-data-pagamento').textContent = formatDate(data.dataPagamento);
                 document.getElementById('view-despesa-valor-pago').textContent = formatCurrency(data.valorPago || 0);
                 document.getElementById('view-despesa-conta-saida').textContent = contaSaidaNome;
+
+                // Show discounts if they exist
+                if (data.descontos && data.descontos > 0) {
+                    document.getElementById('view-despesa-descontos').textContent = formatCurrency(data.descontos);
+                    descontosContainer.classList.remove('hidden');
+                } else {
+                    descontosContainer.classList.add('hidden');
+                }
+
+                // Show fees if they exist
+                if (data.jurosMulta && data.jurosMulta > 0) {
+                    document.getElementById('view-despesa-juros-multa').textContent = formatCurrency(data.jurosMulta);
+                    jurosMultaContainer.classList.remove('hidden');
+                } else {
+                    jurosMultaContainer.classList.add('hidden');
+                }
+
                 pagamentoInfoEl.classList.remove('hidden');
             } else {
                 pagamentoInfoEl.classList.add('hidden');
@@ -4176,9 +4210,27 @@
     if(okVisualizarModalBtn) okVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
 
     if(pagarForm) {
+        const pagarValorInput = document.getElementById('pagar-valor');
+        const pagarDescontosInput = document.getElementById('pagar-descontos');
+        const pagarJurosMultaInput = document.getElementById('pagar-juros-multa');
+        const pagarValorFinalInput = document.getElementById('pagar-valor-final');
+
+        function calculateFinalPayment() {
+            const valor = parseFloat(pagarValorInput.value) || 0;
+            const descontos = parseFloat(pagarDescontosInput.value) || 0;
+            const jurosMulta = parseFloat(pagarJurosMultaInput.value) || 0;
+
+            const valorFinal = (valor + jurosMulta) - descontos;
+            pagarValorFinalInput.value = valorFinal.toFixed(2);
+        }
+
+        [pagarValorInput, pagarDescontosInput, pagarJurosMultaInput].forEach(input => {
+            if (input) input.addEventListener('input', calculateFinalPayment);
+        });
+
         pagarForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+            const userId = effectiveUserId;
             if (!userId) {
                 console.error("Usuário não autenticado.");
                 return;
@@ -4188,7 +4240,19 @@
             const paymentDate = document.getElementById('pagar-data').value;
             const paymentAccount = document.getElementById('pagar-conta-saida').value;
             const paymentMethod = document.getElementById('pagar-meio-pagamento').value;
-            const totalPaid = parseFloat(document.getElementById('pagar-valor').value);
+            const descontos = parseFloat(document.getElementById('pagar-descontos').value) || 0;
+            const jurosMulta = parseFloat(document.getElementById('pagar-juros-multa').value) || 0;
+            const valorFinalPago = parseFloat(document.getElementById('pagar-valor-final').value) || 0;
+
+            // Calculate the total original value of all selected expenses for correct proportioning
+            const totalOriginal = allDespesas
+                .filter(d => despesaIds.includes(d.id))
+                .reduce((sum, d) => sum + d.data().valor, 0);
+
+            if (totalOriginal === 0 && despesaIds.length > 0) {
+                 console.error("Não é possível processar o pagamento pois o valor original total é zero.");
+                 return;
+            }
 
             const paymentPromises = despesaIds.map(async (id) => {
                 const despesaRef = doc(db, 'users', userId, 'despesas', id);
@@ -4199,7 +4263,13 @@
                         return; // Skip this one
                     }
                     const despesaData = despesaSnap.data();
-                    const valorPagoIndividual = despesaIds.length === 1 ? totalPaid : despesaData.valor;
+                    const valorOriginal = despesaData.valor;
+
+                    // Calculate proportional values for this specific expense
+                    const proporcao = totalOriginal > 0 ? valorOriginal / totalOriginal : 0;
+                    const valorPagoIndividual = valorFinalPago * proporcao;
+                    const descontosIndividual = descontos * proporcao;
+                    const jurosMultaIndividual = jurosMulta * proporcao;
 
                     // 1. Create financial transaction record
                     const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
@@ -4208,6 +4278,8 @@
                         dataPagamento: paymentDate,
                         dataCompetencia: despesaData.competencia,
                         valorPago: valorPagoIndividual,
+                        descontos: descontosIndividual,
+                        jurosMulta: jurosMultaIndividual,
                         referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', paymentAccount),
                         referenciaFavorecido: {
                             collection: despesaData.favorecidoTipo,
@@ -4223,7 +4295,9 @@
                     await updateDoc(despesaRef, {
                         pago: true,
                         dataPagamento: paymentDate,
-                        valorPago: valorPagoIndividual
+                        valorPago: valorPagoIndividual,
+                        descontos: descontosIndividual,
+                        jurosMulta: jurosMultaIndividual,
                     });
                 } catch (error) {
                     console.error(`Erro ao processar pagamento para a despesa ${id}:`, error);
