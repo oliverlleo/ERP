@@ -3955,7 +3955,7 @@
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length !== 1) return;
             const id = selectedIds[0];
-            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+            const userId = effectiveUserId;
             if (!userId) return;
             try {
                 const docRef = doc(db, 'users', userId, 'despesas', id);
@@ -4019,7 +4019,7 @@
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length === 0) return;
             if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
-                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+                const userId = effectiveUserId;
                 if (!userId) return;
                 selectedIds.forEach(id => {
                     deleteDoc(doc(db, 'users', userId, 'despesas', id));
@@ -4117,7 +4117,7 @@
 
     async function openVisualizarModal(despesaId) {
         if (!visualizarDespesaModal) return;
-        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+        const userId = effectiveUserId;
         if (!userId) return;
 
         try {
@@ -4342,16 +4342,10 @@
         console.log("Despesa form submitted.");
         closeModal(); // Close modal immediately for better UX and testability
 
-        let userId;
-        if (window.IS_TEST_RUN) {
-            userId = 'test-user-123';
-        } else {
-            const user = auth.currentUser;
-            if (!user) {
-                console.error("Usuário não autenticado.");
-                return;
-            }
-            userId = user.uid;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Usuário não autenticado ou ID do administrador não encontrado.");
+            return;
         }
 
         const expenseId = document.getElementById('despesa-id').value;
@@ -4441,7 +4435,7 @@
     });
 
     // Expose functions for testing
-    window.testHooks = { setupListeners, auth, applyFiltersAndRender };
+    window.testHooks = { setupListeners, auth, applyFiltersAndRender, showView };
 
     if(listaViewBtn) {
         listaViewBtn.addEventListener('click', () => setContasView('lista'));
