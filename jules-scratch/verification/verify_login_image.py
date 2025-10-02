@@ -5,7 +5,8 @@ import os
 async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        page = await browser.new_page()
+        # Set a large viewport to ensure the image div is visible (triggers lg:block)
+        page = await browser.new_page(viewport={'width': 1920, 'height': 1080})
 
         # Get the absolute path to the index.html file
         file_path = os.path.abspath('index.html')
@@ -16,7 +17,7 @@ async def main():
         await page.wait_for_selector('#login-page', state='visible')
 
         # Take a screenshot of the login page
-        await page.screenshot(path='jules-scratch/verification/login_page.png')
+        await page.screenshot(path='jules-scratch/verification/login_page_correct_viewport.png')
 
         await browser.close()
 
