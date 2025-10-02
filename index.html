@@ -2602,30 +2602,60 @@
 
 
     // --- Lógica de Autenticação e Navegação ---
-    onAuthStateChanged(auth, (user) => {
-        // This function now PRIMARILY handles ADMIN logins/logouts via Firebase Auth.
-        // Company user logins are handled separately in the form submit handler.
-        detachListeners();
-        if (user) { // An admin is logged in
-            effectiveUserId = user.uid; // The admin's UID is the one for data operations
-            currentUserName = user.email; // Admin's name is their email
-
-            // Update UI
-            userEmailSpan.textContent = currentUserName;
-            userEmailCadastrosSpan.textContent = currentUserName;
-            userEmailContasSpan.textContent = currentUserName;
-
-            // Setup listeners to listen to the admin's data partition
-            setupListeners(effectiveUserId);
-            showView('main-page');
-        } else { // No admin is logged in, show the login page
+    function updateUiForUser(name) {
+        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan];
+        elements.forEach(el => {
+            if (el) el.textContent = name || '';
+        });
+        if (!name) {
             currentUserName = null;
             effectiveUserId = null;
-            userEmailSpan.textContent = '';
-            userEmailCadastrosSpan.textContent = '';
-            userEmailContasSpan.textContent = '';
-            showView('login-page');
         }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        detachListeners();
+
+        // Caso 1: Usuário do Firebase (admin) está logado.
+        if (user) {
+            console.log("Usuário Firebase (admin) detectado.");
+            effectiveUserId = user.uid;
+            currentUserName = user.email;
+
+            const sessionData = {
+                isAdmin: true,
+                effectiveUserId: user.uid,
+                currentUserName: user.email,
+            };
+            sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+
+            updateUiForUser(currentUserName);
+            setupListeners(effectiveUserId);
+            showView('main-page');
+            return;
+        }
+
+        // Caso 2: Nenhum usuário Firebase. Verificar se há uma sessão de usuário da empresa.
+        const sessionDataString = sessionStorage.getItem('userSession');
+        if (sessionDataString) {
+            const sessionData = JSON.parse(sessionDataString);
+            if (sessionData.isCompanyUser) {
+                console.log("Restaurando sessão de usuário da empresa.");
+                effectiveUserId = sessionData.effectiveUserId;
+                currentUserName = sessionData.currentUserName;
+
+                updateUiForUser(currentUserName);
+                setupListeners(effectiveUserId);
+                showView('main-page');
+                return;
+            }
+        }
+
+        // Caso 3: Nenhum usuário Firebase e nenhuma sessão de usuário da empresa. Mostrar página de login.
+        console.log("Nenhum usuário ativo ou sessão. Mostrando página de login.");
+        sessionStorage.removeItem('userSession'); // Limpa dados obsoletos
+        updateUiForUser(null);
+        showView('login-page');
     });
 
     if (adminLoginLink) {
@@ -2714,6 +2744,16 @@
                     return;
                 }
                 currentUserName = userData.nomeUsuario;
+
+                // Salvar a sessão do usuário da empresa
+                const sessionData = {
+                    isCompanyUser: true,
+                    effectiveUserId: userData.adminId,
+                    currentUserName: userData.nomeUsuario,
+                    acessoId: userDoc.id
+                };
+                sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+
                 userEmailSpan.textContent = currentUserName;
                 userEmailCadastrosSpan.textContent = currentUserName;
                 userEmailContasSpan.textContent = currentUserName;
@@ -2771,6 +2811,16 @@
             }
 
             currentUserName = userData.nomeUsuario;
+
+            // Criar a sessão após a troca de senha
+            const sessionData = {
+                isCompanyUser: true,
+                effectiveUserId: userData.adminId,
+                currentUserName: userData.nomeUsuario,
+                acessoId: userDoc.id
+            };
+            sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+
             userEmailSpan.textContent = currentUserName;
             userEmailCadastrosSpan.textContent = currentUserName;
             userEmailContasSpan.textContent = currentUserName;
@@ -2785,19 +2835,19 @@
     });
 
     const performLogout = () => {
-        // Se há um usuário Firebase autenticado, é um admin.
+        console.log("Performing logout...");
+        // Limpa a sessão do storage. Este é o passo mais importante.
+        sessionStorage.removeItem('userSession');
+
+        // Se era um usuário admin, faz o signOut do Firebase.
+        // O listener onAuthStateChanged vai então ser disparado e redirecionar para o login.
         if (auth.currentUser) {
             signOut(auth).catch(error => console.error("Erro no logout do admin:", error));
         } else {
-            // Se não, é um usuário da empresa, e fazemos o logout manual.
-            console.log("Fazendo logout do usuário da empresa...");
-            currentUserName = null;
-            effectiveUserId = null;
-            userEmailSpan.textContent = '';
-            userEmailCadastrosSpan.textContent = '';
-            userEmailContasSpan.textContent = '';
-            detachListeners();
-            showView('login-page');
+            // Se era um usuário da empresa, não há sessão do Firebase para deslogar.
+            // Limpar o session storage é suficiente. Recarregar a página garante um estado limpo
+            // e que o listener onAuthStateChanged execute e direcione para a página de login.
+            location.reload();
         }
     }
 
@@ -4337,16 +4387,10 @@
         console.log("Despesa form submitted.");
         closeModal(); // Close modal immediately for better UX and testability
 
-        let userId;
-        if (window.IS_TEST_RUN) {
-            userId = 'test-user-123';
-        } else {
-            const user = auth.currentUser;
-            if (!user) {
-                console.error("Usuário não autenticado.");
-                return;
-            }
-            userId = user.uid;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Usuário não autenticado ou ID de administrador não encontrado.");
+            return;
         }
 
         const expenseId = document.getElementById('despesa-id').value;
