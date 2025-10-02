@@ -407,6 +407,7 @@
                             <!-- Tab: Acessos de Usuário -->
                             <div id="perfis-tab" class="tab-content hidden">
                                  <form id="perfil-form" >
+                                     <input type="hidden" id="perfil-id">
                                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="acesso-usuario-select">Usuário do Sistema</label>
@@ -422,7 +423,7 @@
                                     </div>
                                     <div id="perfil-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Criar Acesso</button>
+                                        <button id="perfil-form-button" type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Criar Acesso</button>
                                     </div>
                                 </form>
                                 <div class="mt-8 border-t pt-6">
@@ -2067,23 +2068,29 @@
                             <button class="view-password-btn bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs" data-password="${data.senha}">Ver Senha</button>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-acesso-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
                 });
-                perfisTableBody.querySelectorAll('.view-password-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        alert(`A senha temporária é: ${e.currentTarget.dataset.password}`);
-                    });
-                });
-                perfisTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', async (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        if (confirm('Tem certeza que deseja excluir este acesso? O usuário não poderá mais logar.')) {
-                           await deleteDoc(doc(db, "acessos", id));
+                if (!perfisTableBody.dataset.listenerAttached) {
+                    perfisTableBody.addEventListener('click', async (e) => {
+                        if (e.target.classList.contains('view-password-btn')) {
+                            alert(`A senha temporária é: ${e.target.dataset.password}`);
+                        }
+                        if (e.target.classList.contains('delete-btn')) {
+                            const id = e.target.dataset.id;
+                            if (confirm('Tem certeza que deseja excluir este acesso? O usuário não poderá mais logar.')) {
+                               await deleteDoc(doc(db, "acessos", id));
+                            }
+                        }
+                        if (e.target.classList.contains('edit-acesso-btn')) {
+                            const id = e.target.dataset.id;
+                            openAcessoForEdit(id);
                         }
                     });
-                });
+                    perfisTableBody.dataset.listenerAttached = 'true';
+                }
             }
         });
 
@@ -2133,14 +2140,78 @@
         // Cadastros - Planos de Contas
         const planosContasQuery = query(collection(db, 'users', userId, 'planosDeContas'));
         planosDeContasUnsubscribe = onSnapshot(planosContasQuery, (querySnapshot) => {
-            renderTable(planosContasTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('planosDeContas', id));
+            if (!planosContasTableBody) return;
+            planosContasTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = planosContasTableBody.insertRow();
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhuma categoria cadastrada.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = planosContasTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-plano-conta-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="planosDeContas" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+            }
         });
+
+        if (planosContasTableBody && !planosContasTableBody.dataset.listenerAttached) {
+            planosContasTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-plano-conta-btn')) {
+                    openPlanoContaForEdit(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
+                        deleteItem('planosDeContas', e.target.dataset.id);
+                    }
+                }
+            });
+            planosContasTableBody.dataset.listenerAttached = 'true';
+        }
 
         // Cadastros - Contas Bancárias
         const contasBancariasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
         contasBancariasUnsubscribe = onSnapshot(contasBancariasQuery, (querySnapshot) => {
-            renderTable(contasBancariasTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('contasBancarias', id));
+            if (!contasBancariasTableBody) return;
+            contasBancariasTableBody.innerHTML = '';
+             if (querySnapshot.empty) {
+                const tr = contasBancariasTableBody.insertRow();
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhuma conta cadastrada.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = contasBancariasTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-conta-bancaria-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="contasBancarias" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+            }
         });
+
+        if (contasBancariasTableBody && !contasBancariasTableBody.dataset.listenerAttached) {
+            contasBancariasTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-conta-bancaria-btn')) {
+                    openContaBancariaForEdit(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir esta conta bancária?')) {
+                        deleteItem('contasBancarias', e.target.dataset.id);
+                    }
+                }
+            });
+            contasBancariasTableBody.dataset.listenerAttached = 'true';
+        }
 
         // Cadastros - Clientes
         const clientesQuery = query(collection(db, 'users', userId, 'clientes'));
@@ -2170,28 +2241,66 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cpfCnpj}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${contato}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                        <button class="edit-cliente-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                         <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                     </td>
                 `;
             });
 
-            clientesTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    if (confirm('Tem certeza que deseja excluir este cliente?')) {
-                        deleteItem('clientes', id);
+            if (!clientesTableBody.dataset.listenerAttached) {
+                 clientesTableBody.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-btn')) {
+                        const id = e.target.dataset.id;
+                        if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                            deleteItem('clientes', id);
+                        }
+                    }
+                    if (e.target.classList.contains('edit-cliente-btn')) {
+                        const id = e.target.dataset.id;
+                        openClienteForEdit(id);
                     }
                 });
-            });
-            // Add edit functionality here if needed
+                clientesTableBody.dataset.listenerAttached = 'true';
+            }
         });
 
         // Cadastros - Serviços
         const servicosQuery = query(collection(db, 'users', userId, 'servicos'));
         servicosUnsubscribe = onSnapshot(servicosQuery, (querySnapshot) => {
-            renderTable(servicosTableBody, querySnapshot.docs, ['nome'], (id) => deleteItem('servicos', id));
+            if (!servicosTableBody) return;
+            servicosTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                const tr = servicosTableBody.insertRow();
+                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhum serviço cadastrado.</td>`;
+            } else {
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = servicosTableBody.insertRow();
+                    tr.setAttribute('data-id', doc.id);
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-servico-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="servicos" data-id="${doc.id}">Excluir</button>
+                        </td>
+                    `;
+                });
+            }
         });
+
+        if (servicosTableBody && !servicosTableBody.dataset.listenerAttached) {
+            servicosTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-servico-btn')) {
+                    openServicoForEdit(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir este serviço?')) {
+                        deleteItem('servicos', e.target.dataset.id);
+                    }
+                }
+            });
+            servicosTableBody.dataset.listenerAttached = 'true';
+        }
 
         // Cadastros - Funcionários
         const funcionariosQuery = query(collection(db, 'users', userId, 'funcionarios'));
@@ -2986,6 +3095,25 @@
         }
     }
 
+    async function openContaBancariaForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'contasBancarias', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('conta-bancaria-id').value = docSnap.id;
+                document.getElementById('conta-bancaria-nome').value = data.nome || '';
+
+                financeirosCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-financeiro[data-tab-financeiro="contas-bancarias"]').click();
+                financeirosCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar conta bancária para edição:", error);
+        }
+    }
+
     // Edit Cliente Logic
     async function openClienteForEdit(id) {
         if (!effectiveUserId) return;
@@ -3035,6 +3163,66 @@
                 document.getElementById('cliente-tabela-precos').value = data.financeiro?.tabelaPrecos || '';
                 document.getElementById('cliente-obs').value = data.obs || '';
 
+                document.querySelector('.cliente-tab-link[data-cliente-tab="cliente-dados-principais"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar cliente para edição:", error);
+        }
+    }
+
+    // Edit Cliente Logic
+    async function openClienteForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'clientes', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('cliente-id').value = docSnap.id;
+
+                // Dados Principais
+                document.getElementById('cliente-tipo-pessoa').value = data.tipoPessoa || 'fisica';
+                document.getElementById('cliente-tipo-pessoa').dispatchEvent(new Event('change'));
+
+                if (data.tipoPessoa === 'fisica') {
+                    document.getElementById('cliente-nome-completo').value = data.nome || '';
+                    document.getElementById('cliente-cpf').value = data.cpf || '';
+                    document.getElementById('cliente-rg').value = data.rg || '';
+                    document.getElementById('cliente-data-nascimento').value = data.dataNascimento || '';
+                } else {
+                    document.getElementById('cliente-razao-social').value = data.nome || ''; // Note: mapping 'nome' to 'razaoSocial' for edit
+                    document.getElementById('cliente-nome-fantasia').value = data.nomeFantasia || '';
+                    document.getElementById('cliente-cnpj').value = data.cnpj || '';
+                    document.getElementById('cliente-inscricao').value = data.inscricaoEstadual || '';
+                }
+
+                // Contato
+                document.getElementById('cliente-telefone').value = data.contato?.telefone || '';
+                document.getElementById('cliente-email').value = data.contato?.email || '';
+                document.getElementById('cliente-website').value = data.contato?.website || '';
+                document.getElementById('cliente-contato-pessoa').value = data.contato?.pessoaContato || '';
+                document.getElementById('cliente-email-financeiro').value = data.contato?.emailFinanceiro || '';
+
+                // Endereço
+                document.getElementById('cliente-cep').value = data.endereco?.cep || '';
+                document.getElementById('cliente-logradouro').value = data.endereco?.logradouro || '';
+                document.getElementById('cliente-numero').value = data.endereco?.numero || '';
+                document.getElementById('cliente-complemento').value = data.endereco?.complemento || '';
+                document.getElementById('cliente-bairro').value = data.endereco?.bairro || '';
+                document.getElementById('cliente-cidade').value = data.endereco?.cidade || '';
+                document.getElementById('cliente-estado').value = data.endereco?.estado || '';
+
+                // Financeiro
+                document.getElementById('cliente-vendedor').value = data.financeiro?.vendedorId || '';
+                document.getElementById('cliente-limite-credito').value = data.financeiro?.limiteCredito || '';
+                document.getElementById('cliente-condicao-pagamento').value = data.financeiro?.condicaoPagamento || '';
+                document.getElementById('cliente-tabela-precos').value = data.financeiro?.tabelaPrecos || '';
+                document.getElementById('cliente-obs').value = data.obs || '';
+
+                // Mudar para a aba correta e rolar para a visualização
+                comerciaisCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-comercial[data-tab-comercial="clientes"]').click();
                 document.querySelector('.cliente-tab-link[data-cliente-tab="cliente-dados-principais"]').click();
                 comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
@@ -3182,56 +3370,74 @@
         }
     });
 
-    // Lógica para o formulário de criação de Acessos de Usuário
+    // Lógica para o formulário de criação/edição de Acessos de Usuário
     perfilForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'perfil-form-feedback';
-        const adminId = auth.currentUser?.uid;
+        const adminId = effectiveUserId;
         if (!adminId) {
             showFeedback(feedbackId, "Administrador não autenticado.", true);
             return;
         }
 
-        const usuarioSelect = document.getElementById('acesso-usuario-select');
-        const systemUserId = usuarioSelect.value;
-        const nomeUsuario = usuarioSelect.options[usuarioSelect.selectedIndex].text;
+        const acessoId = document.getElementById('perfil-id').value;
         const login = document.getElementById('acesso-login-nome').value;
+        const usuarioSelect = document.getElementById('acesso-usuario-select');
 
-        if (!systemUserId || !login) {
-            showFeedback(feedbackId, "Por favor, selecione um usuário e defina um login.", true);
+        if (!login) {
+            showFeedback(feedbackId, "Por favor, forneça um nome de login.", true);
             return;
         }
 
         try {
-            // Precisamos buscar a empresa do usuário do sistema para vincular ao acesso
-            const systemUserDocRef = doc(db, 'users', adminId, 'systemUsers', systemUserId);
-            const systemUserDoc = await getDoc(systemUserDocRef);
-            if (!systemUserDoc.exists() || !systemUserDoc.data().empresa) {
-                 showFeedback(feedbackId, "Erro: Usuário do sistema ou empresa não encontrados.", true);
-                 return;
+            if (acessoId) {
+                // Lógica de Atualização
+                const docRef = doc(db, 'acessos', acessoId);
+                await updateDoc(docRef, { login: login });
+                showFeedback(feedbackId, "Acesso atualizado com sucesso!", false);
+            } else {
+                // Lógica de Criação
+                const systemUserId = usuarioSelect.value;
+                if (!systemUserId) {
+                    showFeedback(feedbackId, "Por favor, selecione um usuário do sistema.", true);
+                    return;
+                }
+                const nomeUsuario = usuarioSelect.options[usuarioSelect.selectedIndex].text;
+
+                const systemUserDocRef = doc(db, 'users', adminId, 'systemUsers', systemUserId);
+                const systemUserDoc = await getDoc(systemUserDocRef);
+                if (!systemUserDoc.exists() || !systemUserDoc.data().empresa) {
+                     showFeedback(feedbackId, "Erro: Usuário do sistema ou empresa não encontrados.", true);
+                     return;
+                }
+                const empresa = systemUserDoc.data().empresa;
+
+                const tempPassword = generateRandomPassword(6, true);
+
+                const acessoData = {
+                    login,
+                    senha: tempPassword,
+                    primeiroAcesso: true,
+                    systemUserId,
+                    nomeUsuario,
+                    empresaId: empresa.id,
+                    adminId,
+                    createdAt: serverTimestamp()
+                };
+
+                await addDoc(collection(db, 'acessos'), acessoData);
+                showFeedback(feedbackId, `Acesso para '${nomeUsuario}' criado! Login: ${login}, Senha Temporária: ${tempPassword}`, false, true);
             }
-            const empresa = systemUserDoc.data().empresa;
 
-            const tempPassword = generateRandomPassword(6, true);
-
-            const acessoData = {
-                login,
-                senha: tempPassword,
-                primeiroAcesso: true,
-                systemUserId,
-                nomeUsuario,
-                empresaId: empresa.id,
-                adminId,
-                createdAt: serverTimestamp()
-            };
-
-            await addDoc(collection(db, 'acessos'), acessoData);
-            showFeedback(feedbackId, `Acesso para '${nomeUsuario}' criado! Login: ${login}, Senha Temporária: ${tempPassword}`, false, true);
+            // Resetar o formulário em ambos os casos
             perfilForm.reset();
+            document.getElementById('perfil-id').value = '';
+            usuarioSelect.disabled = false;
+            document.getElementById('perfil-form-button').textContent = 'Criar Acesso';
 
         } catch (error) {
-            console.error(`Erro ao criar acesso:`, error);
-            showFeedback(feedbackId, "Erro ao criar acesso. Tente novamente.", true);
+            console.error(`Erro ao salvar acesso:`, error);
+            showFeedback(feedbackId, "Erro ao salvar acesso. Tente novamente.", true);
         }
     });
     fornecedorForm.addEventListener('submit', async (e) => {
@@ -3424,6 +3630,7 @@
             }
             clienteForm.reset();
             document.getElementById('cliente-id').value = '';
+            document.getElementById('cliente-tipo-pessoa').dispatchEvent(new Event('change'));
         } catch (error) {
             console.error("Erro ao salvar cliente:", error);
             showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
