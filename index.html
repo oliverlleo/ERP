@@ -374,6 +374,7 @@
                             <!-- Tab: Usuários -->
                             <div id="usuarios-tab" class="tab-content hidden">
                                 <form id="usuario-form">
+                                    <input type="hidden" id="usuario-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="usuario-funcionario-select">Funcionário</label>
@@ -1735,6 +1736,25 @@
         }
     }
 
+    async function openUsuarioForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'systemUsers', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('usuario-id').value = docSnap.id;
+                document.getElementById('usuario-funcionario-select').value = data.funcionarioId;
+                document.querySelector('#usuario-form button[type="submit"]').textContent = 'Atualizar Usuário';
+
+                geraisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.tab-link[data-tab="usuarios"]').click();
+            }
+        } catch (error) {
+            console.error("Erro ao buscar usuário para edição:", error);
+        }
+    }
+
     // --- Lógica de Alternância de Visualização (Lista/Calendário) ---
     function setContasView(viewName) {
         if (viewName === 'calendario') {
@@ -2032,10 +2052,18 @@
                     tr.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-usuario-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-collection="systemUsers" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
                 });
+
+                usuariosTableBody.querySelectorAll('.edit-usuario-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        openUsuarioForEdit(e.currentTarget.dataset.id);
+                    });
+                });
+
                 usuariosTableBody.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.currentTarget.dataset.id;
@@ -3292,7 +3320,7 @@
             showFeedback(feedbackId, "Erro ao salvar empresa. Tente novamente.", true);
         }
     });
-    // Lógica para o formulário de criação de Usuários do Sistema
+    // Lógica para o formulário de criação/edição de Usuários do Sistema
     usuarioForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'usuario-form-feedback';
@@ -3302,9 +3330,11 @@
             return;
         }
 
+        const usuarioId = document.getElementById('usuario-id').value;
         const funcionarioSelect = document.getElementById('usuario-funcionario-select');
         const funcionarioId = funcionarioSelect.value;
         const funcionarioNome = funcionarioSelect.options[funcionarioSelect.selectedIndex].text;
+        const submitButton = document.querySelector('#usuario-form button[type="submit"]');
 
         if (!funcionarioId) {
             showFeedback(feedbackId, "Por favor, selecione um funcionário.", true);
@@ -3312,32 +3342,46 @@
         }
 
         try {
-            // Get the employee's company data first
-            const funcionarioDocRef = doc(db, 'users', adminId, 'funcionarios', funcionarioId);
-            const funcionarioDoc = await getDoc(funcionarioDocRef);
+            if (usuarioId) {
+                // Update logic
+                const docRef = doc(db, 'users', adminId, 'systemUsers', usuarioId);
+                await updateDoc(docRef, {
+                    funcionarioId: funcionarioId,
+                    nome: funcionarioNome
+                });
+                showFeedback(feedbackId, `Usuário '${funcionarioNome}' atualizado com sucesso!`, false);
 
-            if (!funcionarioDoc.exists() || !funcionarioDoc.data().empresa) {
-                showFeedback(feedbackId, "Erro: A empresa do funcionário selecionado não foi encontrada.", true);
-                return;
+            } else {
+                // Create logic
+                const funcionarioDocRef = doc(db, 'users', adminId, 'funcionarios', funcionarioId);
+                const funcionarioDoc = await getDoc(funcionarioDocRef);
+
+                if (!funcionarioDoc.exists() || !funcionarioDoc.data().empresa) {
+                    showFeedback(feedbackId, "Erro: A empresa do funcionário selecionado não foi encontrada.", true);
+                    return;
+                }
+                const empresaData = funcionarioDoc.data().empresa;
+
+                const userData = {
+                    funcionarioId,
+                    nome: funcionarioNome,
+                    empresa: empresaData, // Store the company object
+                    adminId,
+                    createdAt: serverTimestamp()
+                };
+                const userRef = collection(db, 'users', adminId, 'systemUsers');
+                await addDoc(userRef, userData);
+                showFeedback(feedbackId, `Usuário '${funcionarioNome}' criado com sucesso!`, false);
             }
-            const empresaData = funcionarioDoc.data().empresa;
 
-            const userData = {
-                funcionarioId,
-                nome: funcionarioNome,
-                empresa: empresaData, // Store the company object
-                adminId,
-                createdAt: serverTimestamp()
-            };
-
-            // Creates a "system user" from an employee.
-            const userRef = collection(db, 'users', adminId, 'systemUsers');
-            await addDoc(userRef, userData);
-            showFeedback(feedbackId, `Usuário '${funcionarioNome}' criado com sucesso!`, false);
+            // Reset form for both cases
             usuarioForm.reset();
+            document.getElementById('usuario-id').value = '';
+            submitButton.textContent = 'Criar Usuário';
+
         } catch (error) {
             console.error(`Erro ao salvar usuário do sistema:`, error);
-            showFeedback(feedbackId, "Erro ao criar usuário. Tente novamente.", true);
+            showFeedback(feedbackId, "Erro ao salvar usuário. Tente novamente.", true);
         }
     });
 
