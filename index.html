@@ -4003,8 +4003,11 @@
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length !== 1) return;
             const id = selectedIds[0];
-            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-            if (!userId) return;
+            const userId = effectiveUserId;
+            if (!userId) {
+                console.error("Ação de editar falhou: ID de usuário efetivo não encontrado.");
+                return;
+            }
             try {
                 const docRef = doc(db, 'users', userId, 'despesas', id);
                 const docSnap = await getDoc(docRef);
@@ -4067,8 +4070,11 @@
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length === 0) return;
             if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
-                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-                if (!userId) return;
+                const userId = effectiveUserId;
+                if (!userId) {
+                    console.error("Ação de excluir falhou: ID de usuário efetivo não encontrado.");
+                    return;
+                }
                 selectedIds.forEach(id => {
                     deleteDoc(doc(db, 'users', userId, 'despesas', id));
                 });
@@ -4167,8 +4173,11 @@
 
     async function openVisualizarModal(despesaId) {
         if (!visualizarDespesaModal) return;
-        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-        if (!userId) return;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Ação de visualizar falhou: ID de usuário efetivo não encontrado.");
+            return;
+        }
 
         try {
             const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
