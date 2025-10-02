@@ -335,6 +335,7 @@
                             <!-- Tab: Empresas -->
                             <div id="empresas-tab" class="tab-content">
                                 <form id="empresa-form">
+                                    <input type="hidden" id="empresa-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="empresa-nome">Nome da Empresa</label>
@@ -470,6 +471,7 @@
                             <!-- Tab: Fornecedores -->
                             <div id="fornecedores-tab-comercial" class="tab-content-comercial">
                                 <form id="fornecedor-form" class="space-y-6">
+                                    <input type="hidden" id="fornecedor-id">
                                     <!-- Abas do Formulário de Fornecedor -->
                                     <div class="border-b border-gray-200">
                                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -572,6 +574,7 @@
                             <!-- Tab: Clientes -->
                             <div id="clientes-tab-comercial" class="tab-content-comercial hidden">
                                 <form id="cliente-form" class="space-y-6">
+                                    <input type="hidden" id="cliente-id">
                                     <!-- Abas do Formulário de Cliente -->
                                     <div class="border-b border-gray-200">
                                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -772,6 +775,7 @@
                              <!-- Tab: Serviços -->
                             <div id="servicos-tab-comercial" class="tab-content-comercial hidden">
                                 <form id="servico-form">
+                                    <input type="hidden" id="servico-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="servico-nome">Nome do Serviço</label>
@@ -825,6 +829,7 @@
                             <!-- Tab: Planos de Contas -->
                             <div id="planos-de-contas-tab-financeiro" class="tab-content-financeiro">
                                 <form id="plano-conta-form">
+                                    <input type="hidden" id="plano-conta-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="plano-conta-nome">Nome da Categoria</label>
@@ -854,6 +859,7 @@
                             <!-- Tab: Contas Bancárias -->
                             <div id="contas-bancarias-tab-financeiro" class="tab-content-financeiro hidden">
                                 <form id="conta-bancaria-form">
+                                    <input type="hidden" id="conta-bancaria-id">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700" for="conta-bancaria-nome">Nome da Conta</label>
@@ -895,6 +901,7 @@
                         </div>
                         <!-- Formulário de Funcionário -->
                         <form id="funcionario-form" class="space-y-6">
+                            <input type="hidden" id="funcionario-id">
                             <!-- Abas do Formulário de Funcionário -->
                             <div class="border-b border-gray-200">
                                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -1973,18 +1980,26 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.cnpj}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">${data.codigo}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="edit-empresa-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                                 <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                             </td>
                         `;
                     });
-                    empresasTableBody.querySelectorAll('.delete-btn').forEach(button => {
-                        button.addEventListener('click', async (e) => {
-                            const id = e.currentTarget.dataset.id;
-                            if (confirm('Tem certeza que deseja excluir esta empresa? A ação não pode ser desfeita.')) {
-                                await deleteDoc(doc(db, "empresas", id));
+
+                    if (!empresasTableBody.dataset.listenerAttached) {
+                        empresasTableBody.addEventListener('click', (e) => {
+                            if (e.target.classList.contains('edit-empresa-btn')) {
+                                openEmpresaForEdit(e.target.dataset.id);
+                            }
+                            if (e.target.classList.contains('delete-btn')) {
+                               const id = e.target.dataset.id;
+                                if (confirm('Tem certeza que deseja excluir esta empresa? A ação não pode ser desfeita.')) {
+                                    deleteDoc(doc(db, "empresas", id));
+                                }
                             }
                         });
-                    });
+                        empresasTableBody.dataset.listenerAttached = 'true';
+                    }
                 }
             }
 
@@ -2099,7 +2114,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cpfCnpj}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${contato}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                        <button class="edit-fornecedor-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                         <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                     </td>
                 `;
@@ -2213,7 +2228,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.pessoal?.nomeCompleto || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.contratual?.cargo || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                            <button class="edit-funcionario-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-id="${doc.id}">Excluir</button>
                         </td>
                     `;
@@ -2855,25 +2870,263 @@
     }
 
     // --- Lógica dos Formulários de Cadastro ---
+
+    async function openEmpresaForEdit(id) {
+        try {
+            const docRef = doc(db, 'empresas', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('empresa-id').value = docSnap.id;
+                document.getElementById('empresa-nome').value = data.nome || '';
+                document.getElementById('empresa-cnpj').value = data.cnpj || '';
+                geraisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.tab-link[data-tab="empresas"]').click();
+            }
+        } catch (error) {
+            console.error("Erro ao buscar empresa para edição:", error);
+        }
+    }
+
+    // Edit Funcionario Logic
+    async function openFuncionarioForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'funcionarios', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('funcionario-id').value = docSnap.id;
+
+                // Pessoal
+                document.getElementById('funcionario-nome-completo').value = data.pessoal?.nomeCompleto || '';
+                document.getElementById('funcionario-nome-social').value = data.pessoal?.nomeSocial || '';
+                document.getElementById('funcionario-data-nascimento').value = data.pessoal?.dataNascimento || '';
+                document.getElementById('funcionario-cpf-rh').value = data.pessoal?.cpf || '';
+                document.getElementById('funcionario-rg-rh').value = data.pessoal?.rg || '';
+                document.getElementById('funcionario-pis').value = data.pessoal?.pis || '';
+                document.getElementById('funcionario-estado-civil').value = data.pessoal?.estadoCivil || '';
+                document.getElementById('funcionario-nacionalidade').value = data.pessoal?.nacionalidade || '';
+                document.getElementById('funcionario-empresa').value = data.empresa?.id || '';
+
+                // Contato
+                document.getElementById('funcionario-telefone').value = data.contato?.telefone || '';
+                document.getElementById('funcionario-email-pessoal').value = data.contato?.emailPessoal || '';
+                document.getElementById('funcionario-contato-emergencia').value = data.contato?.contatoEmergencia || '';
+                document.getElementById('funcionario-cep').value = data.contato?.endereco?.cep || '';
+                document.getElementById('funcionario-logradouro').value = data.contato?.endereco?.logradouro || '';
+                document.getElementById('funcionario-numero').value = data.contato?.endereco?.numero || '';
+                document.getElementById('funcionario-complemento').value = data.contato?.endereco?.complemento || '';
+                document.getElementById('funcionario-bairro').value = data.contato?.endereco?.bairro || '';
+                document.getElementById('funcionario-cidade').value = data.contato?.endereco?.cidade || '';
+                document.getElementById('funcionario-estado').value = data.contato?.endereco?.estado || '';
+
+                // Contratual
+                document.getElementById('funcionario-matricula').value = data.contratual?.matricula || '';
+                document.getElementById('funcionario-admissao').value = data.contratual?.dataAdmissao || '';
+                document.getElementById('funcionario-desligamento').value = data.contratual?.dataDesligamento || '';
+                document.getElementById('funcionario-cargo').value = data.contratual?.cargo || '';
+                document.getElementById('funcionario-departamento').value = data.contratual?.departamento || '';
+                document.getElementById('funcionario-salario').value = data.contratual?.salarioBase || '';
+                document.getElementById('funcionario-tipo-contrato').value = data.contratual?.tipoContrato || '';
+                document.getElementById('funcionario-jornada').value = data.contratual?.jornadaTrabalho || '';
+
+                // Bancario
+                document.getElementById('funcionario-banco').value = data.bancario?.banco || '';
+                document.getElementById('funcionario-agencia').value = data.bancario?.agencia || '';
+                document.getElementById('funcionario-conta').value = data.bancario?.conta || '';
+
+                // Acesso
+                document.getElementById('funcionario-usuario-sistema').value = data.acesso?.usuarioId || '';
+
+                document.querySelector('.funcionario-tab-link[data-funcionario-tab="pessoal"]').click();
+                rhCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar funcionário para edição:", error);
+        }
+    }
+
+    async function openServicoForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'servicos', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('servico-id').value = docSnap.id;
+                document.getElementById('servico-nome').value = data.nome || '';
+
+                comerciaisCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-comercial[data-tab-comercial="servicos"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar serviço para edição:", error);
+        }
+    }
+
+    async function openPlanoContaForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'planosDeContas', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('plano-conta-id').value = docSnap.id;
+                document.getElementById('plano-conta-nome').value = data.nome || '';
+
+                financeirosCadastroSection.classList.remove('hidden');
+                document.querySelector('.tab-link-financeiro[data-tab-financeiro="planos-de-contas"]').click();
+                financeirosCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar plano de conta para edição:", error);
+        }
+    }
+
+    // Edit Cliente Logic
+    async function openClienteForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'clientes', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('cliente-id').value = docSnap.id;
+
+                // Dados Principais
+                document.getElementById('cliente-tipo-pessoa').value = data.tipoPessoa || 'fisica';
+                document.getElementById('cliente-tipo-pessoa').dispatchEvent(new Event('change'));
+
+                if (data.tipoPessoa === 'fisica') {
+                    document.getElementById('cliente-nome-completo').value = data.nome || '';
+                    document.getElementById('cliente-cpf').value = data.cpf || '';
+                    document.getElementById('cliente-rg').value = data.rg || '';
+                    document.getElementById('cliente-data-nascimento').value = data.dataNascimento || '';
+                } else {
+                    document.getElementById('cliente-razao-social').value = data.nome || '';
+                    document.getElementById('cliente-nome-fantasia').value = data.nomeFantasia || '';
+                    document.getElementById('cliente-cnpj').value = data.cnpj || '';
+                    document.getElementById('cliente-inscricao').value = data.inscricaoEstadual || '';
+                }
+
+                // Contato
+                document.getElementById('cliente-telefone').value = data.contato?.telefone || '';
+                document.getElementById('cliente-email').value = data.contato?.email || '';
+                document.getElementById('cliente-website').value = data.contato?.website || '';
+                document.getElementById('cliente-contato-pessoa').value = data.contato?.pessoaContato || '';
+                document.getElementById('cliente-email-financeiro').value = data.contato?.emailFinanceiro || '';
+
+                // Endereço
+                document.getElementById('cliente-cep').value = data.endereco?.cep || '';
+                document.getElementById('cliente-logradouro').value = data.endereco?.logradouro || '';
+                document.getElementById('cliente-numero').value = data.endereco?.numero || '';
+                document.getElementById('cliente-complemento').value = data.endereco?.complemento || '';
+                document.getElementById('cliente-bairro').value = data.endereco?.bairro || '';
+                document.getElementById('cliente-cidade').value = data.endereco?.cidade || '';
+                document.getElementById('cliente-estado').value = data.endereco?.estado || '';
+
+                // Financeiro
+                document.getElementById('cliente-vendedor').value = data.financeiro?.vendedorId || '';
+                document.getElementById('cliente-limite-credito').value = data.financeiro?.limiteCredito || '';
+                document.getElementById('cliente-condicao-pagamento').value = data.financeiro?.condicaoPagamento || '';
+                document.getElementById('cliente-tabela-precos').value = data.financeiro?.tabelaPrecos || '';
+                document.getElementById('cliente-obs').value = data.obs || '';
+
+                document.querySelector('.cliente-tab-link[data-cliente-tab="cliente-dados-principais"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar cliente para edição:", error);
+        }
+    }
+
+    // Edit Fornecedor Logic
+    async function openFornecedorForEdit(id) {
+        if (!effectiveUserId) return;
+        try {
+            const docRef = doc(db, 'users', effectiveUserId, 'fornecedores', id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                // Preencher o formulário
+                document.getElementById('fornecedor-id').value = docSnap.id;
+                document.getElementById('fornecedor-tipo-pessoa').value = data.tipoPessoa || 'juridica';
+                document.getElementById('fornecedor-tipo-pessoa').dispatchEvent(new Event('change'));
+
+                // Dados Principais
+                if (data.tipoPessoa === 'fisica') {
+                    document.getElementById('fornecedor-nome-completo').value = data.dadosPrincipais?.nomeCompleto || '';
+                    document.getElementById('fornecedor-cpf').value = data.dadosPrincipais?.cpf || '';
+                } else {
+                    document.getElementById('fornecedor-razao-social').value = data.dadosPrincipais?.razaoSocial || '';
+                    document.getElementById('fornecedor-nome-fantasia').value = data.dadosPrincipais?.nomeFantasia || '';
+                    document.getElementById('fornecedor-cnpj').value = data.dadosPrincipais?.cnpj || '';
+                    document.getElementById('fornecedor-inscricao').value = data.dadosPrincipais?.inscricaoEstadual || '';
+                }
+
+                // Contato
+                document.getElementById('fornecedor-telefone').value = data.contato?.telefone || '';
+                document.getElementById('fornecedor-email').value = data.contato?.email || '';
+                document.getElementById('fornecedor-website').value = data.contato?.website || '';
+                document.getElementById('fornecedor-contato-principal').value = data.contato?.contatoPrincipal || '';
+
+                // Endereço
+                document.getElementById('fornecedor-cep').value = data.endereco?.cep || '';
+                document.getElementById('fornecedor-logradouro').value = data.endereco?.logradouro || '';
+                document.getElementById('fornecedor-numero').value = data.endereco?.numero || '';
+                document.getElementById('fornecedor-complemento').value = data.endereco?.complemento || '';
+                document.getElementById('fornecedor-bairro').value = data.endereco?.bairro || '';
+                document.getElementById('fornecedor-cidade').value = data.endereco?.cidade || '';
+                document.getElementById('fornecedor-estado').value = data.endereco?.estado || '';
+
+                // Financeiro
+                document.getElementById('fornecedor-banco').value = data.financeiro?.banco || '';
+                document.getElementById('fornecedor-agencia').value = data.financeiro?.agencia || '';
+                document.getElementById('fornecedor-conta').value = data.financeiro?.conta || '';
+                document.getElementById('fornecedor-pix').value = data.financeiro?.pix || '';
+                document.getElementById('fornecedor-condicao-pagamento').value = data.financeiro?.condicaoPagamento || '';
+                document.getElementById('fornecedor-prazo-entrega').value = data.financeiro?.prazoEntrega || '';
+                document.getElementById('fornecedor-obs').value = data.obs || '';
+
+                // Mudar para a aba correta e rolar para a visualização
+                document.querySelector('.fornecedor-tab-link[data-fornecedor-tab="fornecedor-dados-principais"]').click();
+                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar fornecedor para edição:", error);
+        }
+    }
+
     empresaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'empresa-form-feedback';
-        const adminId = auth.currentUser?.uid;
+        const adminId = effectiveUserId;
         if (!adminId) {
             showFeedback(feedbackId, "Administrador não autenticado.", true);
             return;
         }
+        const empresaId = document.getElementById('empresa-id').value;
         const empresaData = {
             nome: document.getElementById('empresa-nome').value,
             cnpj: document.getElementById('empresa-cnpj').value,
-            codigo: generateCompanyCode(),
             adminId: adminId,
-            createdAt: serverTimestamp()
         };
+
         try {
-            await addDoc(collection(db, 'empresas'), empresaData);
-            showFeedback(feedbackId, "Empresa salva com sucesso!", false);
+            if (empresaId) {
+                const docRef = doc(db, 'empresas', empresaId);
+                await updateDoc(docRef, empresaData);
+                showFeedback(feedbackId, "Empresa atualizada com sucesso!", false);
+            } else {
+                empresaData.codigo = generateCompanyCode();
+                empresaData.createdAt = serverTimestamp();
+                await addDoc(collection(db, 'empresas'), empresaData);
+                showFeedback(feedbackId, "Empresa salva com sucesso!", false);
+            }
             empresaForm.reset();
+            document.getElementById('empresa-id').value = '';
         } catch (error) {
             console.error(`Erro ao salvar empresa:`, error);
             showFeedback(feedbackId, "Erro ao salvar empresa. Tente novamente.", true);
@@ -2980,7 +3233,16 @@
             showFeedback(feedbackId, "Erro ao criar acesso. Tente novamente.", true);
         }
     });
-    fornecedorForm.addEventListener('submit', (e) => {
+    fornecedorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'fornecedor-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const fornecedorId = document.getElementById('fornecedor-id').value;
         const tipoPessoa = document.getElementById('fornecedor-tipo-pessoa').value;
         let fornecedorData = {
             tipoPessoa: tipoPessoa,
@@ -3014,23 +3276,101 @@
         if (tipoPessoa === 'fisica') {
             fornecedorData.dadosPrincipais.nomeCompleto = document.getElementById('fornecedor-nome-completo').value;
             fornecedorData.dadosPrincipais.cpf = document.getElementById('fornecedor-cpf').value;
-            // Use nomeCompleto for top-level 'nome' for consistent display
             fornecedorData.nome = fornecedorData.dadosPrincipais.nomeCompleto;
-        } else { // 'juridica'
+        } else {
             fornecedorData.dadosPrincipais.razaoSocial = document.getElementById('fornecedor-razao-social').value;
             fornecedorData.dadosPrincipais.nomeFantasia = document.getElementById('fornecedor-nome-fantasia').value;
             fornecedorData.dadosPrincipais.cnpj = document.getElementById('fornecedor-cnpj').value;
             fornecedorData.dadosPrincipais.inscricaoEstadual = document.getElementById('fornecedor-inscricao').value;
-            // Use razaoSocial for top-level 'nome' for consistent display
             fornecedorData.nome = fornecedorData.dadosPrincipais.razaoSocial;
         }
 
-        handleFormSubmit(e, 'fornecedores', fornecedorData, 'fornecedor-form-feedback', fornecedorForm);
+        try {
+            if (fornecedorId) {
+                // Update
+                const docRef = doc(db, 'users', userId, 'fornecedores', fornecedorId);
+                await updateDoc(docRef, fornecedorData);
+                showFeedback(feedbackId, "Fornecedor atualizado com sucesso!", false);
+            } else {
+                // Create
+                const userRef = collection(db, 'users', userId, 'fornecedores');
+                await addDoc(userRef, { ...fornecedorData, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Fornecedor salvo com sucesso!", false);
+            }
+            fornecedorForm.reset();
+            document.getElementById('fornecedor-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar fornecedor:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
     });
-    planoContaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'planosDeContas', { nome: document.getElementById('plano-conta-nome').value }, 'plano-conta-form-feedback', planoContaForm));
-    contaBancariaForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contasBancarias', { nome: document.getElementById('conta-bancaria-nome').value }, 'conta-bancaria-form-feedback', contaBancariaForm));
+    planoContaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'plano-conta-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
 
-    clienteForm.addEventListener('submit', (e) => {
+        const planoId = document.getElementById('plano-conta-id').value;
+        const data = { nome: document.getElementById('plano-conta-nome').value };
+
+        try {
+            if (planoId) {
+                const docRef = doc(db, 'users', userId, 'planosDeContas', planoId);
+                await updateDoc(docRef, data);
+                showFeedback(feedbackId, "Categoria atualizada com sucesso!", false);
+            } else {
+                await addDoc(collection(db, 'users', userId, 'planosDeContas'), { ...data, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Categoria salva com sucesso!", false);
+            }
+            planoContaForm.reset();
+            document.getElementById('plano-conta-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar plano de conta:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+    contaBancariaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'conta-bancaria-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const contaId = document.getElementById('conta-bancaria-id').value;
+        const data = { nome: document.getElementById('conta-bancaria-nome').value };
+
+        try {
+            if (contaId) {
+                const docRef = doc(db, 'users', userId, 'contasBancarias', contaId);
+                await updateDoc(docRef, data);
+                showFeedback(feedbackId, "Conta atualizada com sucesso!", false);
+            } else {
+                await addDoc(collection(db, 'users', userId, 'contasBancarias'), { ...data, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Conta salva com sucesso!", false);
+            }
+            contaBancariaForm.reset();
+            document.getElementById('conta-bancaria-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar conta bancária:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+
+    clienteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'cliente-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const clienteId = document.getElementById('cliente-id').value;
         const tipoPessoa = document.getElementById('cliente-tipo-pessoa').value;
         let clienteData = {
             tipoPessoa: tipoPessoa,
@@ -3071,30 +3411,73 @@
             clienteData.inscricaoEstadual = document.getElementById('cliente-inscricao').value;
         }
 
-        // Use the generic handler
-        handleFormSubmit(e, 'clientes', clienteData, 'cliente-form-feedback', clienteForm);
+        try {
+            if (clienteId) {
+                const docRef = doc(db, 'users', userId, 'clientes', clienteId);
+                await updateDoc(docRef, clienteData);
+                showFeedback(feedbackId, "Cliente atualizado com sucesso!", false);
+            } else {
+                const userRef = collection(db, 'users', userId, 'clientes');
+                await addDoc(userRef, { ...clienteData, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Cliente salvo com sucesso!", false);
+            }
+            clienteForm.reset();
+            document.getElementById('cliente-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar cliente:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
     });
 
-    servicoForm.addEventListener('submit', (e) => handleFormSubmit(e, 'servicos', { nome: document.getElementById('servico-nome').value }, 'servico-form-feedback', servicoForm));
-
-    funcionarioForm.addEventListener('submit', (e) => {
-        const empresaSelect = document.getElementById('funcionario-empresa');
-        const empresaId = empresaSelect.value;
-        const feedbackId = 'funcionario-form-feedback';
-
-        if (!empresaId) {
-            showFeedback(feedbackId, "O campo 'Empresa' é obrigatório.", true);
-            e.preventDefault();
+    servicoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'servico-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
             return;
         }
 
+        const servicoId = document.getElementById('servico-id').value;
+        const data = { nome: document.getElementById('servico-nome').value };
+
+        try {
+            if (servicoId) {
+                const docRef = doc(db, 'users', userId, 'servicos', servicoId);
+                await updateDoc(docRef, data);
+                showFeedback(feedbackId, "Serviço atualizado com sucesso!", false);
+            } else {
+                await addDoc(collection(db, 'users', userId, 'servicos'), { ...data, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Serviço salvo com sucesso!", false);
+            }
+            servicoForm.reset();
+            document.getElementById('servico-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar serviço:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
+    });
+
+    funcionarioForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const feedbackId = 'funcionario-form-feedback';
+        const userId = effectiveUserId;
+        if (!userId) {
+            showFeedback(feedbackId, "Usuário não autenticado.", true);
+            return;
+        }
+
+        const funcionarioId = document.getElementById('funcionario-id').value;
+        const empresaSelect = document.getElementById('funcionario-empresa');
+        const empresaId = empresaSelect.value;
+        if (!empresaId) {
+            showFeedback(feedbackId, "O campo 'Empresa' é obrigatório.", true);
+            return;
+        }
         const empresaNome = empresaSelect.options[empresaSelect.selectedIndex].text;
 
         const funcionarioData = {
-            empresa: {
-                id: empresaId,
-                nome: empresaNome
-            },
+             empresa: { id: empresaId, nome: empresaNome },
             pessoal: {
                 nomeCompleto: document.getElementById('funcionario-nome-completo').value,
                 nomeSocial: document.getElementById('funcionario-nome-social').value,
@@ -3138,7 +3521,25 @@
                 usuarioId: document.getElementById('funcionario-usuario-sistema').value,
             }
         };
-        handleFormSubmit(e, 'funcionarios', funcionarioData, 'funcionario-form-feedback', funcionarioForm);
+
+        try {
+            if (funcionarioId) {
+                // Update
+                const docRef = doc(db, 'users', userId, 'funcionarios', funcionarioId);
+                await updateDoc(docRef, funcionarioData);
+                showFeedback(feedbackId, "Funcionário atualizado com sucesso!", false);
+            } else {
+                // Create
+                const userRef = collection(db, 'users', userId, 'funcionarios');
+                await addDoc(userRef, { ...funcionarioData, createdAt: serverTimestamp(), adminId: userId });
+                showFeedback(feedbackId, "Funcionário salvo com sucesso!", false);
+            }
+            funcionarioForm.reset();
+            document.getElementById('funcionario-id').value = '';
+        } catch (error) {
+            console.error("Erro ao salvar funcionário:", error);
+            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+        }
     });
 
     // --- Lógica da Tela Financeiro ---
