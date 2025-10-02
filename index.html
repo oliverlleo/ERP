@@ -3114,62 +3114,6 @@
         }
     }
 
-    // Edit Cliente Logic
-    async function openClienteForEdit(id) {
-        if (!effectiveUserId) return;
-        try {
-            const docRef = doc(db, 'users', effectiveUserId, 'clientes', id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById('cliente-id').value = docSnap.id;
-
-                // Dados Principais
-                document.getElementById('cliente-tipo-pessoa').value = data.tipoPessoa || 'fisica';
-                document.getElementById('cliente-tipo-pessoa').dispatchEvent(new Event('change'));
-
-                if (data.tipoPessoa === 'fisica') {
-                    document.getElementById('cliente-nome-completo').value = data.nome || '';
-                    document.getElementById('cliente-cpf').value = data.cpf || '';
-                    document.getElementById('cliente-rg').value = data.rg || '';
-                    document.getElementById('cliente-data-nascimento').value = data.dataNascimento || '';
-                } else {
-                    document.getElementById('cliente-razao-social').value = data.nome || '';
-                    document.getElementById('cliente-nome-fantasia').value = data.nomeFantasia || '';
-                    document.getElementById('cliente-cnpj').value = data.cnpj || '';
-                    document.getElementById('cliente-inscricao').value = data.inscricaoEstadual || '';
-                }
-
-                // Contato
-                document.getElementById('cliente-telefone').value = data.contato?.telefone || '';
-                document.getElementById('cliente-email').value = data.contato?.email || '';
-                document.getElementById('cliente-website').value = data.contato?.website || '';
-                document.getElementById('cliente-contato-pessoa').value = data.contato?.pessoaContato || '';
-                document.getElementById('cliente-email-financeiro').value = data.contato?.emailFinanceiro || '';
-
-                // Endereço
-                document.getElementById('cliente-cep').value = data.endereco?.cep || '';
-                document.getElementById('cliente-logradouro').value = data.endereco?.logradouro || '';
-                document.getElementById('cliente-numero').value = data.endereco?.numero || '';
-                document.getElementById('cliente-complemento').value = data.endereco?.complemento || '';
-                document.getElementById('cliente-bairro').value = data.endereco?.bairro || '';
-                document.getElementById('cliente-cidade').value = data.endereco?.cidade || '';
-                document.getElementById('cliente-estado').value = data.endereco?.estado || '';
-
-                // Financeiro
-                document.getElementById('cliente-vendedor').value = data.financeiro?.vendedorId || '';
-                document.getElementById('cliente-limite-credito').value = data.financeiro?.limiteCredito || '';
-                document.getElementById('cliente-condicao-pagamento').value = data.financeiro?.condicaoPagamento || '';
-                document.getElementById('cliente-tabela-precos').value = data.financeiro?.tabelaPrecos || '';
-                document.getElementById('cliente-obs').value = data.obs || '';
-
-                document.querySelector('.cliente-tab-link[data-cliente-tab="cliente-dados-principais"]').click();
-                comerciaisCadastroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } catch (error) {
-            console.error("Erro ao buscar cliente para edição:", error);
-        }
-    }
 
     // Edit Cliente Logic
     async function openClienteForEdit(id) {
