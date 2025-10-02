@@ -1155,6 +1155,7 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
@@ -1390,6 +1391,18 @@
                       <div>
                           <label for="pagar-valor" class="block text-sm font-medium text-gray-700">Valor Efetivamente Pago (R$)</label>
                           <input type="number" id="pagar-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-descontos" class="block text-sm font-medium text-gray-700">Descontos Concedidos (R$)</label>
+                          <input type="number" id="pagar-descontos" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-juros-multa" class="block text-sm font-medium text-gray-700">Juros / Multa (R$)</label>
+                          <input type="number" id="pagar-juros-multa" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="pagar-valor-final" class="block text-sm font-medium text-gray-700">Valor Final Pago (R$)</label>
+                          <input type="number" id="pagar-valor-final" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly>
                       </div>
                       <div>
                           <label for="pagar-conta-saida" class="block text-sm font-medium text-gray-700">Conta de Saída</label>
@@ -2589,30 +2602,60 @@
 
 
     // --- Lógica de Autenticação e Navegação ---
-    onAuthStateChanged(auth, (user) => {
-        // This function now PRIMARILY handles ADMIN logins/logouts via Firebase Auth.
-        // Company user logins are handled separately in the form submit handler.
-        detachListeners();
-        if (user) { // An admin is logged in
-            effectiveUserId = user.uid; // The admin's UID is the one for data operations
-            currentUserName = user.email; // Admin's name is their email
-
-            // Update UI
-            userEmailSpan.textContent = currentUserName;
-            userEmailCadastrosSpan.textContent = currentUserName;
-            userEmailContasSpan.textContent = currentUserName;
-
-            // Setup listeners to listen to the admin's data partition
-            setupListeners(effectiveUserId);
-            showView('main-page');
-        } else { // No admin is logged in, show the login page
+    function updateUiForUser(name) {
+        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan];
+        elements.forEach(el => {
+            if (el) el.textContent = name || '';
+        });
+        if (!name) {
             currentUserName = null;
             effectiveUserId = null;
-            userEmailSpan.textContent = '';
-            userEmailCadastrosSpan.textContent = '';
-            userEmailContasSpan.textContent = '';
-            showView('login-page');
         }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        detachListeners();
+
+        // Caso 1: Usuário do Firebase (admin) está logado.
+        if (user) {
+            console.log("Usuário Firebase (admin) detectado.");
+            effectiveUserId = user.uid;
+            currentUserName = user.email;
+
+            const sessionData = {
+                isAdmin: true,
+                effectiveUserId: user.uid,
+                currentUserName: user.email,
+            };
+            sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+
+            updateUiForUser(currentUserName);
+            setupListeners(effectiveUserId);
+            showView('main-page');
+            return;
+        }
+
+        // Caso 2: Nenhum usuário Firebase. Verificar se há uma sessão de usuário da empresa.
+        const sessionDataString = sessionStorage.getItem('userSession');
+        if (sessionDataString) {
+            const sessionData = JSON.parse(sessionDataString);
+            if (sessionData.isCompanyUser) {
+                console.log("Restaurando sessão de usuário da empresa.");
+                effectiveUserId = sessionData.effectiveUserId;
+                currentUserName = sessionData.currentUserName;
+
+                updateUiForUser(currentUserName);
+                setupListeners(effectiveUserId);
+                showView('main-page');
+                return;
+            }
+        }
+
+        // Caso 3: Nenhum usuário Firebase e nenhuma sessão de usuário da empresa. Mostrar página de login.
+        console.log("Nenhum usuário ativo ou sessão. Mostrando página de login.");
+        sessionStorage.removeItem('userSession'); // Limpa dados obsoletos
+        updateUiForUser(null);
+        showView('login-page');
     });
 
     if (adminLoginLink) {
@@ -2701,6 +2744,16 @@
                     return;
                 }
                 currentUserName = userData.nomeUsuario;
+
+                // Salvar a sessão do usuário da empresa
+                const sessionData = {
+                    isCompanyUser: true,
+                    effectiveUserId: userData.adminId,
+                    currentUserName: userData.nomeUsuario,
+                    acessoId: userDoc.id
+                };
+                sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+
                 userEmailSpan.textContent = currentUserName;
                 userEmailCadastrosSpan.textContent = currentUserName;
                 userEmailContasSpan.textContent = currentUserName;
@@ -2758,6 +2811,16 @@
             }
 
             currentUserName = userData.nomeUsuario;
+
+            // Criar a sessão após a troca de senha
+            const sessionData = {
+                isCompanyUser: true,
+                effectiveUserId: userData.adminId,
+                currentUserName: userData.nomeUsuario,
+                acessoId: userDoc.id
+            };
+            sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+
             userEmailSpan.textContent = currentUserName;
             userEmailCadastrosSpan.textContent = currentUserName;
             userEmailContasSpan.textContent = currentUserName;
@@ -2772,19 +2835,19 @@
     });
 
     const performLogout = () => {
-        // Se há um usuário Firebase autenticado, é um admin.
+        console.log("Performing logout...");
+        // Limpa a sessão do storage. Este é o passo mais importante.
+        sessionStorage.removeItem('userSession');
+
+        // Se era um usuário admin, faz o signOut do Firebase.
+        // O listener onAuthStateChanged vai então ser disparado e redirecionar para o login.
         if (auth.currentUser) {
             signOut(auth).catch(error => console.error("Erro no logout do admin:", error));
         } else {
-            // Se não, é um usuário da empresa, e fazemos o logout manual.
-            console.log("Fazendo logout do usuário da empresa...");
-            currentUserName = null;
-            effectiveUserId = null;
-            userEmailSpan.textContent = '';
-            userEmailCadastrosSpan.textContent = '';
-            userEmailContasSpan.textContent = '';
-            detachListeners();
-            showView('login-page');
+            // Se era um usuário da empresa, não há sessão do Firebase para deslogar.
+            // Limpar o session storage é suficiente. Recarregar a página garante um estado limpo
+            // e que o listener onAuthStateChanged execute e direcione para a página de login.
+            location.reload();
         }
     }
 
@@ -3837,7 +3900,7 @@
         if (docs.length === 0) {
             const tr = despesasTableBody.insertRow();
             const td = tr.insertCell();
-            td.colSpan = 6;
+            td.colSpan = 8; // Adjusted for the new column
             td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
             td.textContent = 'Nenhuma despesa encontrada.';
             return;
@@ -3853,8 +3916,13 @@
                 pendente: { text: 'Pendente', color: 'yellow', icon: '🟡' },
                 vencido: { text: 'Vencido', color: 'red', icon: '🔴' }
             };
-            const status = data.pago ? 'pago' : (new Date(data.vencimento) < new Date() ? 'vencido' : 'pendente');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const status = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
             const currentStatus = statusInfo[status];
+
+            const valorPagoHtml = data.pago ? formatCurrency(data.valorPago || 0) : '—';
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -3866,10 +3934,11 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatCurrency(data.valor)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(data.valor)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${valorPagoHtml}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${currentStatus.color}-100 text-${currentStatus.color}-800">
-                        ${currentStatus.icon} ${currentStatus.text}
+                        ${currentStatus.text}
                     </span>
                 </td>
             `;
@@ -3934,8 +4003,11 @@
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length !== 1) return;
             const id = selectedIds[0];
-            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-            if (!userId) return;
+            const userId = effectiveUserId;
+            if (!userId) {
+                console.error("Ação de editar falhou: ID de usuário efetivo não encontrado.");
+                return;
+            }
             try {
                 const docRef = doc(db, 'users', userId, 'despesas', id);
                 const docSnap = await getDoc(docRef);
@@ -3998,8 +4070,11 @@
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length === 0) return;
             if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
-                const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-                if (!userId) return;
+                const userId = effectiveUserId;
+                if (!userId) {
+                    console.error("Ação de excluir falhou: ID de usuário efetivo não encontrado.");
+                    return;
+                }
                 selectedIds.forEach(id => {
                     deleteDoc(doc(db, 'users', userId, 'despesas', id));
                 });
@@ -4038,10 +4113,12 @@
 
     function openPagarModal(despesaIds) {
         if (!pagarModal || despesaIds.length === 0) return;
-        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-        if (!userId) return;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Cannot open payment modal: User ID not found.");
+            return;
+        }
 
-        // Store all IDs as a comma-separated string in the hidden input
         document.getElementById('pagar-despesa-id').value = despesaIds.join(',');
 
         // Calculate the total value of all selected expenses
@@ -4096,8 +4173,11 @@
 
     async function openVisualizarModal(despesaId) {
         if (!visualizarDespesaModal) return;
-        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-        if (!userId) return;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Ação de visualizar falhou: ID de usuário efetivo não encontrado.");
+            return;
+        }
 
         try {
             const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
@@ -4152,10 +4232,30 @@
 
             // Payment info section
             const pagamentoInfoEl = document.getElementById('view-pagamento-info');
+            const descontosContainer = document.getElementById('view-despesa-descontos-container');
+            const jurosMultaContainer = document.getElementById('view-despesa-juros-multa-container');
+            const descontosEl = document.getElementById('view-despesa-descontos');
+            const jurosMultaEl = document.getElementById('view-despesa-juros-multa');
+
             if (data.pago) {
                 document.getElementById('view-despesa-data-pagamento').textContent = formatDate(data.dataPagamento);
                 document.getElementById('view-despesa-valor-pago').textContent = formatCurrency(data.valorPago || 0);
                 document.getElementById('view-despesa-conta-saida').textContent = contaSaidaNome;
+
+                if (data.descontos && data.descontos > 0) {
+                    descontosEl.textContent = formatCurrency(data.descontos);
+                    descontosContainer.classList.remove('hidden');
+                } else {
+                    descontosContainer.classList.add('hidden');
+                }
+
+                if (data.jurosMulta && data.jurosMulta > 0) {
+                    jurosMultaEl.textContent = formatCurrency(data.jurosMulta);
+                    jurosMultaContainer.classList.remove('hidden');
+                } else {
+                    jurosMultaContainer.classList.add('hidden');
+                }
+
                 pagamentoInfoEl.classList.remove('hidden');
             } else {
                 pagamentoInfoEl.classList.add('hidden');
@@ -4176,9 +4276,27 @@
     if(okVisualizarModalBtn) okVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
 
     if(pagarForm) {
+        const pagarValorInput = document.getElementById('pagar-valor');
+        const pagarDescontosInput = document.getElementById('pagar-descontos');
+        const pagarJurosMultaInput = document.getElementById('pagar-juros-multa');
+        const pagarValorFinalInput = document.getElementById('pagar-valor-final');
+
+        function calculateFinalPayment() {
+            const valor = parseFloat(pagarValorInput.value) || 0;
+            const descontos = parseFloat(pagarDescontosInput.value) || 0;
+            const jurosMulta = parseFloat(pagarJurosMultaInput.value) || 0;
+
+            const valorFinal = (valor + jurosMulta) - descontos;
+            pagarValorFinalInput.value = valorFinal.toFixed(2);
+        }
+
+        [pagarValorInput, pagarDescontosInput, pagarJurosMultaInput].forEach(input => {
+            if (input) input.addEventListener('input', calculateFinalPayment);
+        });
+
         pagarForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
+            const userId = effectiveUserId;
             if (!userId) {
                 console.error("Usuário não autenticado.");
                 return;
@@ -4188,7 +4306,18 @@
             const paymentDate = document.getElementById('pagar-data').value;
             const paymentAccount = document.getElementById('pagar-conta-saida').value;
             const paymentMethod = document.getElementById('pagar-meio-pagamento').value;
-            const totalPaid = parseFloat(document.getElementById('pagar-valor').value);
+            const descontos = parseFloat(document.getElementById('pagar-descontos').value) || 0;
+            const jurosMulta = parseFloat(document.getElementById('pagar-juros-multa').value) || 0;
+            const valorFinalPago = parseFloat(document.getElementById('pagar-valor-final').value) || 0;
+
+            const totalOriginal = allDespesas
+                .filter(d => despesaIds.includes(d.id))
+                .reduce((sum, d) => sum + d.data().valor, 0);
+
+            if (totalOriginal === 0 && despesaIds.length > 0) {
+                 console.error("Cannot process payment for expenses with zero total value.");
+                 return;
+            }
 
             const paymentPromises = despesaIds.map(async (id) => {
                 const despesaRef = doc(db, 'users', userId, 'despesas', id);
@@ -4196,18 +4325,24 @@
                     const despesaSnap = await getDoc(despesaRef);
                     if (!despesaSnap.exists()) {
                         console.error(`Despesa com ID ${id} não encontrada!`);
-                        return; // Skip this one
+                        return;
                     }
                     const despesaData = despesaSnap.data();
-                    const valorPagoIndividual = despesaIds.length === 1 ? totalPaid : despesaData.valor;
+                    const valorOriginal = despesaData.valor;
 
-                    // 1. Create financial transaction record
+                    const proporcao = totalOriginal > 0 ? valorOriginal / totalOriginal : 0;
+                    const valorPagoIndividual = valorFinalPago * proporcao;
+                    const descontosIndividual = descontos * proporcao;
+                    const jurosMultaIndividual = jurosMulta * proporcao;
+
                     const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
                     await addDoc(transacoesRef, {
                         referenciaContaPagar: despesaRef,
                         dataPagamento: paymentDate,
                         dataCompetencia: despesaData.competencia,
                         valorPago: valorPagoIndividual,
+                        descontos: descontosIndividual,
+                        jurosMulta: jurosMultaIndividual,
                         referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', paymentAccount),
                         referenciaFavorecido: {
                             collection: despesaData.favorecidoTipo,
@@ -4219,11 +4354,12 @@
                         createdAt: serverTimestamp()
                     });
 
-                    // 2. Update the original expense
                     await updateDoc(despesaRef, {
                         pago: true,
                         dataPagamento: paymentDate,
-                        valorPago: valorPagoIndividual
+                        valorPago: valorPagoIndividual,
+                        descontos: descontosIndividual,
+                        jurosMulta: jurosMultaIndividual,
                     });
                 } catch (error) {
                     console.error(`Erro ao processar pagamento para a despesa ${id}:`, error);
@@ -4233,9 +4369,8 @@
             try {
                 await Promise.all(paymentPromises);
                 closePagarModal();
-                // Reset selection state in the main table
                 selectAllCheckbox.checked = false;
-                selectAllCheckbox.dispatchEvent(new Event('change')); // Trigger state update
+                selectAllCheckbox.dispatchEvent(new Event('change'));
             } catch (error) {
                 console.error("Erro ao registrar um ou mais pagamentos:", error);
             }
@@ -4261,16 +4396,10 @@
         console.log("Despesa form submitted.");
         closeModal(); // Close modal immediately for better UX and testability
 
-        let userId;
-        if (window.IS_TEST_RUN) {
-            userId = 'test-user-123';
-        } else {
-            const user = auth.currentUser;
-            if (!user) {
-                console.error("Usuário não autenticado.");
-                return;
-            }
-            userId = user.uid;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Usuário não autenticado ou ID de administrador não encontrado.");
+            return;
         }
 
         const expenseId = document.getElementById('despesa-id').value;
