@@ -1739,7 +1739,9 @@
             if (!calendarInstance) {
                 initializeCalendar();
             }
-             calendarInstance.render();
+            // Processa os dados já existentes ao trocar para a visualização de calendário
+            processAndRenderCalendarEvents(allDespesas);
+            calendarInstance.render();
         } else { // 'lista'
             listaView.classList.remove('hidden');
             calendarioView.classList.add('hidden');
