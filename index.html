@@ -4057,10 +4057,12 @@
 
     function openPagarModal(despesaIds) {
         if (!pagarModal || despesaIds.length === 0) return;
-        const userId = window.IS_TEST_RUN ? 'test-user-123' : auth.currentUser?.uid;
-        if (!userId) return;
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Cannot open payment modal: User ID not found.");
+            return;
+        }
 
-        // Store all IDs as a comma-separated string in the hidden input
         document.getElementById('pagar-despesa-id').value = despesaIds.join(',');
 
         // Calculate the total value of all selected expenses
