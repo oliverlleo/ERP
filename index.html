@@ -1363,7 +1363,7 @@
 
                   <div class="flex items-center justify-end pt-4 border-t space-x-4">
                       <button type="button" id="cancel-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
-                      <button type="button" id="despesa-form-submit-btn" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
+                      <button type="submit" id="despesa-form-submit-btn" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
                   </div>
               </form>
           </div>
@@ -1429,7 +1429,7 @@
                   </div>
                   <div class="flex items-center justify-end pt-4 border-t space-x-4">
                       <button type="button" id="cancel-pagar-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
-                      <button type="button" id="pagar-form-submit-btn" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Pagamento</button>
+                      <button type="submit" id="pagar-form-submit-btn" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Pagamento</button>
                   </div>
               </form>
           </div>
@@ -1992,7 +1992,9 @@
         if (!userId && window.IS_TEST_RUN) {
             userId = 'test-user-123';
         }
-        if (!userId) return;
+        if (!userId) {
+            return;
+        }
 
         // Dashboard indicators are now driven by the despesas listener
 
@@ -2605,27 +2607,31 @@
 
     // --- Lógica de Autenticação e Navegação ---
     onAuthStateChanged(auth, (user) => {
-        // If this is a test run, don't let Firebase auth interfere with manual setup.
         if (window.IS_TEST_RUN) {
-            return;
+            return; // Don't let Firebase interfere with test runs.
         }
 
-        // This function now PRIMARILY handles ADMIN logins/logouts via Firebase Auth.
-        // Company user logins are handled separately in the form submit handler.
-        detachListeners();
-        if (user) { // An admin is logged in
-            effectiveUserId = user.uid; // The admin's UID is the one for data operations
-            currentUserName = user.email; // Admin's name is their email
-
-            // Update UI
+        if (user) {
+            // An admin IS logged in. This is the simple case.
+            detachListeners();
+            effectiveUserId = user.uid;
+            currentUserName = user.email;
             userEmailSpan.textContent = currentUserName;
             userEmailCadastrosSpan.textContent = currentUserName;
             userEmailContasSpan.textContent = currentUserName;
-
-            // Setup listeners to listen to the admin's data partition
             setupListeners(effectiveUserId);
             showView('main-page');
-        } else { // No admin is logged in, show the login page
+        } else {
+            // No admin is logged in.
+            // If effectiveUserId is already set, a regular user has just logged in.
+            // The login form handler has ALREADY set up the session. DO NOT TOUCH IT.
+            if (effectiveUserId) {
+                return;
+            }
+
+            // If we reach here, no admin is logged in AND no regular user is logged in.
+            // This is a true logout/initial state. It is now safe to clean up.
+            detachListeners();
             currentUserName = null;
             effectiveUserId = null;
             userEmailSpan.textContent = '';
@@ -2715,6 +2721,7 @@
                 changePasswordModal.classList.remove('hidden');
             } else {
                 effectiveUserId = userData.adminId;
+                 console.log(`[DIAGNOSTIC] User login successful. Setting effectiveUserId to: ${effectiveUserId}`);
                 if (!effectiveUserId) {
                     userLoginError.textContent = 'Erro de configuração: A empresa deste usuário não tem um administrador associado.';
                     return;
@@ -4314,16 +4321,107 @@
 
     despesaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const userId = effectiveUserId;
+        if (!userId) {
+            console.error("Usuário não autenticado.");
+            return;
+        }
+
+        const despesaId = document.getElementById('despesa-id').value;
+        const formaPagamento = formaPagamentoSelect.value;
+        const isPago = marcarPagoCheckbox.checked;
+
+        const favorecidoTipo = favorecidoTipoSelect.value;
+        const favorecidoId = favorecidoNomeSelect.value;
+        const favorecidoNome = favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text;
+
+        const baseData = {
+            descricao: document.getElementById('despesa-descricao').value,
+            numeroDocumento: document.getElementById('despesa-numero-documento').value,
+            favorecidoTipo: favorecidoTipo,
+            favorecidoId: favorecidoId,
+            favorecidoNome: favorecidoNome,
+            categoriaId: despesaCategoriaSelect.value,
+            valor: parseFloat(document.getElementById('despesa-valor').value),
+            emissao: document.getElementById('despesa-emissao').value,
+            competencia: document.getElementById('despesa-competencia').value,
+            vencimento: document.getElementById('despesa-vencimento').value,
+            obs: document.getElementById('despesa-obs').value,
+            pago: isPago,
+            criadoPor: currentUserName,
+            adminId: userId,
+        };
+
+        if (isPago) {
+            baseData.dataPagamento = document.getElementById('pagamento-data').value;
+            baseData.valorPago = parseFloat(document.getElementById('pagamento-valor').value) || baseData.valor;
+            baseData.contaSaidaId = pagamentoContaSelect.value;
+        }
+
         try {
-            const userId = effectiveUserId;
-            if (!userId) {
-                return;
+            if (despesaId) {
+                // UPDATE
+                const docRef = doc(db, 'users', userId, 'despesas', despesaId);
+                await updateDoc(docRef, baseData);
+            } else {
+                // CREATE
+                if (formaPagamento === 'parcelado') {
+                    const numParcelas = parseInt(document.getElementById('parcelas-numero').value);
+                    const intervalo = document.getElementById('parcelas-intervalo').value;
+                    const vencimentoInicial = new Date(baseData.vencimento + 'T00:00:00');
+
+                    for (let i = 0; i < numParcelas; i++) {
+                        const vencimentoParcela = new Date(vencimentoInicial);
+                        if (intervalo === 'mensal') {
+                            vencimentoParcela.setMonth(vencimentoParcela.getMonth() + i);
+                        } else if (intervalo === 'quinzenal') {
+                            vencimentoParcela.setDate(vencimentoParcela.getDate() + (15 * i));
+                        } else if (intervalo === 'semanal') {
+                             vencimentoParcela.setDate(vencimentoParcela.getDate() + (7 * i));
+                        }
+
+                        const parcelaData = {
+                            ...baseData,
+                            descricao: `${baseData.descricao} (${i + 1}/${numParcelas})`,
+                            vencimento: vencimentoParcela.toISOString().split('T')[0],
+                            createdAt: serverTimestamp()
+                        };
+                        await addDoc(collection(db, 'users', userId, 'despesas'), parcelaData);
+                    }
+                } else if (formaPagamento === 'recorrente') {
+                    const freq = document.getElementById('recorrencia-frequencia').value;
+                    const multiplier = getRecurrenceMultiplier(freq);
+                    const vencimentoInicial = new Date(baseData.vencimento + 'T00:00:00');
+                    let endDate;
+
+                    if (recorrenciaFimDataRadio.checked && recorrenciaFimDataInput.value) {
+                        endDate = new Date(recorrenciaFimDataInput.value + 'T00:00:00');
+                    } else if (recorrenciaFimOcorrenciasRadio.checked && recorrenciaFimOcorrenciasInput.value) {
+                        const numOcorrencias = parseInt(recorrenciaFimOcorrenciasInput.value);
+                        endDate = new Date(vencimentoInicial);
+                        endDate.setMonth(endDate.getMonth() + (multiplier * (numOcorrencias - 1)));
+                    }
+
+                    let currentDueDate = new Date(vencimentoInicial);
+                    while (currentDueDate <= endDate) {
+                         const recorrenciaData = {
+                            ...baseData,
+                            vencimento: currentDueDate.toISOString().split('T')[0],
+                            createdAt: serverTimestamp()
+                        };
+                        await addDoc(collection(db, 'users', userId, 'despesas'), recorrenciaData);
+                        currentDueDate.setMonth(currentDueDate.getMonth() + multiplier);
+                    }
+
+                } else {
+                    // Single expense
+                    const singleData = { ...baseData, createdAt: serverTimestamp() };
+                    await addDoc(collection(db, 'users', userId, 'despesas'), singleData);
+                }
             }
-            // ... (rest of the logic)
+            closeModal();
         } catch (error) {
             console.error("Erro ao salvar despesa:", error);
-        } finally {
-            closeModal();
         }
     });
 
