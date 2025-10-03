@@ -1858,10 +1858,8 @@
             if (!calendarInstance) {
                 initializeCalendar();
             }
-            // Ao trocar para a visualização de calendário, os dados já carregados
-            // são processados e renderizados. A chamada onSnapshot cuidará das
-            // atualizações subsequentes.
-            processAndRenderCalendarEvents(allDespesas);
+            // Now, when switching to calendar view, it will apply the current filters.
+            applyFiltersAndRender();
         } else { // 'lista'
             listaView.classList.remove('hidden');
             calendarioView.classList.add('hidden');
@@ -1921,9 +1919,11 @@
             };
             const eventColor = colorMap[status] || '#6b7280'; // gray-500 as fallback
 
+            const displayValue = status === 'Pago' ? data.valorOriginal : (data.valorSaldo ?? data.valorOriginal);
+
             return {
                 id: doc.id,
-                title: `${data.favorecidoNome}: ${formatCurrency(data.valorOriginal)}`,
+                title: `${data.favorecidoNome}: ${formatCurrency(displayValue)}`,
                 start: data.vencimento,
                 backgroundColor: eventColor,
                 borderColor: eventColor,
