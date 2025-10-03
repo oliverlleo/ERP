@@ -1949,10 +1949,13 @@
     }
 
     function formatCurrency(valueInCents) {
-        if (typeof valueInCents !== 'number' || isNaN(valueInCents)) {
-             valueInCents = 0;
-        }
-        const value = valueInCents / 100;
+        // Coerce the input to a number. If it's not a valid number (e.g., undefined, null), it becomes 0.
+        const numericValue = Number(valueInCents) || 0;
+
+        // Now, we are sure numericValue is a number.
+        const value = numericValue / 100;
+
+        // The toLocaleString should now be safe to call.
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
