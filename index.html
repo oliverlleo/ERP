@@ -57,6 +57,7 @@
   bg-green-100 text-green-800
   bg-yellow-100 text-yellow-800
   bg-red-100 text-red-800
+  bg-blue-100 text-blue-800
   -->
 
   <!-- Container da Tela de Login -->
@@ -1141,6 +1142,7 @@
                                     <select id="status-filter" class="form-select mt-1 block w-full">
                                         <option value="todas">Todas</option>
                                         <option value="pendente">Pendente</option>
+                                        <option value="pago_parcialmente">Pago Parcialmente</option>
                                         <option value="pago">Pago</option>
                                         <option value="vencido">Vencido</option>
                                     </select>
@@ -1159,8 +1161,8 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Devedor</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
@@ -1389,6 +1391,7 @@
                   <input type="hidden" id="pagar-despesa-id">
                   <div class="p-4 border rounded-md space-y-4">
                       <h4 class="text-lg font-semibold text-gray-800 mb-4">Detalhes do Pagamento</h4>
+                      <p id="saldo-devedor-display" class="text-lg font-medium text-gray-700 bg-gray-100 p-3 rounded-md text-center">Saldo Devedor: R$ 0,00</p>
                       <div>
                           <label for="pagar-data" class="block text-sm font-medium text-gray-700">Data do Pagamento</label>
                           <input type="date" id="pagar-data" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
@@ -1441,11 +1444,32 @@
       </div>
   </div>
 
+  <!-- Modal de Confirmação de Pagamento Parcial -->
+  <div id="confirmar-parcial-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 items-center justify-center z-[60]">
+    <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <h3 class="text-xl font-bold">Confirmar Pagamento Parcial</h3>
+        <div class="mt-5 space-y-4">
+            <p id="confirmar-parcial-mensagem" class="text-gray-700"></p>
+            <div class="pt-4 border-t">
+                <label for="repactuar-vencimento" class="block text-sm font-medium text-gray-700">
+                    Repactuar vencimento do saldo restante para: (Opcional)
+                </label>
+                <input type="date" id="repactuar-vencimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]">
+            </div>
+        </div>
+        <div class="flex items-center justify-end pt-6 space-x-4">
+            <button id="cancelar-parcial-btn" type="button" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+            <button id="confirmar-parcial-btn" type="button" class="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar e Registrar</button>
+        </div>
+    </div>
+  </div>
+
+
   <!-- Modal de Visualização de Despesa -->
   <div id="visualizar-despesa-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
           <div class="flex justify-between items-center border-b pb-3">
-              <h3 class="text-2xl font-bold text-gray-900">Detalhes da Despesa</h3>
+              <h3 id="visualizar-despesa-titulo" class="text-2xl font-bold text-gray-900">Detalhes da Despesa</h3>
               <button id="close-visualizar-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
                   <span class="material-symbols-outlined text-gray-600">close</span>
               </button>
@@ -1476,22 +1500,53 @@
               <div class="space-y-4 bg-gray-50 p-4 rounded-lg">
                   <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Valores e Status</h4>
                   <div><p class="text-sm text-gray-500">Número do Documento</p><p id="view-despesa-numero-documento" class="text-base font-medium text-gray-800"></p></div>
-                  <div>
-                      <p class="text-sm text-gray-500">Valor Original</p>
-                      <p id="view-despesa-valor" class="text-2xl font-bold text-blue-600"></p>
-                  </div>
+                   <div class="space-y-2">
+                        <div>
+                            <p class="text-sm text-gray-500">Valor Original</p>
+                            <p id="view-despesa-valor-original" class="text-xl font-bold text-blue-600"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Pago</p>
+                            <p id="view-despesa-total-pago" class="text-xl font-bold text-green-600"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Saldo Devedor</p>
+                            <p id="view-despesa-saldo-devedor" class="text-xl font-bold text-red-600"></p>
+                        </div>
+                   </div>
                    <div>
                       <p class="text-sm text-gray-500">Status</p>
                       <p id="view-despesa-status" class="text-base font-medium"></p>
                   </div>
-                  <div id="view-pagamento-info" class="hidden space-y-4 border-t pt-4">
-                      <h5 class="text-md font-semibold text-gray-700">Informações do Pagamento</h5>
-                      <div><p class="text-sm text-gray-500">Data do Pagamento</p><p id="view-despesa-data-pagamento" class="text-base font-medium text-gray-800"></p></div>
-                      <div><p class="text-sm text-gray-500">Valor Pago</p><p id="view-despesa-valor-pago" class="text-base font-bold text-green-600"></p></div>
-                      <div><p class="text-sm text-gray-500">Conta de Saída</p><p id="view-despesa-conta-saida" class="text-base font-medium text-gray-800"></p></div>
-                  </div>
               </div>
           </div>
+
+          <!-- Histórico de Pagamentos -->
+          <div class="mt-6 border-t pt-4">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">Histórico de Transações</h4>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Principal</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Juros</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descontos</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
+                            <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagamentos-history-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Linhas do histórico serão inseridas aqui -->
+                        <tr>
+                            <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">Nenhuma transação registrada.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+
           <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
               <button type="button" id="ok-visualizar-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">OK</button>
           </div>
@@ -1711,6 +1766,8 @@
     const visualizarDespesaModal = document.getElementById('visualizar-despesa-modal');
     const closeVisualizarModalBtn = document.getElementById('close-visualizar-modal-btn');
     const okVisualizarModalBtn = document.getElementById('ok-visualizar-modal-btn');
+    const confirmarParcialModal = document.getElementById('confirmar-parcial-modal');
+    const cancelarParcialBtn = document.getElementById('cancelar-parcial-btn');
 
     // --- Elementos de Recorrência Inteligente ---
     const despesaVencimentoInput = document.getElementById('despesa-vencimento');
@@ -2531,36 +2588,41 @@
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
 
-        let totalAPagar = 0;
-        let totalPago = 0;
-        let contasVencidas = 0;
+        let totalAPagarMes = 0;
+        let totalPagoMes = 0;
+        let totalVencido = 0;
 
         docs.forEach(doc => {
             const data = doc.data();
             const vencimento = new Date(data.vencimento + 'T00:00:00');
 
-            // Total a Pagar no Mês
-            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && !data.pago) {
-                totalAPagar += data.valor;
+            // Total a Pagar no Mês (soma do saldo devedor das contas que vencem no mês)
+            if ((data.status === 'Pendente' || data.status === 'Pago Parcialmente') && vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear) {
+                totalAPagarMes += data.valorSaldo ?? 0;
             }
 
-            // Total Pago no Mês
-            if (data.pago && data.dataPagamento) {
-                const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
-                if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    totalPago += data.valorPago || data.valor;
-                }
+            // Total Pago no Mês (precisa somar as transações do mês)
+            // Esta parte é complexa e será implementada se o histórico de pagamentos for usado para isso.
+            // Por enquanto, vamos manter uma estimativa.
+            if (data.status === 'Pago' || data.status === 'Pago Parcialmente') {
+                 if (data.dataPagamento) { // Usando o campo legado por simplicidade por enquanto
+                    const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
+                    if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
+                        totalPagoMes += data.totalPago || 0; // Usando o novo campo totalPago
+                    }
+                 }
             }
 
-            // Contas Vencidas
-            if (!data.pago && vencimento < today) {
-                contasVencidas += data.valor;
+
+            // Contas Vencidas (soma do saldo devedor das contas com status pendente/parcial e vencimento passado)
+            if ((data.status === 'Pendente' || data.status === 'Pago Parcialmente') && vencimento < today) {
+                totalVencido += data.valorSaldo ?? 0;
             }
         });
 
-        document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagar);
-        document.getElementById('total-pago-card').textContent = formatCurrency(totalPago);
-        document.getElementById('contas-vencidas-card').textContent = formatCurrency(contasVencidas);
+        document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagarMes);
+        document.getElementById('total-pago-card').textContent = formatCurrency(totalPagoMes);
+        document.getElementById('contas-vencidas-card').textContent = formatCurrency(totalVencido);
     }
 
     function updateDashboardIndicators(docs) {
@@ -3847,15 +3909,28 @@
             const data = doc.data();
 
             // Paid filter (primary filter)
-            if (!includePaid && data.pago) {
+            if (!includePaid && data.status === 'Pago') {
                 return false;
             }
 
             // Status filter
             let statusMatch = true;
             if (status !== 'todas') {
-                const docStatus = data.pago ? 'pago' : (new Date(data.vencimento + 'T00:00:00') < today ? 'vencido' : 'pendente');
-                if (status !== docStatus) statusMatch = false;
+                const vencimento = new Date(data.vencimento + 'T00:00:00');
+                let docStatusForFilter;
+
+                if (data.status === 'Pago') {
+                    docStatusForFilter = 'pago';
+                } else if (data.status === 'Pago Parcialmente') {
+                    docStatusForFilter = 'pago_parcialmente';
+                } else { // Pendente
+                    if (vencimento < today) {
+                        docStatusForFilter = 'vencido';
+                    } else {
+                        docStatusForFilter = 'pendente';
+                    }
+                }
+                if (status !== docStatusForFilter) statusMatch = false;
             }
 
             // Date filter
@@ -3917,17 +3992,21 @@
             tr.setAttribute('data-id', doc.id);
 
             const statusInfo = {
-                pago: { text: 'Pago', color: 'green', icon: '🟢' },
-                pendente: { text: 'Pendente', color: 'yellow', icon: '🟡' },
-                vencido: { text: 'Vencido', color: 'red', icon: '🔴' }
+                'Pago': { text: 'Pago', color: 'green' },
+                'Pendente': { text: 'Pendente', color: 'yellow' },
+                'Pago Parcialmente': { text: 'Parcial', color: 'blue' },
+                'Vencido': { text: 'Vencido', color: 'red' }
             };
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const vencimento = new Date(data.vencimento + 'T00:00:00');
-            const status = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-            const currentStatus = statusInfo[status];
+            let currentStatusKey = data.status || 'Pendente';
+            if (currentStatusKey === 'Pendente' && vencimento < today) {
+                currentStatusKey = 'Vencido';
+            }
 
-            const valorPagoHtml = data.pago ? formatCurrency(data.valorPago || 0) : '—';
+            const currentStatus = statusInfo[currentStatusKey];
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -3939,8 +4018,8 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(data.valor)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${valorPagoHtml}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(data.valorOriginal || data.valor)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(data.valorSaldo ?? data.valor)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${currentStatus.color}-100 text-${currentStatus.color}-800">
                         ${currentStatus.text}
@@ -4016,8 +4095,26 @@
             try {
                 const docRef = doc(db, 'users', userId, 'despesas', id);
                 const docSnap = await getDoc(docRef);
+
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+
+                    // Trava de segurança: verificar se há pagamentos
+                    const pagamentosRef = collection(docRef, 'pagamentos');
+                    const pagamentosSnap = await getDocs(pagamentosRef);
+                    const despesaValorInput = document.getElementById('despesa-valor');
+
+                    if (!pagamentosSnap.empty) {
+                        despesaValorInput.readOnly = true;
+                        despesaValorInput.title = "O valor original não pode ser editado pois já existem transações para esta despesa.";
+                        despesaValorInput.classList.add('bg-gray-200');
+                    } else {
+                        despesaValorInput.readOnly = false;
+                        despesaValorInput.title = "";
+                        despesaValorInput.classList.remove('bg-gray-200');
+                    }
+
+                    // Preencher o formulário
                     document.getElementById('despesa-id').value = docSnap.id;
                     document.getElementById('despesa-descricao').value = data.descricao;
                     document.getElementById('despesa-numero-documento').value = data.numeroDocumento || '';
@@ -4027,34 +4124,40 @@
                         setTimeout(() => {
                             favorecidoNomeSelect.value = data.favorecidoId;
                         }, 150);
-                    } else if (data.fornecedorId) { // Legacy fallback
-                        favorecidoTipoSelect.value = 'fornecedores';
-                        favorecidoTipoSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => {
-                            favorecidoNomeSelect.value = data.fornecedorId;
-                        }, 150);
                     }
                     document.getElementById('despesa-categoria').value = data.categoriaId;
-                    document.getElementById('despesa-valor').value = data.valor;
+                    // Usar valorOriginal para edição, se existir
+                    despesaValorInput.value = data.valorOriginal || data.valor;
                     document.getElementById('despesa-emissao').value = data.emissao || '';
                     document.getElementById('despesa-competencia').value = data.competencia;
                     document.getElementById('despesa-vencimento').value = data.vencimento;
                     document.getElementById('despesa-obs').value = data.obs || '';
-                    const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
-                    pagoCheckbox.checked = data.pago;
+
+                    // A seção 'Marcar como pago' não deve ser mostrada na edição de despesas com histórico
+                    const pagoCheckboxContainer = document.getElementById('marcar-pago-checkbox').parentElement;
                     const pagamentoInfoDiv = document.getElementById('pagamento-info');
-                    if (data.pago) {
-                        pagamentoInfoDiv.classList.remove('hidden');
-                        document.getElementById('pagamento-data').value = data.dataPagamento || '';
-                        document.getElementById('pagamento-valor').value = data.valorPago || '';
-                        document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
-                    } else {
+                    if (!pagamentosSnap.empty) {
+                        pagoCheckboxContainer.classList.add('hidden');
                         pagamentoInfoDiv.classList.add('hidden');
+                    } else {
+                        pagoCheckboxContainer.classList.remove('hidden');
+                        // Lógica original para despesas sem histórico
+                        const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
+                        pagoCheckbox.checked = data.pago;
+                        if (data.pago) {
+                            pagamentoInfoDiv.classList.remove('hidden');
+                            document.getElementById('pagamento-data').value = data.dataPagamento || '';
+                            document.getElementById('pagamento-valor').value = data.valorPago || '';
+                            document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
+                        } else {
+                            pagamentoInfoDiv.classList.add('hidden');
+                        }
                     }
+
                     openModal(true);
                 }
             } catch (error) {
-                console.error("Error getting document:", error);
+                console.error("Error getting document for edit:", error);
             }
         });
     }
@@ -4116,7 +4219,7 @@
         }
     }
 
-    function openPagarModal(despesaIds) {
+    async function openPagarModal(despesaIds) {
         if (!pagarModal || despesaIds.length === 0) return;
         const userId = effectiveUserId;
         if (!userId) {
@@ -4125,37 +4228,42 @@
         }
 
         document.getElementById('pagar-despesa-id').value = despesaIds.join(',');
+        pagarForm.reset();
 
-        // Calculate the total value of all selected expenses
-        let totalValor = 0;
-        const promises = despesaIds.map(id => getDoc(doc(db, 'users', userId, 'despesas', id)));
+        let totalSaldoDevedor = 0;
+        try {
+            const promises = despesaIds.map(id => getDoc(doc(db, 'users', userId, 'despesas', id)));
+            const docsSnaps = await Promise.all(promises);
 
-        Promise.all(promises).then(docs => {
-            docs.forEach(docSnap => {
+            for (const docSnap of docsSnaps) {
                 if (docSnap.exists()) {
-                    totalValor += docSnap.data().valor;
+                    const data = docSnap.data();
+                    totalSaldoDevedor += data.valorSaldo ?? data.valor;
                 }
-            });
+            }
 
-            // Update the modal UI
+            pagarModal.dataset.saldoDevedorAtual = totalSaldoDevedor;
+
+            document.getElementById('saldo-devedor-display').textContent = `Saldo Devedor: ${formatCurrency(totalSaldoDevedor)}`;
             const valorInput = document.getElementById('pagar-valor');
-            valorInput.value = totalValor.toFixed(2);
-            // Make the total value read-only to avoid partial payment complexity for batches
+            valorInput.value = totalSaldoDevedor.toFixed(2);
             valorInput.readOnly = despesaIds.length > 1;
 
+            // Trigger calculation for valor final
+            valorInput.dispatchEvent(new Event('input'));
+
             document.getElementById('pagar-data').value = new Date().toISOString().split('T')[0];
+
+            const modalTitle = pagarModal.querySelector('h3');
+            modalTitle.textContent = despesaIds.length > 1
+                ? `Registrar Pagamento de ${despesaIds.length} Contas`
+                : 'Registrar Pagamento';
+
             pagarModal.classList.remove('hidden');
 
-            // Update modal title
-            const modalTitle = pagarModal.querySelector('h3');
-            if (despesaIds.length > 1) {
-                modalTitle.textContent = `Registrar Pagamento de ${despesaIds.length} Contas`;
-            } else {
-                modalTitle.textContent = 'Registrar Pagamento';
-            }
-        }).catch(error => {
-            console.error("Error getting documents for payment:", error);
-        });
+        } catch (error) {
+            console.error("Erro ao buscar despesas para pagamento:", error);
+        }
     }
 
     function closePagarModal() {
@@ -4221,55 +4329,145 @@
             document.getElementById('view-despesa-valor').textContent = formatCurrency(data.valor || 0);
 
             // Status logic
+            document.getElementById('view-despesa-valor-original').textContent = formatCurrency(data.valorOriginal || data.valor || 0);
+            document.getElementById('view-despesa-total-pago').textContent = formatCurrency(data.totalPago || 0);
+            document.getElementById('view-despesa-saldo-devedor').textContent = formatCurrency(data.valorSaldo ?? data.valor);
+
             const statusEl = document.getElementById('view-despesa-status');
+            const statusInfo = {
+                'Pago': { text: 'Pago', className: 'text-base font-medium text-green-600' },
+                'Pendente': { text: 'Pendente', className: 'text-base font-medium text-yellow-600' },
+                'Pago Parcialmente': { text: 'Pago Parcialmente', className: 'text-base font-medium text-blue-600' },
+                'Vencido': { text: 'Vencido', className: 'text-base font-medium text-red-600' }
+            };
+
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
             const vencimento = new Date(data.vencimento + 'T00:00:00');
-            if (data.pago) {
-                statusEl.textContent = 'Pago';
-                statusEl.className = 'text-base font-medium text-green-600';
-            } else if (vencimento < today) {
-                statusEl.textContent = 'Vencido';
-                statusEl.className = 'text-base font-medium text-red-600';
-            } else {
-                statusEl.textContent = 'Pendente';
-                statusEl.className = 'text-base font-medium text-yellow-600';
+            let statusKey = data.status || 'Pendente';
+            if (statusKey === 'Pendente' && vencimento < today) {
+                statusKey = 'Vencido';
             }
+            const currentStatusInfo = statusInfo[statusKey] || statusInfo['Pendente'];
+            statusEl.textContent = currentStatusInfo.text;
+            statusEl.className = currentStatusInfo.className;
 
-            // Payment info section
-            const pagamentoInfoEl = document.getElementById('view-pagamento-info');
-            const descontosContainer = document.getElementById('view-despesa-descontos-container');
-            const jurosMultaContainer = document.getElementById('view-despesa-juros-multa-container');
-            const descontosEl = document.getElementById('view-despesa-descontos');
-            const jurosMultaEl = document.getElementById('view-despesa-juros-multa');
 
-            if (data.pago) {
-                document.getElementById('view-despesa-data-pagamento').textContent = formatDate(data.dataPagamento);
-                document.getElementById('view-despesa-valor-pago').textContent = formatCurrency(data.valorPago || 0);
-                document.getElementById('view-despesa-conta-saida').textContent = contaSaidaNome;
+            // Fetch and render payment history
+            const historyTableBody = document.getElementById('pagamentos-history-table-body');
+            historyTableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">Carregando histórico...</td></tr>';
+            const pagamentosQuery = query(collection(despesaRef, 'pagamentos'));
+            const pagamentosSnapshot = await getDocs(pagamentosQuery);
 
-                if (data.descontos && data.descontos > 0) {
-                    descontosEl.textContent = formatCurrency(data.descontos);
-                    descontosContainer.classList.remove('hidden');
-                } else {
-                    descontosContainer.classList.add('hidden');
-                }
-
-                if (data.jurosMulta && data.jurosMulta > 0) {
-                    jurosMultaEl.textContent = formatCurrency(data.jurosMulta);
-                    jurosMultaContainer.classList.remove('hidden');
-                } else {
-                    jurosMultaContainer.classList.add('hidden');
-                }
-
-                pagamentoInfoEl.classList.remove('hidden');
+            if (pagamentosSnapshot.empty) {
+                historyTableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhuma transação registrada.</td></tr>';
             } else {
-                pagamentoInfoEl.classList.add('hidden');
+                historyTableBody.innerHTML = '';
+                pagamentosSnapshot.docs.forEach(pagamentoDoc => {
+                    const pagData = pagamentoDoc.data();
+                    const tr = historyTableBody.insertRow();
+                    const isEstorno = pagData.tipoTransacao === 'Estorno';
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 text-sm whitespace-nowrap ${isEstorno ? 'text-red-500' : 'text-gray-700'}">${pagData.tipoTransacao}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${formatDate(pagData.dataTransacao)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">${formatCurrency(pagData.valorPrincipal || 0)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">${formatCurrency(pagData.jurosPagos || 0)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">${formatCurrency(pagData.descontosAplicados || 0)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${pagData.usuarioResponsavel || 'N/A'}</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium">
+                            ${!isEstorno ? `<button class="estornar-btn text-red-600 hover:text-red-800" data-despesa-id="${despesaId}" data-pagamento-id="${pagamentoDoc.id}">Estornar</button>` : ''}
+                        </td>
+                    `;
+                });
+
+                historyTableBody.querySelectorAll('.estornar-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const despesaId = e.target.dataset.despesaId;
+                        const pagamentoId = e.target.dataset.pagamentoId;
+                        iniciarEstorno(despesaId, pagamentoId);
+                    });
+                });
             }
 
             visualizarDespesaModal.classList.remove('hidden');
 
         } catch (error) {
             console.error("Erro ao abrir modal de visualização:", error);
+        }
+    }
+
+    async function iniciarEstorno(despesaId, pagamentoId) {
+        const userId = effectiveUserId;
+        if (!userId) return;
+
+        const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
+        const pagamentoRef = doc(despesaRef, 'pagamentos', pagamentoId);
+
+        try {
+            const pagamentoSnap = await getDoc(pagamentoRef);
+            if (!pagamentoSnap.exists()) {
+                alert("Erro: O pagamento original não foi encontrado para estornar.");
+                return;
+            }
+            const valorEstorno = formatCurrency(pagamentoSnap.data().valorPrincipal || 0);
+
+            const motivo = prompt(`Deseja realmente estornar este pagamento de ${valorEstorno}?\n\nSe sim, digite um motivo (opcional) e clique em OK.`);
+
+            if (motivo !== null) { // User clicked OK, prompt returns "" for empty input, null for Cancel
+                await executarEstorno(despesaRef, pagamentoRef, motivo);
+                // Re-open the modal to show the updated history
+                openVisualizarModal(despesaId);
+            }
+        } catch (error) {
+            console.error("Erro ao iniciar estorno:", error);
+            alert("Ocorreu um erro ao iniciar o estorno.");
+        }
+    }
+
+    async function executarEstorno(despesaRef, pagamentoRef, motivo) {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const despesaSnap = await transaction.get(despesaRef);
+                const pagamentoSnap = await transaction.get(pagamentoRef);
+
+                if (!despesaSnap.exists() || !pagamentoSnap.exists()) {
+                    throw "Despesa ou pagamento não encontrado na transação.";
+                }
+
+                const despesaData = despesaSnap.data();
+                const pagamentoData = pagamentoSnap.data();
+                const valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
+
+                // 1. Criar o novo documento de estorno
+                const estornoRef = doc(collection(despesaRef, 'pagamentos'));
+                transaction.set(estornoRef, {
+                    ...pagamentoData, // Copy original payment data
+                    tipoTransacao: "Estorno",
+                    motivoEstorno: motivo,
+                    dataTransacao: new Date().toISOString().split('T')[0], // Use today's date for reversal
+                    usuarioResponsavel: currentUserName || "Sistema",
+                    createdAt: serverTimestamp()
+                });
+
+                // 2. Atualizar o documento principal da despesa
+                const novoTotalPago = (despesaData.totalPago || 0) - valorPrincipalEstornado;
+                const novoSaldo = despesaData.valorSaldo + valorPrincipalEstornado;
+                const novoStatus = novoSaldo >= despesaData.valorOriginal ? "Pendente" : "Pago Parcialmente";
+
+                transaction.update(despesaRef, {
+                    totalPago: novoTotalPago,
+                    valorSaldo: novoSaldo,
+                    status: novoStatus,
+                    pago: false, // Sempre se torna não-pago ou parcialmente pago
+                    dataPagamento: null, // Limpa a data de pagamento principal
+                    valorPago: null, // Limpa o valor de pagamento principal
+                });
+            });
+            console.log("Estorno realizado com sucesso!");
+        } catch (error) {
+            console.error("Erro na transação de estorno:", error);
+            alert("Falha na transação de estorno. Os dados permanecem consistentes.");
         }
     }
 
@@ -4301,85 +4499,161 @@
 
         pagarForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userId = effectiveUserId;
-            if (!userId) {
-                console.error("Usuário não autenticado.");
+            const saldoDevedorAtual = parseFloat(pagarModal.dataset.saldoDevedorAtual || 0);
+            const valorFinalPago = parseFloat(document.getElementById('pagar-valor-final').value) || 0;
+
+            const paymentData = {
+                despesaIds: document.getElementById('pagar-despesa-id').value.split(','),
+                dataPagamento: document.getElementById('pagar-data').value,
+                contaSaidaId: document.getElementById('pagar-conta-saida').value,
+                meioPagamento: document.getElementById('pagar-meio-pagamento').value,
+                descontosAplicados: parseFloat(document.getElementById('pagar-descontos').value) || 0,
+                jurosPagos: parseFloat(document.getElementById('pagar-juros-multa').value) || 0,
+                valorPrincipal: parseFloat(document.getElementById('pagar-valor').value) || 0,
+                valorFinalPago: valorFinalPago,
+                novaDataVencimento: null,
+                userId: effectiveUserId
+            };
+
+            if (!paymentData.userId) {
+                console.error("Usuário não autenticado. Ação de pagamento cancelada.");
                 return;
             }
 
-            const despesaIds = document.getElementById('pagar-despesa-id').value.split(',');
-            const paymentDate = document.getElementById('pagar-data').value;
-            const paymentAccount = document.getElementById('pagar-conta-saida').value;
-            const paymentMethod = document.getElementById('pagar-meio-pagamento').value;
-            const descontos = parseFloat(document.getElementById('pagar-descontos').value) || 0;
-            const jurosMulta = parseFloat(document.getElementById('pagar-juros-multa').value) || 0;
-            const valorFinalPago = parseFloat(document.getElementById('pagar-valor-final').value) || 0;
-
-            const totalOriginal = allDespesas
-                .filter(d => despesaIds.includes(d.id))
-                .reduce((sum, d) => sum + d.data().valor, 0);
-
-            if (totalOriginal === 0 && despesaIds.length > 0) {
-                 console.error("Cannot process payment for expenses with zero total value.");
-                 return;
+            if (valorFinalPago < saldoDevedorAtual) {
+                abrirModalConfirmacaoParcial(paymentData, saldoDevedorAtual);
+            } else {
+                prosseguirComPagamentoTotal(paymentData);
             }
+        });
+    }
 
-            const paymentPromises = despesaIds.map(async (id) => {
-                const despesaRef = doc(db, 'users', userId, 'despesas', id);
-                try {
-                    const despesaSnap = await getDoc(despesaRef);
-                    if (!despesaSnap.exists()) {
-                        console.error(`Despesa com ID ${id} não encontrada!`);
-                        return;
-                    }
+    function abrirModalConfirmacaoParcial(paymentData, saldoDevedorAtual) {
+        const mensagemEl = document.getElementById('confirmar-parcial-mensagem');
+        const saldoRestante = saldoDevedorAtual - paymentData.valorFinalPago;
+        mensagemEl.textContent = `Você está pagando ${formatCurrency(paymentData.valorFinalPago)} de um total de ${formatCurrency(saldoDevedorAtual)}. Um saldo de ${formatCurrency(saldoRestante)} permanecerá. Deseja continuar?`;
+
+        const confirmarBtn = document.getElementById('confirmar-parcial-btn');
+
+        const confirmHandler = () => {
+            const novaData = document.getElementById('repactuar-vencimento').value;
+            paymentData.novaDataVencimento = novaData || null;
+            prosseguirComPagamentoParcial(paymentData);
+            confirmarParcialModal.classList.add('hidden');
+            confirmarBtn.removeEventListener('click', confirmHandler); // Clean up listener
+        };
+
+        confirmarBtn.addEventListener('click', confirmHandler, { once: true });
+
+        confirmarParcialModal.classList.remove('hidden');
+        confirmarParcialModal.classList.add('flex');
+    }
+
+    if (cancelarParcialBtn) {
+        cancelarParcialBtn.addEventListener('click', () => {
+            confirmarParcialModal.classList.add('hidden');
+            confirmarParcialModal.classList.remove('flex');
+        });
+    }
+
+    async function prosseguirComPagamentoParcial(paymentData) {
+        await processarPagamento(paymentData);
+    }
+
+    async function prosseguirComPagamentoTotal(paymentData) {
+        await processarPagamento(paymentData);
+    }
+
+    async function processarPagamento(paymentData) {
+        const { userId, despesaIds, dataPagamento, contaSaidaId, meioPagamento, valorPrincipal, descontosAplicados, jurosPagos, novaDataVencimento } = paymentData;
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                // 1. Ler todas as despesas envolvidas para obter o saldo total devedor.
+                const despesasRefs = despesaIds.map(id => doc(db, 'users', userId, 'despesas', id));
+                const despesasSnaps = await Promise.all(despesasRefs.map(ref => transaction.get(ref)));
+
+                let totalSaldoDevedorTransacao = 0;
+                for (const despesaSnap of despesasSnaps) {
+                    if (!despesaSnap.exists()) throw `Despesa com ID ${despesaSnap.id} não encontrada.`;
+                    const data = despesaSnap.data();
+                    totalSaldoDevedorTransacao += data.valorSaldo ?? data.valor;
+                }
+
+                if (totalSaldoDevedorTransacao <= 0) {
+                    // Se não há saldo, não há o que pagar. Isso pode acontecer em corridas de condição.
+                    console.warn("Nenhum saldo devedor para as despesas selecionadas. Transação abortada.");
+                    return;
+                }
+
+                // 2. Iterar sobre cada despesa para aplicar o pagamento proporcionalmente.
+                for (const despesaSnap of despesasSnaps) {
+                    const despesaRef = despesaSnap.ref;
                     const despesaData = despesaSnap.data();
-                    const valorOriginal = despesaData.valor;
+                    const saldoDevedorIndividual = despesaData.valorSaldo ?? despesaData.valor;
+                    const proporcao = saldoDevedorIndividual / totalSaldoDevedorTransacao;
 
-                    const proporcao = totalOriginal > 0 ? valorOriginal / totalOriginal : 0;
-                    const valorPagoIndividual = valorFinalPago * proporcao;
-                    const descontosIndividual = descontos * proporcao;
-                    const jurosMultaIndividual = jurosMulta * proporcao;
+                    const valorPrincipalAplicado = valorPrincipal * proporcao;
+                    const descontosAplicadosIndividual = descontosAplicados * proporcao;
+                    const jurosPagosIndividual = jurosPagos * proporcao;
 
-                    const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
-                    await addDoc(transacoesRef, {
-                        referenciaContaPagar: despesaRef,
-                        dataPagamento: paymentDate,
-                        dataCompetencia: despesaData.competencia,
-                        valorPago: valorPagoIndividual,
-                        descontos: descontosIndividual,
-                        jurosMulta: jurosMultaIndividual,
-                        referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', paymentAccount),
-                        referenciaFavorecido: {
-                            collection: despesaData.favorecidoTipo,
-                            id: despesaData.favorecidoId
-                        },
-                        referenciaPlanoDeContas: doc(db, 'users', userId, 'planosDeContas', despesaData.categoriaId),
-                        meioPagamento: paymentMethod,
-                        tipoTransacao: "DESPESA",
+                    // 3. Criar o registro na subcoleção 'pagamentos'.
+                    const pagamentoRef = doc(collection(despesaRef, 'pagamentos'));
+                    transaction.set(pagamentoRef, {
+                        tipoTransacao: "Pagamento",
+                        dataTransacao: dataPagamento,
+                        valorPrincipal: valorPrincipalAplicado,
+                        jurosPagos: jurosPagosIndividual,
+                        descontosAplicados: descontosAplicadosIndividual,
+                        contaSaidaId: contaSaidaId,
+                        meioPagamento: meioPagamento,
+                        usuarioResponsavel: currentUserName || "Sistema",
                         createdAt: serverTimestamp()
                     });
 
-                    await updateDoc(despesaRef, {
-                        pago: true,
-                        dataPagamento: paymentDate,
-                        valorPago: valorPagoIndividual,
-                        descontos: descontosIndividual,
-                        jurosMulta: jurosMultaIndividual,
-                    });
-                } catch (error) {
-                    console.error(`Erro ao processar pagamento para a despesa ${id}:`, error);
+                    // 4. Calcular e atualizar o documento principal da despesa.
+                    const novoTotalPago = (despesaData.totalPago || 0) + valorPrincipalAplicado;
+                    const novoSaldo = despesaData.valorOriginal - novoTotalPago;
+                    const novoStatus = novoSaldo <= 0.01 ? "Pago" : "Pago Parcialmente";
+
+                    const updateData = {
+                        totalPago: novoTotalPago,
+                        valorSaldo: novoSaldo,
+                        status: novoStatus,
+                    };
+
+                    if (novaDataVencimento) {
+                        updateData.vencimento = novaDataVencimento;
+                    }
+
+                    // Para compatibilidade com a visualização antiga, se quitado.
+                    if (novoStatus === 'Pago') {
+                        updateData.pago = true;
+                        updateData.dataPagamento = dataPagamento;
+                        updateData.valorPago = despesaData.valorOriginal; // Preenche o valor total pago.
+                    }
+
+                    transaction.update(despesaRef, updateData);
                 }
             });
 
-            try {
-                await Promise.all(paymentPromises);
-                closePagarModal();
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.dispatchEvent(new Event('change'));
-            } catch (error) {
-                console.error("Erro ao registrar um ou mais pagamentos:", error);
-            }
-        });
+            console.log("Pagamento processado com sucesso!");
+            closePagarModal();
+            closeConfirmarParcialModal();
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.dispatchEvent(new Event('change'));
+
+        } catch (error) {
+            console.error("Erro na transação de pagamento:", error);
+            alert("Ocorreu um erro ao processar o pagamento. Verifique o console para mais detalhes.");
+        }
+    }
+
+    function closeConfirmarParcialModal() {
+        if(confirmarParcialModal) {
+            confirmarParcialModal.classList.add('hidden');
+            confirmarParcialModal.classList.remove('flex');
+        }
     }
 
     if(marcarPagoCheckbox) {
@@ -4426,7 +4700,11 @@
                 favorecidoId: favorecidoId,
                 favorecidoNome: favorecidoNome,
                 categoriaId: document.getElementById('despesa-categoria').value,
-                valor: valorTotal,
+                valor: valorTotal, // Legacy field, might be deprecated later but kept for compatibility
+                valorOriginal: valorTotal,
+                valorSaldo: valorTotal,
+                totalPago: 0,
+                status: 'Pendente',
                 emissao: document.getElementById('despesa-emissao').value,
                 competencia: document.getElementById('despesa-competencia').value,
                 vencimento: document.getElementById('despesa-vencimento').value,
@@ -4436,9 +4714,19 @@
             };
 
             if (baseData.pago) {
+                const valorPagoInicial = parseFloat(document.getElementById('pagamento-valor').value) || valorTotal;
                 baseData.dataPagamento = document.getElementById('pagamento-data').value;
-                baseData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
+                baseData.valorPago = valorPagoInicial; // Legacy field
                 baseData.contaSaidaId = document.getElementById('pagamento-conta').value;
+                baseData.totalPago = valorPagoInicial;
+                baseData.valorSaldo = baseData.valorOriginal - valorPagoInicial;
+                baseData.status = baseData.valorSaldo <= 0 ? 'Pago' : 'Pago Parcialmente';
+
+                if (baseData.valorSaldo < 0) {
+                    console.warn("Pagamento inicial maior que o valor da despesa. Saldo ficou negativo.");
+                    baseData.valorSaldo = 0;
+                    baseData.status = 'Pago';
+                }
             }
 
             if (expenseId && formaPagamento !== 'parcelado' && formaPagamento !== 'recorrente') {
