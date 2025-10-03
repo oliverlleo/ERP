@@ -1130,32 +1130,33 @@
                             </button>
                         </div>
 
-                        <!-- Container da Visualização de Lista -->
-                        <div id="lista-view">
-                             <!-- Toolbar de Filtros e Busca -->
-                            <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                                <div class="flex-grow min-w-[200px]">
-                                    <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
-                                    <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full">
-                                </div>
-                                <div>
-                                    <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
-                                    <input type="date" id="start-date-input" class="form-input mt-1 block w-full">
-                                </div>
-                                <div>
-                                    <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
-                                    <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Status</label>
-                                    <div id="status-filter-group" class="flex items-center gap-2 mt-1">
-                                        <button data-status="Pendente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
-                                        <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
-                                        <button data-status="Pago Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
-                                        <button data-status="Pago" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pago</button>
-                                    </div>
+                        <!-- Toolbar de Filtros e Busca -->
+                        <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                            <div class="flex-grow min-w-[200px]">
+                                <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
+                                <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
+                                <input type="date" id="start-date-input" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
+                                <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <div id="status-filter-group" class="flex items-center gap-2 mt-1">
+                                    <button data-status="Pendente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
+                                    <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
+                                    <button data-status="Pago Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
+                                    <button data-status="Pago" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pago</button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Container da Visualização de Lista -->
+                        <div id="lista-view">
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
