@@ -179,29 +179,128 @@
                         <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Painel</h1>
                         <p class="text-gray-600 text-base font-normal leading-normal">Visão geral dos principais indicadores e módulos do sistema.</p>
                     </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight">Indicadores Financeiros</h2>
+                        <div>
+                            <select id="dashboard-financeiro-selector" class="form-select rounded-lg border-gray-300 bg-white p-2 shadow-sm focus:border-[var(--brand-primary)] focus:ring focus:ring-[var(--brand-primary)] focus:ring-opacity-50 text-base">
+                                <option value="provisoes" selected>Provisões</option>
+                                <option value="a_pagar">A Pagar</option>
+                                <option value="a_receber">A Receber</option>
+                                <option value="movimentacoes">Movimentações</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Container for all financial views -->
                     <div>
-                        <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight mb-4">Indicadores Financeiros</h2>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <div id="dashboard-total-a-pagar-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-yellow-500"> calendar_month </span>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">Total a Pagar no Mês</p>
+                        <!-- Provisões View (Visible by default) -->
+                        <div id="financeiro-provisoes-view" class="dashboard-financeiro-view">
+                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <!-- Card: Provisão a Pagar -->
+                                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-yellow-500"> event_upcoming </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Provisão a Pagar</p>
+                                    </div>
+                                    <p id="dashboard-provisao-a-pagar" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                                 </div>
-                                <p id="dashboard-total-a-pagar" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                <!-- Card: Provisão a Receber -->
+                                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-blue-500"> event_available </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Provisão a Receber</p>
+                                    </div>
+                                    <p id="dashboard-provisao-a-receber" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
+                                <!-- Card: Saldo em Conta (Provisões) -->
+                                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-gray-500"> account_balance_wallet </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Saldo em Conta</p>
+                                    </div>
+                                    <p id="dashboard-provisao-saldo" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
                             </div>
-                            <div id="dashboard-total-pago-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-green-500"> check_circle </span>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">Total Pago no Mês</p>
+                        </div>
+
+                        <!-- A Pagar View (Hidden) -->
+                        <div id="financeiro-a-pagar-view" class="dashboard-financeiro-view hidden">
+                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <div id="dashboard-pagar-total-mes-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-yellow-500"> calendar_month </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Total a Pagar no Mês</p>
+                                    </div>
+                                    <p id="dashboard-pagar-total-mes" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                                 </div>
-                                <p id="dashboard-total-pago" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                <div id="dashboard-pagar-pago-mes-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-green-500"> check_circle </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Total Pago no Mês</p>
+                                    </div>
+                                    <p id="dashboard-pagar-pago-mes" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
+                                <div id="dashboard-pagar-vencidas-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-red-500"> error </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Contas Vencidas</p>
+                                    </div>
+                                    <p id="dashboard-pagar-vencidas" class="text-red-600 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
                             </div>
-                            <div id="dashboard-contas-vencidas-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-red-500"> error </span>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">Contas Vencidas</p>
+                        </div>
+
+                        <!-- A Receber View (Hidden) -->
+                        <div id="financeiro-a-receber-view" class="dashboard-financeiro-view hidden">
+                           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <div id="dashboard-receber-total-mes-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-blue-500"> event_available </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Total a Receber no Mês</p>
+                                    </div>
+                                    <p id="dashboard-receber-total-mes" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                                 </div>
-                                <p id="dashboard-contas-vencidas" class="text-red-600 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                <div id="dashboard-receber-recebido-mes-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-green-500"> price_check </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Total Recebido no Mês</p>
+                                    </div>
+                                    <p id="dashboard-receber-recebido-mes" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
+                                <div id="dashboard-receber-vencidos-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-orange-500"> warning </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Títulos Vencidos</p>
+                                    </div>
+                                    <p id="dashboard-receber-vencidos" class="text-orange-600 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Movimentações View (Hidden) -->
+                        <div id="financeiro-movimentacoes-view" class="dashboard-financeiro-view hidden">
+                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-red-500"> arrow_circle_up </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Saídas</p>
+                                    </div>
+                                    <p id="dashboard-mov-saidas" class="text-red-600 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
+                                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-green-500"> arrow_circle_down </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Entradas</p>
+                                    </div>
+                                    <p id="dashboard-mov-entradas" class="text-green-600 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
+                                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-gray-500"> account_balance </span>
+                                        <p class="text-gray-800 text-base font-medium leading-normal">Saldo em Conta</p>
+                                    </div>
+                                    <p id="dashboard-mov-saldo" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3121,45 +3220,10 @@
 
         // --- Listener for Despesas Table ---
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
-        despesasUnsubscribe = onSnapshot(despesasQuery, async (querySnapshot) => {
-            allDespesas = querySnapshot.docs; // Store all documents
-            applyFiltersAndRender(); // Apply current filters and render for the list
-
-            // New logic to fetch payments and calculate Total Pago no Mês
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            let totalPagoNoMes = 0;
-
-            // This is inefficient (N+1 problem) but necessary for accuracy without schema changes.
-            const paymentPromises = allDespesas.map(despesaDoc => {
-                const pagamentosRef = collection(db, 'users', userId, 'despesas', despesaDoc.id, 'pagamentos');
-                return getDocs(pagamentosRef);
-            });
-
-            const paymentSnapshots = await Promise.all(paymentPromises);
-
-            paymentSnapshots.forEach(paymentSnapshot => {
-                paymentSnapshot.forEach(paymentDoc => {
-                    const paymentData = paymentDoc.data();
-                    if (paymentData.dataTransacao) {
-                        const paymentDate = new Date(paymentData.dataTransacao + 'T00:00:00');
-                        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-                            if (paymentData.tipoTransacao === 'Pagamento') {
-                                totalPagoNoMes += paymentData.valorPrincipal || 0;
-                            } else if (paymentData.tipoTransacao === 'Estorno') {
-                                totalPagoNoMes -= paymentData.valorPrincipal || 0;
-                            }
-                        }
-                    }
-                });
-            });
-
-            updateSummaryCards(allDespesas, totalPagoNoMes);
-            updateDashboardIndicators(allDespesas, totalPagoNoMes);
-            if (calendarInstance) {
-                processAndRenderCalendarEvents(allDespesas);
-            }
+        despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
+            allDespesas = querySnapshot.docs; // Store all documents for filtering
+            applyFiltersAndRender(); // Render the table on the Contas a Pagar page
+            updateAllDashboardViews(); // Update all dashboard cards across all views
         });
 
         // --- Listener for Receitas Table ---
@@ -3167,7 +3231,7 @@
         receitasUnsubscribe = onSnapshot(receitasQuery, (querySnapshot) => {
             allReceitas = querySnapshot.docs;
             applyReceitasFiltersAndRender();
-            // TODO: Update summary cards and dashboard for receivables
+            updateAllDashboardViews(); // Update all dashboard cards across all views
         });
 
         // --- Listeners for Modal Dropdowns ---
@@ -3304,12 +3368,136 @@
     }
 
     function updateDashboardIndicators(docs, totalPagoNoMes) {
-        // This function can now simply call updateSummaryCards and map the values,
-        // as the logic is identical.
-        updateSummaryCards(docs, totalPagoNoMes); // Recalculates card values
-        document.getElementById('dashboard-total-a-pagar').textContent = document.getElementById('total-a-pagar-card').textContent;
-        document.getElementById('dashboard-total-pago').textContent = document.getElementById('total-pago-card').textContent;
-        document.getElementById('dashboard-contas-vencidas').textContent = document.getElementById('contas-vencidas-card').textContent;
+        // This function is being deprecated in favor of updateAllDashboardViews
+        // but kept for now to avoid breaking other parts of the app during refactoring.
+        // The main call is now updateAllDashboardViews() in the listeners.
+    }
+
+    async function updateAllDashboardViews() {
+        try {
+            if (!effectiveUserId) return;
+
+            const despesasQuery = query(collection(db, 'users', effectiveUserId, 'despesas'));
+            const receitasQuery = query(collection(db, 'users', effectiveUserId, 'receitas'));
+
+            const [despesasSnap, receitasSnap] = await Promise.all([
+                getDocs(despesasQuery),
+                getDocs(receitasQuery)
+            ]);
+
+            const allDespesas = despesasSnap.docs;
+            const allReceitas = receitasSnap.docs;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            // --- Calculation Variables ---
+            let provisaoAPagar = 0, provisaoAReceber = 0;
+            let pagarTotalMes = 0, pagarPagoMes = 0, pagarVencidas = 0;
+            let receberTotalMes = 0, receberRecebidoMes = 0, receberVencidos = 0;
+            let movSaidas = 0, movEntradas = 0;
+
+            // --- Process Despesas ---
+            const pagamentosPromises = allDespesas.map(doc => getDocs(collection(doc.ref, 'pagamentos')));
+            const pagamentosSnapshots = await Promise.all(pagamentosPromises);
+
+            allDespesas.forEach((doc, index) => {
+                const data = doc.data();
+                const status = data.status || 'Pendente';
+                const saldo = data.valorSaldo ?? 0;
+                const vencimentoStr = data.vencimento;
+
+                if (vencimentoStr) {
+                    const vencimento = new Date(vencimentoStr + 'T00:00:00');
+                    if (!isNaN(vencimento.getTime())) {
+                        if (status !== 'Pago') {
+                            provisaoAPagar += saldo;
+                            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear) {
+                                pagarTotalMes += saldo;
+                            }
+                            if (vencimento < today) {
+                                pagarVencidas += saldo;
+                            }
+                        }
+                    }
+                }
+
+                pagamentosSnapshots[index].forEach(pagoDoc => {
+                    const pagoData = pagoDoc.data();
+                    const transacaoDateStr = pagoData.dataTransacao;
+                    if (pagoData.tipoTransacao === 'Pagamento' && transacaoDateStr) {
+                        const transacaoDate = new Date(transacaoDateStr + 'T00:00:00');
+                        if (!isNaN(transacaoDate.getTime())) {
+                            if (transacaoDate.getMonth() === currentMonth && transacaoDate.getFullYear() === currentYear) {
+                                pagarPagoMes += pagoData.valorPrincipal || 0;
+                            }
+                            movSaidas += pagoData.valorPrincipal || 0;
+                        }
+                    }
+                });
+            });
+
+            // --- Process Receitas ---
+            const recebimentosPromises = allReceitas.map(doc => getDocs(collection(doc.ref, 'recebimentos')));
+            const recebimentosSnapshots = await Promise.all(recebimentosPromises);
+
+            allReceitas.forEach((doc, index) => {
+                const data = doc.data();
+                const status = data.status || 'Pendente';
+                const saldo = data.saldoPendente ?? 0;
+                const vencimentoStr = data.dataVencimento || data.vencimento;
+
+                if (vencimentoStr) {
+                    const vencimento = new Date(vencimentoStr + 'T00:00:00');
+                    if (!isNaN(vencimento.getTime())) {
+                         if (status !== 'Recebido') {
+                            provisaoAReceber += saldo;
+                            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear) {
+                                receberTotalMes += saldo;
+                            }
+                            if (vencimento < today) {
+                                receberVencidos += saldo;
+                            }
+                        }
+                    }
+                }
+
+                recebimentosSnapshots[index].forEach(recebidoDoc => {
+                    const recebidoData = recebidoDoc.data();
+                    const transacaoDateStr = recebidoData.dataTransacao;
+                    if (recebidoData.tipoTransacao === 'Recebimento' && transacaoDateStr) {
+                        const transacaoDate = new Date(transacaoDateStr + 'T00:00:00');
+                         if (!isNaN(transacaoDate.getTime())) {
+                            if (transacaoDate.getMonth() === currentMonth && transacaoDate.getFullYear() === currentYear) {
+                               receberRecebidoMes += recebidoData.valorPrincipal || 0;
+                            }
+                            movEntradas += recebidoData.valorPrincipal || 0;
+                        }
+                    }
+                });
+            });
+
+            // --- Update UI ---
+            document.getElementById('dashboard-provisao-a-pagar').textContent = formatCurrency(provisaoAPagar);
+            document.getElementById('dashboard-provisao-a-receber').textContent = formatCurrency(provisaoAReceber);
+            document.getElementById('dashboard-provisao-saldo').textContent = formatCurrency(0);
+            document.getElementById('dashboard-pagar-total-mes').textContent = formatCurrency(pagarTotalMes);
+            document.getElementById('dashboard-pagar-pago-mes').textContent = formatCurrency(pagarPagoMes);
+            document.getElementById('dashboard-pagar-vencidas').textContent = formatCurrency(pagarVencidas);
+            document.getElementById('dashboard-receber-total-mes').textContent = formatCurrency(receberTotalMes);
+            document.getElementById('dashboard-receber-recebido-mes').textContent = formatCurrency(receberRecebidoMes);
+            document.getElementById('dashboard-receber-vencidos').textContent = formatCurrency(receberVencidos);
+            document.getElementById('total-a-receber-card').textContent = formatCurrency(receberTotalMes);
+            document.getElementById('total-recebido-card').textContent = formatCurrency(receberRecebidoMes);
+            document.getElementById('titulos-vencidos-card').textContent = formatCurrency(receberVencidos);
+            document.getElementById('dashboard-mov-saidas').textContent = formatCurrency(movSaidas);
+            document.getElementById('dashboard-mov-entradas').textContent = formatCurrency(movEntradas);
+            document.getElementById('dashboard-mov-saldo').textContent = formatCurrency(0);
+        } catch (error) {
+            console.error("Error updating all dashboard views:", error);
+        }
     }
 
 
@@ -5897,11 +6085,21 @@
     if(closeVisualizarReceitaModalBtn) closeVisualizarReceitaModalBtn.addEventListener('click', () => visualizarReceitaModal.classList.add('hidden'));
     if(okVisualizarReceitaModalBtn) okVisualizarReceitaModalBtn.addEventListener('click', () => visualizarReceitaModal.classList.add('hidden'));
 
-    function openReceberModal(receitaIds) {
+    async function openReceberModal(receitaIds) {
         if (!receberModal || receitaIds.length === 0) return;
         receberForm.reset();
         const userId = effectiveUserId;
         if (!userId) return;
+
+        // Fetch bank accounts to populate the dropdown
+        try {
+            const contasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
+            const contaSnap = await getDocs(contasQuery);
+            populateDropdown(receberContaEntradaSelect, contaSnap.docs);
+        } catch (error) {
+            console.error("Error fetching bank accounts for modal:", error);
+        }
+
 
         document.getElementById('receber-receita-id').value = receitaIds.join(',');
 
@@ -6225,51 +6423,106 @@
         populateEmpresaDropdown(loginEmpresaSelect, querySnapshot.docs);
     });
 
+    // --- Lógica do Seletor de Visão do Dashboard Financeiro ---
+    const dashboardFinanceiroSelector = document.getElementById('dashboard-financeiro-selector');
+    if (dashboardFinanceiroSelector) {
+        dashboardFinanceiroSelector.addEventListener('change', (e) => {
+            const selectedValue = e.target.value;
+            document.querySelectorAll('.dashboard-financeiro-view').forEach(view => {
+                const viewIdSuffix = view.id.replace('financeiro-', '').replace('-view', '').replace('-', '_');
+                if (viewIdSuffix === selectedValue) {
+                    view.classList.remove('hidden');
+                } else {
+                    view.classList.add('hidden');
+                }
+            });
+        });
+    }
+
     // --- Lógica dos Filtros do Dashboard ---
     const cardMappings = [
         // Contas a Pagar Page
-        { id: 'total-a-pagar-card-container', type: 'aPagarMes' },
-        { id: 'total-pago-card-container', type: 'pagoMes' },
-        { id: 'contas-vencidas-card-container', type: 'vencidas' },
-        // Main Dashboard Page
-        { id: 'dashboard-total-a-pagar-container', type: 'aPagarMes' },
-        { id: 'dashboard-total-pago-container', type: 'pagoMes' },
-        { id: 'dashboard-contas-vencidas-container', type: 'vencidas' }
+        { id: 'total-a-pagar-card-container', type: 'aPagarMes', target: 'contas-a-pagar-page' },
+        { id: 'total-pago-card-container', type: 'pagoMes', target: 'contas-a-pagar-page' },
+        { id: 'contas-vencidas-card-container', type: 'vencidas', target: 'contas-a-pagar-page' },
+        // Main Dashboard Page - Contas a Pagar
+        { id: 'dashboard-total-a-pagar-container', type: 'aPagarMes', target: 'contas-a-pagar-page' },
+        { id: 'dashboard-total-pago-container', type: 'pagoMes', target: 'contas-a-pagar-page' },
+        { id: 'dashboard-contas-vencidas-container', type: 'vencidas', target: 'contas-a-pagar-page' },
+        // Contas a Receber Page
+        { id: 'total-a-receber-card-container', type: 'aReceberMes', target: 'contas-a-receber-page' },
+        { id: 'total-recebido-card-container', type: 'recebidoMes', target: 'contas-a-receber-page' },
+        { id: 'titulos-vencidos-card-container', type: 'titulosVencidos', target: 'contas-a-receber-page' },
+        // Main Dashboard Page - Contas a Receber
+        { id: 'dashboard-total-a-receber-container', type: 'aReceberMes', target: 'contas-a-receber-page' },
+        { id: 'dashboard-total-recebido-container', type: 'recebidoMes', target: 'contas-a-receber-page' },
+        { id: 'dashboard-titulos-vencidos-container', type: 'titulosVencidos', target: 'contas-a-receber-page' }
     ];
 
     cardMappings.forEach(mapping => {
         const card = document.getElementById(mapping.id);
         if (card) {
             card.addEventListener('click', () => {
-                // Clear existing filters first
-                searchInput.value = '';
-                startDateInput.value = '';
-                endDateInput.value = '';
-
                 const today = new Date();
                 const year = today.getFullYear();
                 const month = today.getMonth();
 
+                // Reset filters for the target page
+                if (mapping.target === 'contas-a-pagar-page') {
+                    searchInput.value = '';
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                } else if (mapping.target === 'contas-a-receber-page') {
+                    searchInputReceber.value = '';
+                    startDateInputReceber.value = '';
+                    endDateInputReceber.value = '';
+                }
+
+
                 switch (mapping.type) {
+                    // Contas a Pagar cases
                     case 'aPagarMes':
                         activeStatusFilters = new Set(['Pendente', 'Vencido', 'Pago Parcialmente']);
                         startDateInput.value = new Date(year, month, 1).toISOString().split('T')[0];
                         endDateInput.value = new Date(year, month + 1, 0).toISOString().split('T')[0];
+                        updateStatusFilterUI();
+                        applyFiltersAndRender();
                         break;
                     case 'pagoMes':
                         activeStatusFilters = new Set(['Pago']);
-                        startDateInput.value = new Date(year, month, 1).toISOString().split('T')[0];
-                        endDateInput.value = new Date(year, month + 1, 0).toISOString().split('T')[0];
+                        // We don't set a date range here, allowing the user to see all paid items
+                        // The summary card is for the month, but the click shows all.
+                        updateStatusFilterUI();
+                        applyFiltersAndRender();
                         break;
                     case 'vencidas':
                         activeStatusFilters = new Set(['Vencido']);
-                        // No date filter for all overdue items
+                        updateStatusFilterUI();
+                        applyFiltersAndRender();
+                        break;
+
+                    // Contas a Receber cases
+                    case 'aReceberMes':
+                        activeReceitaStatusFilters = new Set(['Pendente', 'Vencido', 'Recebido Parcialmente']);
+                        startDateInputReceber.value = new Date(year, month, 1).toISOString().split('T')[0];
+                        endDateInputReceber.value = new Date(year, month + 1, 0).toISOString().split('T')[0];
+                        updateReceitaStatusFilterUI();
+                        applyReceitasFiltersAndRender();
+                        break;
+                    case 'recebidoMes':
+                        activeReceitaStatusFilters = new Set(['Recebido']);
+                        // Similarly, show all received items, not just the month's
+                        updateReceitaStatusFilterUI();
+                        applyReceitasFiltersAndRender();
+                        break;
+                    case 'titulosVencidos':
+                        activeReceitaStatusFilters = new Set(['Vencido']);
+                        updateReceitaStatusFilterUI();
+                        applyReceitasFiltersAndRender();
                         break;
                 }
 
-                showView('contas-a-pagar-page');
-                updateStatusFilterUI();
-                applyFiltersAndRender();
+                showView(mapping.target);
             });
         }
     });
