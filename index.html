@@ -6085,11 +6085,21 @@
     if(closeVisualizarReceitaModalBtn) closeVisualizarReceitaModalBtn.addEventListener('click', () => visualizarReceitaModal.classList.add('hidden'));
     if(okVisualizarReceitaModalBtn) okVisualizarReceitaModalBtn.addEventListener('click', () => visualizarReceitaModal.classList.add('hidden'));
 
-    function openReceberModal(receitaIds) {
+    async function openReceberModal(receitaIds) {
         if (!receberModal || receitaIds.length === 0) return;
         receberForm.reset();
         const userId = effectiveUserId;
         if (!userId) return;
+
+        // Fetch bank accounts to populate the dropdown
+        try {
+            const contasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
+            const contaSnap = await getDocs(contasQuery);
+            populateDropdown(receberContaEntradaSelect, contaSnap.docs);
+        } catch (error) {
+            console.error("Error fetching bank accounts for modal:", error);
+        }
+
 
         document.getElementById('receber-receita-id').value = receitaIds.join(',');
 
