@@ -3440,13 +3440,17 @@
         if (receitasUnsubscribe) receitasUnsubscribe();
     }
 
-    function populatePlanoContasDropdown(selectElement, contas, aplicavelEmContext) {
+    function populatePlanoContasDropdown(selectElement, contas, aplicavelEmContext, allowedTipos) {
         if (!selectElement) return;
         const currentVal = selectElement.value;
         selectElement.innerHTML = '<option value="">Selecione uma categoria</option>';
 
         contas
-            .filter(conta => conta.aceitaLancamento && conta.aplicavelEm.includes(aplicavelEmContext))
+            .filter(conta =>
+                conta.aceitaLancamento &&
+                conta.aplicavelEm.includes(aplicavelEmContext) &&
+                allowedTipos.includes(conta.tipo)
+            )
             .sort((a, b) => a.codigo.localeCompare(b.codigo))
             .forEach(conta => {
                 const option = document.createElement('option');
@@ -5360,7 +5364,7 @@
             const contasQuery = query(collection(db, 'users', effectiveUserId, 'planosDeContas'));
             const contasSnap = await getDocs(contasQuery);
             const allContas = contasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            populatePlanoContasDropdown(despesaCategoriaSelect, allContas, 'pagamentos');
+            populatePlanoContasDropdown(despesaCategoriaSelect, allContas, 'pagamentos', ['despesa', 'custo', 'investimento']);
 
             if (!isEdit) {
                 despesaForm.reset();
@@ -6472,7 +6476,7 @@
         const allContas = categoriaSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         populateDropdown(receitaClienteSelect, clienteSnap.docs, 'clientes');
-        populatePlanoContasDropdown(receitaCategoriaSelect, allContas, 'recebimentos');
+        populatePlanoContasDropdown(receitaCategoriaSelect, allContas, 'recebimentos', ['receita']);
         populateDropdown(recebimentoContaSelect, contaSnap.docs);
         populateDropdown(receberContaEntradaSelect, contaSnap.docs);
 
