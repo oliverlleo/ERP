@@ -1494,6 +1494,10 @@
                           <p class="text-sm text-gray-500">Total já Pago</p>
                           <p id="view-despesa-total-pago" class="text-xl font-bold text-green-600"></p>
                       </div>
+                       <div>
+                          <p class="text-sm text-gray-500">Total de Descontos</p>
+                          <p id="view-despesa-total-descontos" class="text-lg font-medium text-gray-800"></p>
+                      </div>
                       <div>
                           <p class="text-sm text-gray-500">Saldo Devedor</p>
                           <p id="view-despesa-saldo-devedor" class="text-xl font-bold text-red-600"></p>
@@ -4334,12 +4338,14 @@
             const historyContainer = document.getElementById('view-historico-pagamentos-container');
             const historyBody = document.getElementById('view-historico-pagamentos-body');
             historyBody.innerHTML = ''; // Clear previous history
+            let totalDescontos = 0; // Initialize total discounts
 
             if (pagamentosSnap.empty) {
                 historyContainer.classList.add('hidden');
             } else {
                 pagamentosSnap.forEach(pagamentoDoc => {
                     const pagData = pagamentoDoc.data();
+                    totalDescontos += pagData.descontos || 0; // Accumulate discounts
                     const tr = historyBody.insertRow();
                     tr.innerHTML = `
                         <td class="px-4 py-3 text-sm text-gray-700">${formatDate(pagData.dataPagamento)}</td>
@@ -4351,6 +4357,9 @@
                 });
                 historyContainer.classList.remove('hidden');
             }
+
+            // Update the total discounts display
+            document.getElementById('view-despesa-total-descontos').textContent = formatCurrency(totalDescontos);
 
             visualizarDespesaModal.classList.remove('hidden');
 
@@ -4605,6 +4614,11 @@
                     // é menor que o saldo devedor? Se for, é parcial.
                     // O valorFinalPago (que inclui descontos) é usado para o registro.
                     if (valorAPagar < saldoDevedorAtual) {
+                        const descontos = parseFloat(document.getElementById('pagar-descontos').value) || 0;
+                        if (descontos > 0) {
+                            alert("Descontos não são permitidos em pagamentos parciais. Por favor, ajuste o valor ou remova o desconto.");
+                            return; // Stop execution
+                        }
                         // É um pagamento parcial.
                         abrirModalConfirmacaoParcial(saldoDevedorAtual, valorFinalPago, despesaId);
                     } else {
