@@ -57,6 +57,7 @@
   bg-green-100 text-green-800
   bg-yellow-100 text-yellow-800
   bg-red-100 text-red-800
+  bg-blue-100 text-blue-800
   -->
 
   <!-- Container da Tela de Login -->
@@ -1141,6 +1142,7 @@
                                     <select id="status-filter" class="form-select mt-1 block w-full">
                                         <option value="todas">Todas</option>
                                         <option value="pendente">Pendente</option>
+                                        <option value="pago_parcialmente">Pago Parcialmente</option>
                                         <option value="pago">Pago</option>
                                         <option value="vencido">Vencido</option>
                                     </select>
@@ -1368,7 +1370,7 @@
 
                   <div class="flex items-center justify-end pt-4 border-t space-x-4">
                       <button type="button" id="cancel-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
-                      <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
+                      <button type="button" id="salvar-despesa-btn" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
                   </div>
               </form>
           </div>
@@ -1389,12 +1391,16 @@
                   <input type="hidden" id="pagar-despesa-id">
                   <div class="p-4 border rounded-md space-y-4">
                       <h4 class="text-lg font-semibold text-gray-800 mb-4">Detalhes do Pagamento</h4>
+                      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p class="text-sm text-gray-600">Saldo Devedor Total</p>
+                          <p id="pagar-saldo-devedor" class="text-2xl font-bold text-blue-700">R$ 0,00</p>
+                      </div>
                       <div>
                           <label for="pagar-data" class="block text-sm font-medium text-gray-700">Data do Pagamento</label>
                           <input type="date" id="pagar-data" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                       </div>
                       <div>
-                          <label for="pagar-valor" class="block text-sm font-medium text-gray-700">Valor Efetivamente Pago (R$)</label>
+                          <label for="pagar-valor" class="block text-sm font-medium text-gray-700">Valor a Pagar (R$)</label>
                           <input type="number" id="pagar-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
                       </div>
                       <div>
@@ -1471,6 +1477,27 @@
                         <div><p class="text-sm text-gray-500">Criado por</p><p id="view-despesa-criado-por" class="text-base font-medium text-gray-800"></p></div>
                         <div><p class="text-sm text-gray-500">Data de Criação</p><p id="view-despesa-criado-em" class="text-base font-medium text-gray-800"></p></div>
                    </div>
+
+                   <!-- Histórico de Pagamentos -->
+                   <div id="view-pagamento-history-section" class="pt-4">
+                       <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Histórico de Pagamentos</h4>
+                       <div class="mt-4 overflow-x-auto">
+                           <table class="min-w-full divide-y divide-gray-200">
+                               <thead class="bg-gray-50">
+                                   <tr>
+                                       <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                       <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor Pago</th>
+                                       <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Conta Saída</th>
+                                       <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Juros/Multa</th>
+                                       <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descontos</th>
+                                   </tr>
+                               </thead>
+                               <tbody id="view-pagamentos-table-body" class="bg-white divide-y divide-gray-200">
+                                   <!-- Linhas do histórico serão inseridas aqui -->
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
               </div>
               <!-- Coluna 2: Status e Valores -->
               <div class="space-y-4 bg-gray-50 p-4 rounded-lg">
@@ -1478,17 +1505,15 @@
                   <div><p class="text-sm text-gray-500">Número do Documento</p><p id="view-despesa-numero-documento" class="text-base font-medium text-gray-800"></p></div>
                   <div>
                       <p class="text-sm text-gray-500">Valor Original</p>
-                      <p id="view-despesa-valor" class="text-2xl font-bold text-blue-600"></p>
+                      <p id="view-despesa-valor" class="text-xl font-bold text-gray-700"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Saldo Devedor</p>
+                      <p id="view-despesa-saldo" class="text-2xl font-bold text-red-600"></p>
                   </div>
                    <div>
                       <p class="text-sm text-gray-500">Status</p>
                       <p id="view-despesa-status" class="text-base font-medium"></p>
-                  </div>
-                  <div id="view-pagamento-info" class="hidden space-y-4 border-t pt-4">
-                      <h5 class="text-md font-semibold text-gray-700">Informações do Pagamento</h5>
-                      <div><p class="text-sm text-gray-500">Data do Pagamento</p><p id="view-despesa-data-pagamento" class="text-base font-medium text-gray-800"></p></div>
-                      <div><p class="text-sm text-gray-500">Valor Pago</p><p id="view-despesa-valor-pago" class="text-base font-bold text-green-600"></p></div>
-                      <div><p class="text-sm text-gray-500">Conta de Saída</p><p id="view-despesa-conta-saida" class="text-base font-medium text-gray-800"></p></div>
                   </div>
               </div>
           </div>
@@ -1688,6 +1713,7 @@
     const closeModalBtn = document.getElementById('close-modal-btn');
     const cancelModalBtn = document.getElementById('cancel-modal-btn');
     const despesaForm = document.getElementById('despesa-form');
+    const salvarDespesaBtn = document.getElementById('salvar-despesa-btn');
     const marcarPagoCheckbox = document.getElementById('marcar-pago-checkbox');
     const pagamentoInfo = document.getElementById('pagamento-info');
     const favorecidoTipoSelect = document.getElementById('favorecido-tipo');
@@ -1839,23 +1865,29 @@
         const events = docs.map(doc => {
             const data = doc.data();
             const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const status = data.status || (data.pago ? 'Pago' : 'Pendente');
 
-            let eventColor = '#f59e0b'; // Amarelo para Pendente
-            if (data.pago) {
-                eventColor = '#16a34a'; // Verde para Pago
+            let eventColor = '#f59e0b'; // Amarelo (Pendente)
+            let title = `${data.favorecidoNome}: ${formatCurrency(data.valor)}`;
+
+            if (status === 'Pago') {
+                eventColor = '#16a34a'; // Verde
+            } else if (status === 'Pago Parcialmente') {
+                eventColor = '#3b82f6'; // Azul
+                const saldo = data.valorSaldo ?? 0;
+                title = `${data.favorecidoNome}: ${formatCurrency(saldo)} restante`;
             } else if (vencimento < today) {
-                eventColor = '#dc2626'; // Vermelho para Vencido
+                eventColor = '#dc2626'; // Vermelho (Vencido)
             }
+
 
             return {
                 id: doc.id,
-                title: `${data.favorecidoNome}: ${formatCurrency(data.valor)}`,
+                title: title,
                 start: data.vencimento,
                 backgroundColor: eventColor,
                 borderColor: eventColor,
-                extendedProps: {
-                    status: data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente')
-                }
+                extendedProps: { status: status.toLowerCase().replace(' ', '_') }
             };
         });
 
@@ -1864,6 +1896,9 @@
     }
 
     function formatCurrency(value) {
+        if (typeof value !== 'number') {
+            return 'R$ 0,00';
+        }
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
@@ -2532,34 +2567,36 @@
         const currentYear = today.getFullYear();
 
         let totalAPagar = 0;
-        let totalPago = 0;
+        let totalPagoNoMes = 0;
         let contasVencidas = 0;
 
         docs.forEach(doc => {
             const data = doc.data();
             const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const saldoDevedor = data.valorSaldo ?? (data.pago ? 0 : data.valor);
 
-            // Total a Pagar no Mês
-            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && !data.pago) {
-                totalAPagar += data.valor;
+            // Total a Pagar no Mês (based on outstanding balance of items due this month)
+            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && saldoDevedor > 0) {
+                totalAPagar += saldoDevedor;
             }
 
-            // Total Pago no Mês
-            if (data.pago && data.dataPagamento) {
+            // Total Pago no Mês (based on when the status changed to 'Pago')
+            if (data.status === 'Pago' && data.dataPagamento) {
                 const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
                 if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    totalPago += data.valorPago || data.valor;
+                    // Sum the total original value of the expense, as 'valorPago' might not exist on older data
+                    totalPagoNoMes += data.valor;
                 }
             }
 
-            // Contas Vencidas
-            if (!data.pago && vencimento < today) {
-                contasVencidas += data.valor;
+            // Contas Vencidas (based on outstanding balance of items past due date)
+            if (vencimento < today && saldoDevedor > 0) {
+                contasVencidas += saldoDevedor;
             }
         });
 
         document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagar);
-        document.getElementById('total-pago-card').textContent = formatCurrency(totalPago);
+        document.getElementById('total-pago-card').textContent = formatCurrency(totalPagoNoMes);
         document.getElementById('contas-vencidas-card').textContent = formatCurrency(contasVencidas);
     }
 
@@ -2569,29 +2606,30 @@
         const currentYear = today.getFullYear();
 
         let totalAPagar = 0;
-        let totalPago = 0;
+        let totalPagoNoMes = 0;
         let contasVencidas = 0;
 
         docs.forEach(doc => {
             const data = doc.data();
             const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const saldoDevedor = data.valorSaldo ?? (data.pago ? 0 : data.valor);
 
             // Total a Pagar no Mês
-            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && !data.pago) {
-                totalAPagar += data.valor;
+            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && saldoDevedor > 0) {
+                totalAPagar += saldoDevedor;
             }
 
             // Total Pago no Mês
-            if (data.pago && data.dataPagamento) {
+            if (data.status === 'Pago' && data.dataPagamento) {
                 const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
                 if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    totalPago += data.valorPago || data.valor;
+                    totalPagoNoMes += data.valor;
                 }
             }
 
             // Contas Vencidas
-            if (!data.pago && vencimento < today) {
-                contasVencidas += data.valor;
+            if (vencimento < today && saldoDevedor > 0) {
+                contasVencidas += saldoDevedor;
             }
         });
 
@@ -2601,7 +2639,7 @@
         const dashContasVencidasEl = document.getElementById('dashboard-contas-vencidas');
 
         if (dashTotalAPagarEl) dashTotalAPagarEl.textContent = formatCurrency(totalAPagar);
-        if (dashTotalPagoEl) dashTotalPagoEl.textContent = formatCurrency(totalPago);
+        if (dashTotalPagoEl) dashTotalPagoEl.textContent = formatCurrency(totalPagoNoMes);
         if (dashContasVencidasEl) dashContasVencidasEl.textContent = formatCurrency(contasVencidas);
     }
 
@@ -3847,15 +3885,29 @@
             const data = doc.data();
 
             // Paid filter (primary filter)
-            if (!includePaid && data.pago) {
+            if (!includePaid && (data.status === 'Pago' || data.pago === true)) {
                 return false;
             }
 
             // Status filter
             let statusMatch = true;
             if (status !== 'todas') {
-                const docStatus = data.pago ? 'pago' : (new Date(data.vencimento + 'T00:00:00') < today ? 'vencido' : 'pendente');
-                if (status !== docStatus) statusMatch = false;
+                const vencimento = new Date(data.vencimento + 'T00:00:00');
+                let docStatus;
+
+                if (data.status === 'Pago' || data.pago === true) {
+                    docStatus = 'pago';
+                } else if (data.status === 'Pago Parcialmente') {
+                    docStatus = 'pago_parcialmente';
+                } else if (vencimento < today) {
+                    docStatus = 'vencido';
+                } else { // Pendente or old unpaid
+                    docStatus = 'pendente';
+                }
+
+                if (status !== docStatus) {
+                    statusMatch = false;
+                }
             }
 
             // Date filter
@@ -3905,702 +3957,22 @@
         if (docs.length === 0) {
             const tr = despesasTableBody.insertRow();
             const td = tr.insertCell();
-            td.colSpan = 8; // Adjusted for the new column
+            td.colSpan = 8;
             td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
             td.textContent = 'Nenhuma despesa encontrada.';
             return;
         }
 
+        const statusInfo = {
+            'Pago': { text: 'Pago', color: 'green' },
+            'Pago Parcialmente': { text: 'Pago Parcialmente', color: 'blue' },
+            'Pendente': { text: 'Pendente', color: 'yellow' },
+            'Vencido': { text: 'Vencido', color: 'red' }
+        };
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         docs.forEach(doc => {
             const data = doc.data();
             const tr = despesasTableBody.insertRow();
             tr.setAttribute('data-id', doc.id);
-
-            const statusInfo = {
-                pago: { text: 'Pago', color: 'green', icon: '🟢' },
-                pendente: { text: 'Pendente', color: 'yellow', icon: '🟡' },
-                vencido: { text: 'Vencido', color: 'red', icon: '🔴' }
-            };
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
-            const status = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-            const currentStatus = statusInfo[status];
-
-            const valorPagoHtml = data.pago ? formatCurrency(data.valorPago || 0) : '—';
-
-            tr.innerHTML = `
-                <td class="p-4">
-                    <div class="flex items-center">
-                        <input type="checkbox" class="despesa-checkbox h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded" data-id="${doc.id}">
-                    </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.numeroDocumento || ''}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(data.valor)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${valorPagoHtml}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${currentStatus.color}-100 text-${currentStatus.color}-800">
-                        ${currentStatus.text}
-                    </span>
-                </td>
-            `;
-        });
-    }
-
-    function setupDropdown(button, dropdown) {
-        if(button) {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-            });
-        }
-    }
-
-    function getSelectedDespesaIds() {
-        return Array.from(despesasTableBody.querySelectorAll('.despesa-checkbox:checked')).map(cb => cb.dataset.id);
-    }
-
-    function updateActionButtonsState() {
-        const selectedIds = getSelectedDespesaIds();
-        const selectedCount = selectedIds.length;
-
-        // Enable/disable 'Editar' and 'Visualizar' buttons
-        editarSelecionadaBtn.disabled = selectedCount !== 1;
-        visualizarSelecionadaBtn.disabled = selectedCount !== 1;
-
-        // Enable/disable 'Excluir' button
-        excluirSelecionadasBtn.disabled = selectedCount === 0;
-
-        // Enable/disable 'Pagar' button
-        let canPay = false;
-        if (selectedCount > 0) {
-            // Check if ALL selected items are not paid
-            canPay = selectedIds.every(id => {
-                const despesaDoc = allDespesas.find(d => d.id === id);
-                return despesaDoc && !despesaDoc.data().pago;
-            });
-        }
-        pagarSelecionadasBtn.disabled = !canPay;
-    }
-
-    if (despesasTableBody) {
-        despesasTableBody.addEventListener('change', e => {
-            if (e.target.classList.contains('despesa-checkbox')) {
-                updateActionButtonsState();
-            }
-        });
-    }
-
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', () => {
-            despesasTableBody.querySelectorAll('.despesa-checkbox').forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-            });
-            updateActionButtonsState();
-        });
-    }
-
-    if (editarSelecionadaBtn) {
-        editarSelecionadaBtn.addEventListener('click', async () => {
-            const selectedIds = getSelectedDespesaIds();
-            if (selectedIds.length !== 1) return;
-            const id = selectedIds[0];
-            const userId = effectiveUserId;
-            if (!userId) {
-                console.error("Ação de editar falhou: ID de usuário efetivo não encontrado.");
-                return;
-            }
-            try {
-                const docRef = doc(db, 'users', userId, 'despesas', id);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('despesa-id').value = docSnap.id;
-                    document.getElementById('despesa-descricao').value = data.descricao;
-                    document.getElementById('despesa-numero-documento').value = data.numeroDocumento || '';
-                    if (data.favorecidoTipo && data.favorecidoId) {
-                        favorecidoTipoSelect.value = data.favorecidoTipo;
-                        favorecidoTipoSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => {
-                            favorecidoNomeSelect.value = data.favorecidoId;
-                        }, 150);
-                    } else if (data.fornecedorId) { // Legacy fallback
-                        favorecidoTipoSelect.value = 'fornecedores';
-                        favorecidoTipoSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => {
-                            favorecidoNomeSelect.value = data.fornecedorId;
-                        }, 150);
-                    }
-                    document.getElementById('despesa-categoria').value = data.categoriaId;
-                    document.getElementById('despesa-valor').value = data.valor;
-                    document.getElementById('despesa-emissao').value = data.emissao || '';
-                    document.getElementById('despesa-competencia').value = data.competencia;
-                    document.getElementById('despesa-vencimento').value = data.vencimento;
-                    document.getElementById('despesa-obs').value = data.obs || '';
-                    const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
-                    pagoCheckbox.checked = data.pago;
-                    const pagamentoInfoDiv = document.getElementById('pagamento-info');
-                    if (data.pago) {
-                        pagamentoInfoDiv.classList.remove('hidden');
-                        document.getElementById('pagamento-data').value = data.dataPagamento || '';
-                        document.getElementById('pagamento-valor').value = data.valorPago || '';
-                        document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
-                    } else {
-                        pagamentoInfoDiv.classList.add('hidden');
-                    }
-                    openModal(true);
-                }
-            } catch (error) {
-                console.error("Error getting document:", error);
-            }
-        });
-    }
-
-    if (pagarSelecionadasBtn) {
-        pagarSelecionadasBtn.addEventListener('click', () => {
-            const selectedIds = getSelectedDespesaIds();
-            if (selectedIds.length === 0) return;
-            // The modal will be adapted to handle multiple payments if needed,
-            // but for now, it opens with the details of the first selected item.
-            // A more advanced implementation could show a summary.
-            openPagarModal(selectedIds); // Pass all selected IDs
-        });
-    }
-
-    if (excluirSelecionadasBtn) {
-        excluirSelecionadasBtn.addEventListener('click', () => {
-            const selectedIds = getSelectedDespesaIds();
-            if (selectedIds.length === 0) return;
-            if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
-                const userId = effectiveUserId;
-                if (!userId) {
-                    console.error("Ação de excluir falhou: ID de usuário efetivo não encontrado.");
-                    return;
-                }
-                selectedIds.forEach(id => {
-                    deleteDoc(doc(db, 'users', userId, 'despesas', id));
-                });
-                // Reset selection
-                selectAllCheckbox.checked = false;
-                updateActionButtonsState();
-            }
-        });
-    }
-
-    setupDropdown(financeiroNavLink, financeiroDropdown);
-    setupDropdown(financeiroNavLinkCadastros, financeiroDropdownCadastros);
-    setupDropdown(financeiroNavLinkContas, financeiroDropdownContas);
-
-    function openModal(isEdit = false) {
-        if(despesaModal) {
-            if (!isEdit) {
-                despesaForm.reset();
-                document.getElementById('despesa-id').value = '';
-                resetRecurrenceFields();
-                setNextDocumentNumber();
-            }
-            document.querySelector('#despesa-modal h3').textContent = isEdit ? 'Editar Despesa' : 'Lançar Nova Despesa';
-            pagamentoInfo.classList.add('hidden');
-            despesaModal.classList.remove('hidden');
-        }
-    }
-
-    function closeModal() {
-        console.log("Attempting to close modal...");
-        if(despesaModal) {
-            despesaModal.classList.add('hidden');
-            console.log("Modal closed.");
-        }
-    }
-
-    function openPagarModal(despesaIds) {
-        if (!pagarModal || despesaIds.length === 0) return;
-        const userId = effectiveUserId;
-        if (!userId) {
-            console.error("Cannot open payment modal: User ID not found.");
-            return;
-        }
-
-        document.getElementById('pagar-despesa-id').value = despesaIds.join(',');
-
-        // Calculate the total value of all selected expenses
-        let totalValor = 0;
-        const promises = despesaIds.map(id => getDoc(doc(db, 'users', userId, 'despesas', id)));
-
-        Promise.all(promises).then(docs => {
-            docs.forEach(docSnap => {
-                if (docSnap.exists()) {
-                    totalValor += docSnap.data().valor;
-                }
-            });
-
-            // Update the modal UI
-            const valorInput = document.getElementById('pagar-valor');
-            valorInput.value = totalValor.toFixed(2);
-            // Make the total value read-only to avoid partial payment complexity for batches
-            valorInput.readOnly = despesaIds.length > 1;
-
-            document.getElementById('pagar-data').value = new Date().toISOString().split('T')[0];
-            pagarModal.classList.remove('hidden');
-
-            // Update modal title
-            const modalTitle = pagarModal.querySelector('h3');
-            if (despesaIds.length > 1) {
-                modalTitle.textContent = `Registrar Pagamento de ${despesaIds.length} Contas`;
-            } else {
-                modalTitle.textContent = 'Registrar Pagamento';
-            }
-        }).catch(error => {
-            console.error("Error getting documents for payment:", error);
-        });
-    }
-
-    function closePagarModal() {
-        if(pagarModal) pagarModal.classList.add('hidden');
-    }
-
-    if(lancarDespesaBtn) lancarDespesaBtn.addEventListener('click', () => openModal(false));
-    if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-    if(cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
-    if(closePagarModalBtn) closePagarModalBtn.addEventListener('click', closePagarModal);
-    if(cancelPagarModalBtn) cancelPagarModalBtn.addEventListener('click', closePagarModal);
-
-    if(visualizarSelecionadaBtn) {
-        visualizarSelecionadaBtn.addEventListener('click', () => {
-            const selectedIds = getSelectedDespesaIds();
-            if (selectedIds.length !== 1) return;
-            openVisualizarModal(selectedIds[0]);
-        });
-    }
-
-    async function openVisualizarModal(despesaId) {
-        if (!visualizarDespesaModal) return;
-        const userId = effectiveUserId;
-        if (!userId) {
-            console.error("Ação de visualizar falhou: ID de usuário efetivo não encontrado.");
-            return;
-        }
-
-        try {
-            const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
-            const despesaSnap = await getDoc(despesaRef);
-
-            if (!despesaSnap.exists()) {
-                console.error("Despesa não encontrada!");
-                return;
-            }
-
-            const data = despesaSnap.data();
-
-            // Fetch related data in parallel
-            const categoriaPromise = data.categoriaId ? getDoc(doc(db, 'users', userId, 'planosDeContas', data.categoriaId)) : Promise.resolve(null);
-            const contaSaidaPromise = data.contaSaidaId ? getDoc(doc(db, 'users', userId, 'contasBancarias', data.contaSaidaId)) : Promise.resolve(null);
-            const [categoriaSnap, contaSaidaSnap] = await Promise.all([categoriaPromise, contaSaidaPromise]);
-
-            const categoriaNome = categoriaSnap?.exists() ? categoriaSnap.data().nome : 'N/A';
-            const contaSaidaNome = contaSaidaSnap?.exists() ? contaSaidaSnap.data().nome : 'N/A';
-
-            // Helper to format dates consistently
-            const formatDate = (dateString) => dateString ? new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-            const formatTimestamp = (timestamp) => timestamp ? timestamp.toDate().toLocaleString('pt-BR') : 'N/A';
-
-            // Populate modal fields
-            document.getElementById('view-despesa-descricao').textContent = data.descricao || 'N/A';
-            document.getElementById('view-despesa-favorecido').textContent = data.favorecidoNome || 'N/A';
-            document.getElementById('view-despesa-categoria').textContent = categoriaNome;
-            document.getElementById('view-despesa-obs').textContent = data.obs || 'Nenhuma';
-            document.getElementById('view-despesa-emissao').textContent = formatDate(data.emissao);
-            document.getElementById('view-despesa-competencia').textContent = formatDate(data.competencia);
-            document.getElementById('view-despesa-vencimento').textContent = formatDate(data.vencimento);
-            document.getElementById('view-despesa-criado-por').textContent = data.criadoPor || 'N/A';
-            document.getElementById('view-despesa-criado-em').textContent = formatTimestamp(data.createdAt);
-            document.getElementById('view-despesa-numero-documento').textContent = data.numeroDocumento || 'N/A';
-            document.getElementById('view-despesa-valor').textContent = formatCurrency(data.valor || 0);
-
-            // Status logic
-            const statusEl = document.getElementById('view-despesa-status');
-            const today = new Date();
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
-            if (data.pago) {
-                statusEl.textContent = 'Pago';
-                statusEl.className = 'text-base font-medium text-green-600';
-            } else if (vencimento < today) {
-                statusEl.textContent = 'Vencido';
-                statusEl.className = 'text-base font-medium text-red-600';
-            } else {
-                statusEl.textContent = 'Pendente';
-                statusEl.className = 'text-base font-medium text-yellow-600';
-            }
-
-            // Payment info section
-            const pagamentoInfoEl = document.getElementById('view-pagamento-info');
-            const descontosContainer = document.getElementById('view-despesa-descontos-container');
-            const jurosMultaContainer = document.getElementById('view-despesa-juros-multa-container');
-            const descontosEl = document.getElementById('view-despesa-descontos');
-            const jurosMultaEl = document.getElementById('view-despesa-juros-multa');
-
-            if (data.pago) {
-                document.getElementById('view-despesa-data-pagamento').textContent = formatDate(data.dataPagamento);
-                document.getElementById('view-despesa-valor-pago').textContent = formatCurrency(data.valorPago || 0);
-                document.getElementById('view-despesa-conta-saida').textContent = contaSaidaNome;
-
-                if (data.descontos && data.descontos > 0) {
-                    descontosEl.textContent = formatCurrency(data.descontos);
-                    descontosContainer.classList.remove('hidden');
-                } else {
-                    descontosContainer.classList.add('hidden');
-                }
-
-                if (data.jurosMulta && data.jurosMulta > 0) {
-                    jurosMultaEl.textContent = formatCurrency(data.jurosMulta);
-                    jurosMultaContainer.classList.remove('hidden');
-                } else {
-                    jurosMultaContainer.classList.add('hidden');
-                }
-
-                pagamentoInfoEl.classList.remove('hidden');
-            } else {
-                pagamentoInfoEl.classList.add('hidden');
-            }
-
-            visualizarDespesaModal.classList.remove('hidden');
-
-        } catch (error) {
-            console.error("Erro ao abrir modal de visualização:", error);
-        }
-    }
-
-    function closeVisualizarModal() {
-        if(visualizarDespesaModal) visualizarDespesaModal.classList.add('hidden');
-    }
-
-    if(closeVisualizarModalBtn) closeVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
-    if(okVisualizarModalBtn) okVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
-
-    if(pagarForm) {
-        const pagarValorInput = document.getElementById('pagar-valor');
-        const pagarDescontosInput = document.getElementById('pagar-descontos');
-        const pagarJurosMultaInput = document.getElementById('pagar-juros-multa');
-        const pagarValorFinalInput = document.getElementById('pagar-valor-final');
-
-        function calculateFinalPayment() {
-            const valor = parseFloat(pagarValorInput.value) || 0;
-            const descontos = parseFloat(pagarDescontosInput.value) || 0;
-            const jurosMulta = parseFloat(pagarJurosMultaInput.value) || 0;
-
-            const valorFinal = (valor + jurosMulta) - descontos;
-            pagarValorFinalInput.value = valorFinal.toFixed(2);
-        }
-
-        [pagarValorInput, pagarDescontosInput, pagarJurosMultaInput].forEach(input => {
-            if (input) input.addEventListener('input', calculateFinalPayment);
-        });
-
-        pagarForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const userId = effectiveUserId;
-            if (!userId) {
-                console.error("Usuário não autenticado.");
-                return;
-            }
-
-            const despesaIds = document.getElementById('pagar-despesa-id').value.split(',');
-            const paymentDate = document.getElementById('pagar-data').value;
-            const paymentAccount = document.getElementById('pagar-conta-saida').value;
-            const paymentMethod = document.getElementById('pagar-meio-pagamento').value;
-            const descontos = parseFloat(document.getElementById('pagar-descontos').value) || 0;
-            const jurosMulta = parseFloat(document.getElementById('pagar-juros-multa').value) || 0;
-            const valorFinalPago = parseFloat(document.getElementById('pagar-valor-final').value) || 0;
-
-            const totalOriginal = allDespesas
-                .filter(d => despesaIds.includes(d.id))
-                .reduce((sum, d) => sum + d.data().valor, 0);
-
-            if (totalOriginal === 0 && despesaIds.length > 0) {
-                 console.error("Cannot process payment for expenses with zero total value.");
-                 return;
-            }
-
-            const paymentPromises = despesaIds.map(async (id) => {
-                const despesaRef = doc(db, 'users', userId, 'despesas', id);
-                try {
-                    const despesaSnap = await getDoc(despesaRef);
-                    if (!despesaSnap.exists()) {
-                        console.error(`Despesa com ID ${id} não encontrada!`);
-                        return;
-                    }
-                    const despesaData = despesaSnap.data();
-                    const valorOriginal = despesaData.valor;
-
-                    const proporcao = totalOriginal > 0 ? valorOriginal / totalOriginal : 0;
-                    const valorPagoIndividual = valorFinalPago * proporcao;
-                    const descontosIndividual = descontos * proporcao;
-                    const jurosMultaIndividual = jurosMulta * proporcao;
-
-                    const transacoesRef = collection(db, 'users', userId, 'transacoesFinanceiras');
-                    await addDoc(transacoesRef, {
-                        referenciaContaPagar: despesaRef,
-                        dataPagamento: paymentDate,
-                        dataCompetencia: despesaData.competencia,
-                        valorPago: valorPagoIndividual,
-                        descontos: descontosIndividual,
-                        jurosMulta: jurosMultaIndividual,
-                        referenciaContaBancaria: doc(db, 'users', userId, 'contasBancarias', paymentAccount),
-                        referenciaFavorecido: {
-                            collection: despesaData.favorecidoTipo,
-                            id: despesaData.favorecidoId
-                        },
-                        referenciaPlanoDeContas: doc(db, 'users', userId, 'planosDeContas', despesaData.categoriaId),
-                        meioPagamento: paymentMethod,
-                        tipoTransacao: "DESPESA",
-                        createdAt: serverTimestamp()
-                    });
-
-                    await updateDoc(despesaRef, {
-                        pago: true,
-                        dataPagamento: paymentDate,
-                        valorPago: valorPagoIndividual,
-                        descontos: descontosIndividual,
-                        jurosMulta: jurosMultaIndividual,
-                    });
-                } catch (error) {
-                    console.error(`Erro ao processar pagamento para a despesa ${id}:`, error);
-                }
-            });
-
-            try {
-                await Promise.all(paymentPromises);
-                closePagarModal();
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.dispatchEvent(new Event('change'));
-            } catch (error) {
-                console.error("Erro ao registrar um ou mais pagamentos:", error);
-            }
-        });
-    }
-
-    if(marcarPagoCheckbox) {
-        marcarPagoCheckbox.addEventListener('change', () => {
-            pagamentoInfo.classList.toggle('hidden', !marcarPagoCheckbox.checked);
-        });
-    }
-
-    if(formaPagamentoSelect) {
-        formaPagamentoSelect.addEventListener('change', (e) => {
-            const selection = e.target.value;
-            parceladoFields.classList.toggle('hidden', selection !== 'parcelado');
-            recorrenteFields.classList.toggle('hidden', selection !== 'recorrente');
-        });
-    }
-
-    despesaForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        console.log("Despesa form submitted.");
-        closeModal(); // Close modal immediately for better UX and testability
-
-        const userId = effectiveUserId;
-        if (!userId) {
-            console.error("Usuário não autenticado ou ID de administrador não encontrado.");
-            return;
-        }
-
-        const expenseId = document.getElementById('despesa-id').value;
-        const formaPagamento = document.getElementById('forma-pagamento').value;
-        const userRef = collection(db, 'users', userId, 'despesas');
-
-        const baseDescricao = document.getElementById('despesa-descricao').value;
-        const valorTotal = parseFloat(document.getElementById('despesa-valor').value);
-
-        try {
-            const favorecidoTipo = favorecidoTipoSelect.value;
-            const favorecidoId = favorecidoNomeSelect.value;
-            const favorecidoNome = favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text;
-
-            const baseData = {
-                descricao: baseDescricao,
-                numeroDocumento: document.getElementById('despesa-numero-documento').value,
-                favorecidoTipo: favorecidoTipo,
-                favorecidoId: favorecidoId,
-                favorecidoNome: favorecidoNome,
-                categoriaId: document.getElementById('despesa-categoria').value,
-                valor: valorTotal,
-                emissao: document.getElementById('despesa-emissao').value,
-                competencia: document.getElementById('despesa-competencia').value,
-                vencimento: document.getElementById('despesa-vencimento').value,
-                pago: document.getElementById('marcar-pago-checkbox').checked,
-                obs: document.getElementById('despesa-obs').value,
-                formaPagamento: formaPagamento,
-            };
-
-            if (baseData.pago) {
-                baseData.dataPagamento = document.getElementById('pagamento-data').value;
-                baseData.valorPago = parseFloat(document.getElementById('pagamento-valor').value);
-                baseData.contaSaidaId = document.getElementById('pagamento-conta').value;
-            }
-
-            if (expenseId && formaPagamento !== 'parcelado' && formaPagamento !== 'recorrente') {
-                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
-                await updateDoc(docRef, baseData);
-            } else if (formaPagamento === 'parcelado') {
-                const numeroParcelas = parseInt(document.getElementById('parcelas-numero').value);
-                const intervalo = document.getElementById('parcelas-intervalo').value;
-                const vencimentoInicial = new Date(document.getElementById('despesa-vencimento').value + 'T00:00:00');
-                const valorParcela = valorTotal / numeroParcelas;
-
-                for (let i = 1; i <= numeroParcelas; i++) {
-                    const vencimentoParcela = new Date(vencimentoInicial);
-                    if (intervalo === 'mensal') {
-                        vencimentoParcela.setMonth(vencimentoInicial.getMonth() + (i - 1));
-                    } else if (intervalo === 'quinzenal') {
-                        vencimentoParcela.setDate(vencimentoInicial.getDate() + 15 * (i - 1));
-                    } else if (intervalo === 'semanal') {
-                        vencimentoParcela.setDate(vencimentoInicial.getDate() + 7 * (i - 1));
-                    }
-
-                    const despesaParcela = {
-                        ...baseData,
-                        descricao: `${baseDescricao} (${i}/${numeroParcelas})`,
-                        valor: valorParcela,
-                        vencimento: vencimentoParcela.toISOString().split('T')[0],
-                        pago: false, // Each installment starts as unpaid
-                        parcelaInfo: { atual: i, total: numeroParcelas },
-                        criadoPor: currentUserName || 'sistema',
-                        createdAt: serverTimestamp()
-                    };
-                    await addDoc(userRef, despesaParcela);
-                }
-            } else {
-                const despesaData = {
-                    ...baseData,
-                    criadoPor: currentUserName || 'sistema',
-                    createdAt: serverTimestamp()
-                };
-                if (formaPagamento === 'recorrente') {
-                    despesaData.recorrencia = {
-                        frequencia: document.getElementById('recorrencia-frequencia').value,
-                        fimCondicao: document.querySelector('input[name="recorrencia-fim"]:checked').value,
-                        fimData: document.getElementById('recorrencia-fim-data').value,
-                        fimOcorrencias: parseInt(document.getElementById('recorrencia-fim-ocorrencias').value) || null
-                    };
-                }
-                await addDoc(userRef, despesaData);
-            }
-        } catch (error) {
-            console.error("Erro ao salvar despesa:", error);
-        }
-    });
-
-    // Expose functions for testing
-    window.testHooks = { setupListeners, auth };
-
-    if(listaViewBtn) {
-        listaViewBtn.addEventListener('click', () => setContasView('lista'));
-    }
-    if(calendarioViewBtn) {
-        calendarioViewBtn.addEventListener('click', () => setContasView('calendario'));
-    }
-
-    if(calendarStatusFilter) {
-        calendarStatusFilter.addEventListener('change', () => {
-            const status = calendarStatusFilter.value;
-            if (status === 'todas') {
-                processAndRenderCalendarEvents(allDespesas);
-            } else {
-                const filteredDespesas = allDespesas.filter(doc => {
-                    const data = doc.data();
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const vencimento = new Date(data.vencimento + 'T00:00:00');
-                    const docStatus = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-                    return docStatus === status;
-                });
-                processAndRenderCalendarEvents(filteredDespesas);
-            }
-        });
-    }
-
-    // --- Lógica de Recorrência Inteligente ---
-    function resetRecurrenceFields() {
-        if (recorrenciaFimDataInput) recorrenciaFimDataInput.value = '';
-        if (recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.value = '';
-        if (recorrenciaFimDataRadio) recorrenciaFimDataRadio.checked = false;
-        if (recorrenciaFimOcorrenciasRadio) recorrenciaFimOcorrenciasRadio.checked = false;
-        if (despesaVencimentoInput) despesaVencimentoInput.classList.remove('border-red-500', 'ring-red-500');
-        if (document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').value = 'mensal';
-    }
-
-    function getRecurrenceMultiplier(freq) {
-        switch (freq) {
-            case 'bimestral': return 2;
-            case 'trimestral': return 3;
-            case 'semestral': return 6;
-            case 'anual': return 12;
-            default: return 1; // mensal
-        }
-    }
-
-    function handleRecurrenceInteraction() {
-        const dueDateInput = despesaVencimentoInput;
-        const occurrencesInput = recorrenciaFimOcorrenciasInput;
-        const endDateInput = recorrenciaFimDataInput;
-        const freq = document.getElementById('recorrencia-frequencia').value;
-        const multiplier = getRecurrenceMultiplier(freq);
-        const activeEl = document.activeElement;
-
-        // Validation: If user interacts with recurrence fields before setting a due date
-        if ((activeEl === occurrencesInput || activeEl === endDateInput) && !dueDateInput.value) {
-            dueDateInput.classList.add('border-red-500', 'ring-red-500');
-            return; // Stop further calculations until due date is set
-        }
-        // If due date is filled, remove any existing error style.
-        dueDateInput.classList.remove('border-red-500', 'ring-red-500');
-
-        const dueDate = dueDateInput.value ? new Date(dueDateInput.value + 'T00:00:00') : null;
-        const occurrences = occurrencesInput.value ? parseInt(occurrencesInput.value, 10) : null;
-        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T00:00:00') : null;
-
-        // Determine which field to clear based on user's last action
-        if (activeEl === occurrencesInput) endDateInput.value = '';
-        if (activeEl === endDateInput) occurrencesInput.value = '';
-
-        // Recalculate based on the two available fields
-        if (dueDate && occurrences) {
-            recorrenciaFimOcorrenciasRadio.checked = true;
-            const calculatedEndDate = new Date(dueDate.getTime());
-            calculatedEndDate.setMonth(calculatedEndDate.getMonth() + (multiplier * (occurrences - 1)));
-            endDateInput.value = calculatedEndDate.toISOString().split('T')[0];
-        } else if (dueDate && endDate) {
-            if (endDate >= dueDate) {
-                recorrenciaFimDataRadio.checked = true;
-                const monthDiff = (endDate.getFullYear() - dueDate.getFullYear()) * 12 + (endDate.getMonth() - dueDate.getMonth());
-                const calculatedOccurrences = Math.floor(monthDiff / multiplier) + 1;
-                occurrencesInput.value = calculatedOccurrences > 0 ? calculatedOccurrences : '';
-            }
-        } else if (occurrences && endDate) {
-            recorrenciaFimOcorrenciasRadio.checked = true;
-            const calculatedStartDate = new Date(endDate.getTime());
-            calculatedStartDate.setMonth(calculatedStartDate.getMonth() - (multiplier * (occurrences - 1)));
-            dueDateInput.value = calculatedStartDate.toISOString().split('T')[0];
-        }
-    }
-
-    if(despesaVencimentoInput) despesaVencimentoInput.addEventListener('change', handleRecurrenceInteraction);
-    if(recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.addEventListener('input', handleRecurrenceInteraction);
-    if(recorrenciaFimDataInput) recorrenciaFimDataInput.addEventListener('change', handleRecurrenceInteraction);
-    if(document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').addEventListener('change', handleRecurrenceInteraction);
-
-    // --- Lógica da Tela de Login de Usuário ---
-    // Popula o dropdown de empresas na tela de login assim que a página carrega
-    const allEmpresasQuery = query(collection(db, 'empresas'));
-    onSnapshot(allEmpresasQuery, (querySnapshot) => {
-        populateEmpresaDropdown(loginEmpresaSelect, querySnapshot.docs);
-    });
-
-  </script>
-
-</body>
-
-</html>
