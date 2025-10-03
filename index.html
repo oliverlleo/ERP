@@ -1161,6 +1161,7 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descontos</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Juros</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Devedor</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1493,6 +1494,10 @@
                   <div>
                       <p class="text-sm text-gray-500">Descontos Concedidos</p>
                       <p id="view-despesa-descontos" class="text-2xl font-bold text-yellow-600"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Juros Pagos</p>
+                      <p id="view-despesa-juros" class="text-2xl font-bold text-orange-600"></p>
                   </div>
                    <div>
                       <p class="text-sm text-gray-500">Total Pago</p>
@@ -3966,7 +3971,7 @@
         if (docs.length === 0) {
             const tr = despesasTableBody.insertRow();
             const td = tr.insertCell();
-            td.colSpan = 10; // Adjusted for the new column
+            td.colSpan = 11; // Adjusted for the new column
             td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
             td.textContent = 'Nenhuma despesa encontrada.';
             return;
@@ -3989,7 +3994,8 @@
             const valorOriginal = data.valorOriginal || data.valor || 0;
             const totalPago = data.totalPago || data.valorPago || 0;
             const totalDescontos = data.totalDescontos || 0;
-            const valorSaldo = data.valorSaldo ?? (valorOriginal - totalPago - totalDescontos);
+            const totalJuros = data.totalJuros || 0;
+            const valorSaldo = data.valorSaldo ?? (valorOriginal + totalJuros - totalPago - totalDescontos);
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -4003,6 +4009,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600 font-bold">${formatCurrency(totalDescontos)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-bold">${formatCurrency(totalJuros)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${formatCurrency(totalPago)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(valorSaldo)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -4269,10 +4276,12 @@
             const valorOriginal = data.valorOriginal || 0;
             const totalPago = data.totalPago || 0;
             const totalDescontos = data.totalDescontos || 0;
-            const valorSaldo = data.valorSaldo ?? (valorOriginal - totalPago - totalDescontos);
+            const totalJuros = data.totalJuros || 0;
+            const valorSaldo = data.valorSaldo ?? (valorOriginal + totalJuros - totalPago - totalDescontos);
 
             document.getElementById('view-despesa-valor-original').textContent = formatCurrency(valorOriginal);
             document.getElementById('view-despesa-descontos').textContent = formatCurrency(totalDescontos);
+            document.getElementById('view-despesa-juros').textContent = formatCurrency(totalJuros);
             document.getElementById('view-despesa-total-pago').textContent = formatCurrency(totalPago);
             document.getElementById('view-despesa-saldo-devedor').textContent = formatCurrency(valorSaldo);
 
@@ -4506,7 +4515,9 @@
 
                 const novoTotalPago = (data.totalPago || 0) + valorPrincipalCents;
                 const novoTotalDescontos = (data.totalDescontos || 0) + descontosCents;
-                const novoSaldo = saldoAtual - valorPrincipalCents - descontosCents;
+                const novoTotalJuros = (data.totalJuros || 0) + jurosCents;
+                // Recalculate saldo from scratch to ensure accuracy
+                const novoSaldo = (data.valorOriginal + novoTotalJuros) - novoTotalPago - novoTotalDescontos;
 
                 let novoStatus = 'Pendente';
                 if (novoSaldo <= 0) {
@@ -4532,6 +4543,7 @@
                     totalPago: novoTotalPago,
                     valorSaldo: novoSaldo,
                     totalDescontos: novoTotalDescontos,
+                    totalJuros: novoTotalJuros,
                     status: novoStatus,
                 };
 
