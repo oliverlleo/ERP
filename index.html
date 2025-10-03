@@ -47,6 +47,16 @@
       background-size: cover;
       background-position: center;
     }
+    .status-filter-btn.active {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        border: 1px solid var(--primary-color) !important;
+    }
+    .status-filter-btn {
+        background-color: #F3F4F6;
+        color: #374151;
+        border: 1px solid #D1D5DB;
+    }
   </style>
 </head>
 
@@ -1137,17 +1147,13 @@
                                     <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
                                 </div>
                                 <div>
-                                    <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
-                                    <select id="status-filter" class="form-select mt-1 block w-full">
-                                        <option value="todas">Todas</option>
-                                        <option value="pendente">Pendente</option>
-                                        <option value="pago">Pago</option>
-                                        <option value="vencido">Vencido</option>
-                                    </select>
-                                </div>
-                                <div class="flex items-center h-full pt-7">
-                                    <input id="include-paid-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
-                                    <label for="include-paid-checkbox" class="ml-2 block text-sm font-medium text-gray-900">Incluir Pagos</label>
+                                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                                    <div id="status-filter-group" class="flex items-center gap-2 mt-1">
+                                        <button data-status="Pendente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
+                                        <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
+                                        <button data-status="Pago Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
+                                        <button data-status="Pago" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pago</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="overflow-x-auto">
@@ -1447,7 +1453,7 @@
 
   <!-- Modal de Visualização de Despesa -->
   <div id="visualizar-despesa-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+      <div class="relative top-10 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white">
           <div class="flex justify-between items-center border-b pb-3">
               <h3 class="text-2xl font-bold text-gray-900">Detalhes da Despesa</h3>
               <button id="close-visualizar-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
@@ -1771,11 +1777,21 @@
     const searchInput = document.getElementById('search-input');
     const startDateInput = document.getElementById('start-date-input');
     const endDateInput = document.getElementById('end-date-input');
-    const statusFilter = document.getElementById('status-filter');
-    const filterBtn = document.getElementById('filter-btn');
-    const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    const includePaidCheckbox = document.getElementById('include-paid-checkbox');
+    const statusFilterGroup = document.getElementById('status-filter-group');
     let allDespesas = []; // Holds all expenses for client-side filtering
+    let activeStatusFilters = new Set(['Pendente', 'Vencido', 'Pago Parcialmente']);
+
+    function updateStatusFilterUI() {
+        const buttons = document.querySelectorAll('.status-filter-btn');
+        buttons.forEach(btn => {
+            const status = btn.dataset.status;
+            if (activeStatusFilters.has(status)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
 
     // --- Elementos da Visualização de Calendário ---
     const listaViewBtn = document.getElementById('lista-view-btn');
@@ -2703,6 +2719,7 @@
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
             showView('main-page');
+            updateStatusFilterUI();
             return;
         }
 
@@ -2718,6 +2735,7 @@
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
                 showView('main-page');
+                updateStatusFilterUI();
                 return;
             }
         }
@@ -3904,24 +3922,14 @@
         const searchTerm = searchInput.value.toLowerCase();
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
-        const status = statusFilter.value;
-        const includePaid = includePaidCheckbox.checked;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
 
         const filteredDocs = allDespesas.filter(doc => {
             const data = doc.data();
-
-            // Paid filter (primary filter)
-            if (!includePaid && data.pago) {
-                return false;
-            }
+            const status = data.status || 'Pendente';
 
             // Status filter
-            let statusMatch = true;
-            if (status !== 'todas') {
-                const docStatus = data.pago ? 'pago' : (new Date(data.vencimento + 'T00:00:00') < today ? 'vencido' : 'pendente');
-                if (status !== docStatus) statusMatch = false;
+            if (activeStatusFilters.size > 0 && !activeStatusFilters.has(status)) {
+                return false;
             }
 
             // Date filter
@@ -3944,25 +3952,30 @@
                 searchMatch = descriptionMatch || payeeMatch;
             }
 
-            return statusMatch && dateMatch && searchMatch;
+            return dateMatch && searchMatch;
         });
 
         renderDespesasTable(filteredDocs);
     }
 
-    if(filterBtn) filterBtn.addEventListener('click', applyFiltersAndRender);
-    if(searchInput) searchInput.addEventListener('keyup', applyFiltersAndRender);
-    if(includePaidCheckbox) includePaidCheckbox.addEventListener('change', applyFiltersAndRender);
-    if(clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            startDateInput.value = '';
-            endDateInput.value = '';
-            statusFilter.value = 'todas';
-            includePaidCheckbox.checked = false;
-            applyFiltersAndRender();
+    if (statusFilterGroup) {
+        statusFilterGroup.addEventListener('click', (e) => {
+            if (e.target.classList.contains('status-filter-btn')) {
+                const status = e.target.dataset.status;
+                if (activeStatusFilters.has(status)) {
+                    activeStatusFilters.delete(status);
+                } else {
+                    activeStatusFilters.add(status);
+                }
+                updateStatusFilterUI();
+                applyFiltersAndRender();
+            }
         });
     }
+
+    if(searchInput) searchInput.addEventListener('input', applyFiltersAndRender);
+    if(startDateInput) startDateInput.addEventListener('change', applyFiltersAndRender);
+    if(endDateInput) endDateInput.addEventListener('change', applyFiltersAndRender);
 
 
     function renderDespesasTable(docs) {
