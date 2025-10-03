@@ -4450,17 +4450,17 @@
             return;
         }
 
-        // Gather data from forms
         const valorPrincipalCents = toCents(document.getElementById('pagar-valor').value);
         const descontosCents = toCents(document.getElementById('pagar-descontos').value);
         const jurosCents = toCents(document.getElementById('pagar-juros-multa').value);
         const dataTransacao = document.getElementById('pagar-data').value;
         const contaSaidaId = document.getElementById('pagar-conta-saida').value;
         const novaDataVencimento = document.getElementById('parcial-nova-data-vencimento').value;
+        const valorFinalPagoCents = toCents(document.getElementById('pagar-valor-final').value);
+
 
         const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
-        const pagamentosRef = collection(despesaRef, 'pagamentos');
-        const novoPagamentoRef = doc(pagamentosRef);
+        const novoPagamentoRef = doc(collection(despesaRef, 'pagamentos'));
 
         try {
             await runTransaction(db, async (transaction) => {
@@ -4482,7 +4482,6 @@
                     novoStatus = 'Pago Parcialmente';
                 }
 
-                // 1. Create the new payment document
                 transaction.set(novoPagamentoRef, {
                     tipoTransacao: "Pagamento",
                     dataTransacao: dataTransacao,
@@ -4494,7 +4493,6 @@
                     createdAt: serverTimestamp()
                 });
 
-                // 2. Update the main expense document
                 const updateData = {
                     totalPago: novoTotalPago,
                     valorSaldo: novoSaldo,
