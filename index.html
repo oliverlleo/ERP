@@ -2484,13 +2484,44 @@
 
         // --- Listener for Despesas Table ---
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
-        despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
+        despesasUnsubscribe = onSnapshot(despesasQuery, async (querySnapshot) => {
             allDespesas = querySnapshot.docs; // Store all documents
             applyFiltersAndRender(); // Apply current filters and render for the list
-            updateSummaryCards(allDespesas);
-            updateDashboardIndicators(allDespesas);
+
+            // New logic to fetch payments and calculate Total Pago no Mês
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            let totalPagoNoMes = 0;
+
+            // This is inefficient (N+1 problem) but necessary for accuracy without schema changes.
+            const paymentPromises = allDespesas.map(despesaDoc => {
+                const pagamentosRef = collection(db, 'users', userId, 'despesas', despesaDoc.id, 'pagamentos');
+                return getDocs(pagamentosRef);
+            });
+
+            const paymentSnapshots = await Promise.all(paymentPromises);
+
+            paymentSnapshots.forEach(paymentSnapshot => {
+                paymentSnapshot.forEach(paymentDoc => {
+                    const paymentData = paymentDoc.data();
+                    if (paymentData.dataTransacao) {
+                        const paymentDate = new Date(paymentData.dataTransacao + 'T00:00:00');
+                        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+                            if (paymentData.tipoTransacao === 'Pagamento') {
+                                totalPagoNoMes += paymentData.valorPrincipal || 0;
+                            } else if (paymentData.tipoTransacao === 'Estorno') {
+                                totalPagoNoMes -= paymentData.valorPrincipal || 0;
+                            }
+                        }
+                    }
+                });
+            });
+
+            updateSummaryCards(allDespesas, totalPagoNoMes);
+            updateDashboardIndicators(allDespesas, totalPagoNoMes);
             if (calendarInstance) {
-                processAndRenderCalendarEvents(allDespesas); // Process for calendar
+                processAndRenderCalendarEvents(allDespesas);
             }
         });
 
@@ -2594,14 +2625,13 @@
         selectElement.value = currentVal;
     }
 
-    function updateSummaryCards(docs) {
+    function updateSummaryCards(docs, totalPagoNoMes) {
         const today = new Date();
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
         today.setHours(0, 0, 0, 0);
 
         let totalAPagar = 0;
-        let totalPago = 0;
         let contasVencidas = 0;
 
         docs.forEach(doc => {
@@ -2616,16 +2646,6 @@
                 totalAPagar += valorSaldo;
             }
 
-            // Total Pago no Mês (based on payments in the subcollection, but for now we use totalPago)
-            if (data.dataPagamento) { // This condition needs to be more robust later
-                const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
-                 if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    // This is tricky without querying the subcollection. We'll approximate.
-                    // Let's assume `totalPago` reflects the sum of payments.
-                    totalPago += data.totalPago || data.valorPago || 0;
-                 }
-            }
-
             // Contas Vencidas (based on remaining balance)
             if (status !== 'Pago' && vencimento < today) {
                 contasVencidas += valorSaldo;
@@ -2633,14 +2653,14 @@
         });
 
         document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagar);
-        document.getElementById('total-pago-card').textContent = formatCurrency(totalPago);
+        document.getElementById('total-pago-card').textContent = formatCurrency(totalPagoNoMes);
         document.getElementById('contas-vencidas-card').textContent = formatCurrency(contasVencidas);
     }
 
-    function updateDashboardIndicators(docs) {
+    function updateDashboardIndicators(docs, totalPagoNoMes) {
         // This function can now simply call updateSummaryCards and map the values,
         // as the logic is identical.
-        updateSummaryCards(docs); // Recalculates card values
+        updateSummaryCards(docs, totalPagoNoMes); // Recalculates card values
         document.getElementById('dashboard-total-a-pagar').textContent = document.getElementById('total-a-pagar-card').textContent;
         document.getElementById('dashboard-total-pago').textContent = document.getElementById('total-pago-card').textContent;
         document.getElementById('dashboard-contas-vencidas').textContent = document.getElementById('contas-vencidas-card').textContent;
@@ -4418,7 +4438,8 @@
             if (!despesaId) return;
 
             const valorFinalPagoCents = toCents(document.getElementById('pagar-valor-final').value);
-            const valorAPagarCents = toCents(document.getElementById('pagar-valor').value);
+            const valorFinalPagoCents = toCents(document.getElementById('pagar-valor-final').value);
+            const descontosCents = toCents(document.getElementById('pagar-descontos').value);
 
             try {
                 const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
@@ -4430,7 +4451,9 @@
                 const totalPago = data.totalPago || 0;
                 const saldoDevedorAtualCents = data.valorSaldo ?? (valorOriginal - totalPago);
 
-                if (valorAPagarCents < saldoDevedorAtualCents) {
+                // The total amount being settled is the cash paid + discounts.
+                // Compare this to the balance to see if it's a partial payment.
+                if ((valorFinalPagoCents + descontosCents) < saldoDevedorAtualCents) {
                     abrirModalConfirmacaoParcial();
                 } else {
                     prosseguirComPagamento();
@@ -4461,7 +4484,7 @@
         }
 
         // Gather data from forms
-        const valorPrincipalCents = toCents(document.getElementById('pagar-valor').value);
+        const valorPrincipalCents = toCents(document.getElementById('pagar-valor-final').value);
         const descontosCents = toCents(document.getElementById('pagar-descontos').value);
         const jurosCents = toCents(document.getElementById('pagar-juros-multa').value);
         const dataTransacao = document.getElementById('pagar-data').value;
