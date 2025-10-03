@@ -57,6 +57,7 @@
   bg-green-100 text-green-800
   bg-yellow-100 text-yellow-800
   bg-red-100 text-red-800
+  bg-blue-100 text-blue-800
   -->
 
   <!-- Container da Tela de Login -->
@@ -1141,7 +1142,8 @@
                                     <select id="status-filter" class="form-select mt-1 block w-full">
                                         <option value="todas">Todas</option>
                                         <option value="pendente">Pendente</option>
-                                        <option value="pago">Pago</option>
+                                        <option value="parcial">Pago Parcialmente</option>
+                                        <option value="pago">Pago (Quitado)</option>
                                         <option value="vencido">Vencido</option>
                                     </select>
                                 </div>
@@ -1896,21 +1898,29 @@
             const data = doc.data();
             const vencimento = new Date(data.vencimento + 'T00:00:00');
 
-            let eventColor = '#f59e0b'; // Amarelo para Pendente
-            if (data.pago) {
-                eventColor = '#16a34a'; // Verde para Pago
-            } else if (vencimento < today) {
-                eventColor = '#dc2626'; // Vermelho para Vencido
+            // Determine effective status for coloring
+            let status = data.status || 'Pendente';
+            if ((status === 'Pendente' || status === 'Pago Parcialmente') && vencimento < today) {
+                status = 'Vencido';
+            }
+
+            let eventColor = '#f59e0b'; // Default: Pendente (Yellow)
+            if (status === 'Pago') {
+                eventColor = '#16a34a'; // Pago (Green)
+            } else if (status === 'Vencido') {
+                eventColor = '#dc2626'; // Vencido (Red)
+            } else if (status === 'Pago Parcialmente') {
+                eventColor = '#3b82f6'; // Parcial (Blue)
             }
 
             return {
                 id: doc.id,
-                title: `${data.favorecidoNome}: ${formatCurrency(data.valor)}`,
+                title: `${data.favorecidoNome}: ${formatCurrency(data.valorSaldo ?? data.valor)}`,
                 start: data.vencimento,
                 backgroundColor: eventColor,
                 borderColor: eventColor,
                 extendedProps: {
-                    status: data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente')
+                    status: status
                 }
             };
         });
@@ -3896,22 +3906,35 @@
         const endDate = endDateInput.value;
         const status = statusFilter.value;
         const includePaid = includePaidCheckbox.checked;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
 
         const filteredDocs = allDespesas.filter(doc => {
             const data = doc.data();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-            // Paid filter (primary filter)
-            if (!includePaid && data.pago) {
+            // Determine the document's effective status for filtering
+            let docStatus = 'pendente'; // Default
+            if (data.status === 'Pago') {
+                docStatus = 'pago';
+            } else if (data.status === 'Pago Parcialmente') {
+                docStatus = 'parcial';
+            }
+
+            if ((data.status === 'Pendente' || data.status === 'Pago Parcialmente') && new Date(data.vencimento + 'T00:00:00') < today) {
+                docStatus = 'vencido';
+            }
+
+            // Paid filter (primary filter) - Hides fully paid items if unchecked
+            if (!includePaid && data.status === 'Pago') {
                 return false;
             }
 
             // Status filter
             let statusMatch = true;
             if (status !== 'todas') {
-                const docStatus = data.pago ? 'pago' : (new Date(data.vencimento + 'T00:00:00') < today ? 'vencido' : 'pendente');
-                if (status !== docStatus) statusMatch = false;
+                if (status !== docStatus) {
+                    statusMatch = false;
+                }
             }
 
             // Date filter
@@ -3972,18 +3995,22 @@
             const tr = despesasTableBody.insertRow();
             tr.setAttribute('data-id', doc.id);
 
-            const statusInfo = {
-                pago: { text: 'Pago', color: 'green', icon: '🟢' },
-                pendente: { text: 'Pendente', color: 'yellow', icon: '🟡' },
-                vencido: { text: 'Vencido', color: 'red', icon: '🔴' }
-            };
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
-            const status = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-            const currentStatus = statusInfo[status];
+            let status = data.status || 'Pendente';
+            if ((status === 'Pendente' || status === 'Pago Parcialmente') && new Date(data.vencimento + 'T00:00:00') < today) {
+                status = 'Vencido';
+            }
 
-            const valorPagoHtml = data.pago ? formatCurrency(data.valorPago || 0) : '—';
+            const statusInfo = {
+                'Pago': { text: 'Pago', color: 'green' },
+                'Pendente': { text: 'Pendente', color: 'yellow' },
+                'Vencido': { text: 'Vencido', color: 'red' },
+                'Pago Parcialmente': { text: 'Parcial', color: 'blue' }
+            };
+
+            const currentStatus = statusInfo[status] || statusInfo['Pendente'];
+            const valorPagoHtml = formatCurrency(data.valorPago || 0);
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -3996,7 +4023,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(data.valor)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${valorPagoHtml}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-bold">${valorPagoHtml}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${currentStatus.color}-100 text-${currentStatus.color}-800">
                         ${currentStatus.text}
