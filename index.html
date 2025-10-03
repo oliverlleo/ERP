@@ -3486,6 +3486,11 @@
             document.getElementById('dashboard-pagar-total-mes').textContent = formatCurrency(pagarTotalMes);
             document.getElementById('dashboard-pagar-pago-mes').textContent = formatCurrency(pagarPagoMes);
             document.getElementById('dashboard-pagar-vencidas').textContent = formatCurrency(pagarVencidas);
+
+            // Also update the dedicated Contas a Pagar page cards
+            document.getElementById('total-a-pagar-card').textContent = formatCurrency(pagarTotalMes);
+            document.getElementById('total-pago-card').textContent = formatCurrency(pagarPagoMes);
+            document.getElementById('contas-vencidas-card').textContent = formatCurrency(pagarVencidas);
             document.getElementById('dashboard-receber-total-mes').textContent = formatCurrency(receberTotalMes);
             document.getElementById('dashboard-receber-recebido-mes').textContent = formatCurrency(receberRecebidoMes);
             document.getElementById('dashboard-receber-vencidos').textContent = formatCurrency(receberVencidos);
