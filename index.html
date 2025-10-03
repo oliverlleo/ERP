@@ -847,32 +847,15 @@
                         <div class="mt-6">
                             <!-- Tab: Planos de Contas -->
                             <div id="planos-de-contas-tab-financeiro" class="tab-content-financeiro">
-                                <form id="plano-conta-form">
-                                    <input type="hidden" id="plano-conta-id">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="plano-conta-nome">Nome da Categoria</label>
-                                            <input type="text" id="plano-conta-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="Ex: Despesas Administrativas">
-                                        </div>
-                                    </div>
-                                    <div id="plano-conta-form-feedback" class="text-sm mt-4"></div>
-                                    <div class="flex justify-end pt-4">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Salvar Categoria</button>
-                                    </div>
-                                </form>
-                                <div class="mt-8 border-t pt-6">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Categorias Cadastradas</h3>
-                                    <div class="overflow-x-auto">
-                                        <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
-                                                <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Categoria</th>
-                                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="planos-contas-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                                        </table>
-                                    </div>
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Estrutura do Plano de Contas</h3>
+                                    <button id="add-root-account-btn" class="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                        Adicionar Conta Raiz
+                                    </button>
+                                </div>
+                                <div id="plano-de-contas-tree" class="border rounded-lg p-4 space-y-2 bg-gray-50 min-h-[200px]">
+                                    <!-- A árvore de contas será renderizada aqui via JavaScript -->
+                                    <p class="text-gray-500">Carregando plano de contas...</p>
                                 </div>
                             </div>
                             <!-- Tab: Contas Bancárias -->
@@ -907,6 +890,89 @@
                             </div>
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Modal para Adicionar/Editar Conta do Plano de Contas -->
+                    <div id="plano-conta-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                            <div class="flex justify-between items-center border-b pb-3">
+                                <h3 id="plano-conta-modal-title" class="text-2xl font-bold text-gray-900">Adicionar Conta</h3>
+                                <button id="close-plano-conta-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                    <span class="material-symbols-outlined text-gray-600">close</span>
+                                </button>
+                            </div>
+                            <div class="mt-5">
+                                <form id="plano-conta-form-new" class="space-y-6">
+                                    <input type="hidden" id="plano-conta-id-new">
+                                    <input type="hidden" id="plano-conta-codigo-pai">
+                                    <input type="hidden" id="plano-conta-nivel">
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Conta Pai</label>
+                                        <p id="plano-conta-pai-display" class="mt-1 text-base font-semibold text-gray-800 bg-gray-100 p-2 rounded-md"></p>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="plano-conta-codigo-new">Código</label>
+                                            <input type="text" id="plano-conta-codigo-new" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="plano-conta-nome-new">Nome da Conta</label>
+                                            <input type="text" id="plano-conta-nome-new" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="plano-conta-tipo">Tipo Principal</label>
+                                            <select id="plano-conta-tipo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                                <option value="" disabled>Selecione o tipo</option>
+                                                <option value="receita">Receita</option>
+                                                <option value="despesa">Despesa</option>
+                                                <option value="custo">Custo</option>
+                                                <option value="investimento">Investimento</option>
+                                                <option value="movimentacao">Movimentação Não Operacional</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Natureza da Conta</label>
+                                            <div class="mt-2 space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="radio" id="natureza-sintetica" name="aceitaLancamento" value="false" class="h-4 w-4 text-indigo-600 border-gray-300" checked>
+                                                    <label for="natureza-sintetica" class="ml-3 block text-sm font-medium text-gray-700">Sintética (Título / Agrupadora)</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="radio" id="natureza-analitica" name="aceitaLancamento" value="true" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                                    <label for="natureza-analitica" class="ml-3 block text-sm font-medium text-gray-700">Analítica (Aceita Lançamento)</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="aplicavel-em-container" class="hidden">
+                                        <label class="block text-sm font-medium text-gray-700">Aplicável em:</label>
+                                        <div class="mt-2 space-y-2">
+                                             <div class="flex items-center">
+                                                <input type="checkbox" id="aplicavel-pagamentos" name="aplicavelEm" value="pagamentos" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                                <label for="aplicavel-pagamentos" class="ml-3 block text-sm font-medium text-gray-700">Contas a Pagar</label>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" id="aplicavel-recebimentos" name="aplicavelEm" value="recebimentos" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                                <label for="aplicavel-recebimentos" class="ml-3 block text-sm font-medium text-gray-700">Contas a Receber</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="plano-conta-form-feedback-new" class="text-sm mt-4"></div>
+
+                                    <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                                        <button type="button" id="cancel-plano-conta-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                                        <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Conta</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Seção de Cadastro Recursos Humanos (inicia oculta) -->
@@ -2207,8 +2273,13 @@
     const financeirosCardLink = document.getElementById('financeiros-card-link');
     const financeirosCadastroSection = document.getElementById('financeiros-cadastro-section');
     const closeFinanceirosCadastro = document.getElementById('close-financeiros-cadastro');
-    const planoContaForm = document.getElementById('plano-conta-form');
-    const planosContasTableBody = document.getElementById('planos-contas-table-body');
+    const addRootAccountBtn = document.getElementById('add-root-account-btn');
+    const planoDeContasTreeContainer = document.getElementById('plano-de-contas-tree');
+    const planoContaModal = document.getElementById('plano-conta-modal');
+    const planoContaFormNew = document.getElementById('plano-conta-form-new');
+    const closePlanoContaModalBtn = document.getElementById('close-plano-conta-modal-btn');
+    const cancelPlanoContaModalBtn = document.getElementById('cancel-plano-conta-modal-btn');
+    const aplicavelEmContainer = document.getElementById('aplicavel-em-container');
     const contaBancariaForm = document.getElementById('conta-bancaria-form');
     const contasBancariasTableBody = document.getElementById('contas-bancarias-table-body');
     const rhCardLink = document.getElementById('rh-card-link');
@@ -2890,42 +2961,100 @@
             });
         });
 
-        // Cadastros - Planos de Contas
+        // Cadastros - Planos de Contas (New Tree Logic)
         const planosContasQuery = query(collection(db, 'users', userId, 'planosDeContas'));
         planosDeContasUnsubscribe = onSnapshot(planosContasQuery, (querySnapshot) => {
-            if (!planosContasTableBody) return;
-            planosContasTableBody.innerHTML = '';
-            if (querySnapshot.empty) {
-                const tr = planosContasTableBody.insertRow();
-                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhuma categoria cadastrada.</td>`;
-            } else {
-                querySnapshot.forEach(doc => {
-                    const data = doc.data();
-                    const tr = planosContasTableBody.insertRow();
-                    tr.setAttribute('data-id', doc.id);
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="edit-plano-conta-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
-                            <button class="delete-btn text-red-600 hover:text-red-900" data-collection="planosDeContas" data-id="${doc.id}">Excluir</button>
-                        </td>
-                    `;
-                });
-            }
+            if (!planoDeContasTreeContainer) return;
+            const accounts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            accounts.sort((a, b) => a.codigo.localeCompare(b.codigo)); // Ensure parent comes before child
+            const tree = buildTree(accounts);
+            renderTree(tree, planoDeContasTreeContainer);
         });
 
-        if (planosContasTableBody && !planosContasTableBody.dataset.listenerAttached) {
-            planosContasTableBody.addEventListener('click', (e) => {
-                if (e.target.classList.contains('edit-plano-conta-btn')) {
-                    openPlanoContaForEdit(e.target.dataset.id);
-                }
-                if (e.target.classList.contains('delete-btn')) {
-                    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-                        deleteItem('planosDeContas', e.target.dataset.id);
-                    }
+        function buildTree(list) {
+            const map = {};
+            const roots = [];
+            list.forEach(node => {
+                map[node.codigo] = { ...node, children: [] };
+            });
+
+            list.forEach(nodeData => {
+                const node = map[nodeData.codigo];
+                if (node.codigoPai && map[node.codigoPai]) {
+                    map[node.codigoPai].children.push(node);
+                } else {
+                    roots.push(node);
                 }
             });
-            planosContasTableBody.dataset.listenerAttached = 'true';
+            return roots;
+        }
+
+        function renderTree(nodes, container) {
+            container.innerHTML = '';
+            if (nodes.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Nenhum plano de contas cadastrado. Comece adicionando uma conta raiz.</p>';
+                return;
+            }
+            nodes.forEach(node => {
+                container.appendChild(createNodeElement(node));
+            });
+        }
+
+        function createNodeElement(node) {
+            const div = document.createElement('div');
+            const isSintetica = node.aceitaLancamento === false;
+            const hasChildren = node.children && node.children.length > 0;
+
+            div.className = `pl-${(node.nivel - 1) * 6}`;
+            div.innerHTML = `
+                <div class="flex items-center justify-between p-2 rounded-md hover:bg-gray-200 group">
+                    <div class="flex items-center">
+                        <span class="font-mono text-sm text-gray-500 w-32 flex-shrink-0">${node.codigo}</span>
+                        <span class="font-medium ${isSintetica ? 'text-gray-900' : 'text-gray-600'}">${node.nome}</span>
+                        ${node.inativo ? '<span class="ml-2 text-xs bg-gray-300 text-gray-700 px-2 py-0.5 rounded-full">Inativo</span>' : ''}
+                    </div>
+                    <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        ${isSintetica ? `<button class="add-sub-account-btn text-green-600 hover:text-green-800 text-sm font-medium p-1 rounded hover:bg-green-100" title="Adicionar Sub-conta" data-id="${node.id}"><span class="material-symbols-outlined">add</span></button>` : ''}
+                        <button class="edit-account-btn text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-100" title="Editar Conta" data-id="${node.id}"><span class="material-symbols-outlined">edit</span></button>
+                        <button class="toggle-active-btn text-yellow-600 hover:text-yellow-800 text-sm font-medium p-1 rounded hover:bg-yellow-100" title="${node.inativo ? 'Reativar' : 'Inativar'}" data-id="${node.id}" data-has-children="${hasChildren}" data-inativo="${!!node.inativo}">${node.inativo ? '<span class="material-symbols-outlined">visibility</span>' : '<span class="material-symbols-outlined">visibility_off</span>'}</button>
+                        <button class="delete-account-btn text-red-600 hover:text-red-800 text-sm font-medium p-1 rounded hover:bg-red-100" title="Excluir Conta" data-id="${node.id}" data-has-children="${hasChildren}"><span class="material-symbols-outlined">delete</span></button>
+                    </div>
+                </div>
+            `;
+
+            if (hasChildren) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'mt-1 border-l-2 border-gray-200';
+                node.children.forEach(child => {
+                    childrenContainer.appendChild(createNodeElement(child));
+                });
+                div.appendChild(childrenContainer);
+            }
+            return div;
+        }
+
+        // --- Lógica do Novo Plano de Contas ---
+
+        if (addRootAccountBtn) {
+            addRootAccountBtn.addEventListener('click', () => {
+                openPlanoContaModal(); // Open modal for a new root account
+            });
+        }
+
+        if (closePlanoContaModalBtn) closePlanoContaModalBtn.addEventListener('click', closePlanoContaModal);
+        if (cancelPlanoContaModalBtn) cancelPlanoContaModalBtn.addEventListener('click', closePlanoContaModal);
+
+        function closePlanoContaModal() {
+            if (planoContaModal) planoContaModal.classList.add('hidden');
+        }
+
+        // Show/hide 'Aplicável Em' based on account nature
+        if (planoContaFormNew) {
+            planoContaFormNew.addEventListener('change', (e) => {
+                if (e.target.name === 'aceitaLancamento') {
+                    aplicavelEmContainer.classList.toggle('hidden', e.target.value !== 'true');
+                }
+            });
         }
 
         // Cadastros - Contas Bancárias
@@ -3203,8 +3332,36 @@
         }
 
         planosContasDropdownUnsubscribe = onSnapshot(planosContasQuery, (querySnapshot) => {
-            populateDropdown(despesaCategoriaSelect, querySnapshot.docs);
+            const allAccounts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Filter for expense categories
+            const expenseAccounts = allAccounts
+                .filter(acc => acc.aceitaLancamento === true && !acc.inativo && acc.aplicavelEm?.includes('pagamentos'))
+                .sort((a, b) => a.codigo.localeCompare(b.codigo));
+
+            // Filter for revenue categories
+            const revenueAccounts = allAccounts
+                .filter(acc => acc.aceitaLancamento === true && !acc.inativo && acc.aplicavelEm?.includes('recebimentos'))
+                .sort((a, b) => a.codigo.localeCompare(b.codigo));
+
+            populatePlanoContasDropdown(despesaCategoriaSelect, expenseAccounts);
+            populatePlanoContasDropdown(receitaCategoriaSelect, revenueAccounts);
         });
+
+        function populatePlanoContasDropdown(selectElement, accounts) {
+            if (!selectElement) return;
+            const currentVal = selectElement.value;
+            selectElement.innerHTML = '<option value="">Selecione uma categoria</option>';
+            accounts.forEach(acc => {
+                const option = document.createElement('option');
+                option.value = acc.id;
+                // Add indentation based on level for better readability
+                const indentation = '&nbsp;&nbsp;'.repeat((acc.nivel - 1) * 2);
+                option.innerHTML = `${indentation}${acc.codigo} - ${acc.nome}`;
+                selectElement.appendChild(option);
+            });
+            selectElement.value = currentVal;
+        }
         contasBancariasDropdownUnsubscribe = onSnapshot(contasBancariasQuery, (querySnapshot) => {
             const docs = querySnapshot.docs;
             populateDropdown(pagamentoContaSelect, docs);
@@ -3981,24 +4138,161 @@
         }
     }
 
-    async function openPlanoContaForEdit(id) {
-        if (!effectiveUserId) return;
-        try {
-            const docRef = doc(db, 'users', effectiveUserId, 'planosDeContas', id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById('plano-conta-id').value = docSnap.id;
-                document.getElementById('plano-conta-nome').value = data.nome || '';
+        async function openPlanoContaModal({ parentId = null, editId = null } = {}) {
+            if (!effectiveUserId) return;
+            planoContaFormNew.reset();
+            document.getElementById('plano-conta-id-new').value = '';
+            document.getElementById('natureza-sintetica').checked = true;
+            document.getElementById('plano-conta-tipo').disabled = false;
+            document.getElementById('natureza-analitica').disabled = false;
+            document.getElementById('natureza-sintetica').disabled = false;
+            aplicavelEmContainer.classList.add('hidden');
+            const feedbackEl = document.getElementById('plano-conta-form-feedback-new');
+            feedbackEl.textContent = '';
 
-                financeirosCadastroSection.classList.remove('hidden');
-                document.querySelector('.tab-link-financeiro[data-tab-financeiro="planos-de-contas"]').click();
-                financeirosCadastroSection.scrollIntoView({ behavior: 'smooth' });
+            const collectionRef = collection(db, 'users', effectiveUserId, 'planosDeContas');
+
+            if (editId) {
+                // --- MODO DE EDIÇÃO ---
+                const docRef = doc(collectionRef, editId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('plano-conta-modal-title').textContent = "Editar Conta";
+                    document.getElementById('plano-conta-id-new').value = docSnap.id;
+                    document.getElementById('plano-conta-pai-display').textContent = data.codigoPai ? `Editando sob ${data.codigoPai}` : 'Editando Conta Raiz';
+                    document.getElementById('plano-conta-codigo-new').value = data.codigo;
+                    document.getElementById('plano-conta-nome-new').value = data.nome;
+                    document.getElementById('plano-conta-tipo').value = data.tipo;
+                    document.getElementById('plano-conta-codigo-pai').value = data.codigoPai || '';
+                    document.getElementById('plano-conta-nivel').value = data.nivel;
+
+                    if (data.aceitaLancamento) {
+                        document.getElementById('natureza-analitica').checked = true;
+                        aplicavelEmContainer.classList.remove('hidden');
+                        (data.aplicavelEm || []).forEach(val => {
+                            const checkbox = document.getElementById(`aplicavel-${val}`);
+                            if(checkbox) checkbox.checked = true;
+                        });
+                    }
+                    // Prevent changing type if it has children
+                    const q = query(collectionRef, where("codigoPai", "==", data.codigo));
+                    const childrenSnap = await getDocs(q);
+                    if (!childrenSnap.empty) {
+                        document.getElementById('plano-conta-tipo').disabled = true;
+                        document.getElementById('natureza-analitica').disabled = true;
+                        document.getElementById('natureza-sintetica').disabled = true;
+                        showFeedback('plano-conta-form-feedback-new', 'Não é possível alterar o tipo ou natureza de contas que possuem sub-contas.', true, true);
+                    }
+
+                }
+            } else {
+                // --- MODO DE CRIAÇÃO ---
+                document.getElementById('plano-conta-modal-title').textContent = "Adicionar Nova Conta";
+                let parentData = null;
+                let nivel = 1;
+                let codigoPai = '';
+
+                if (parentId) {
+                    const parentDoc = await getDoc(doc(collectionRef, parentId));
+                    if (parentDoc.exists()) {
+                        parentData = parentDoc.data();
+                        nivel = parentData.nivel + 1;
+                        codigoPai = parentData.codigo;
+                        document.getElementById('plano-conta-pai-display').textContent = `${parentData.codigo} - ${parentData.nome}`;
+                        document.getElementById('plano-conta-tipo').value = parentData.tipo;
+                        document.getElementById('plano-conta-tipo').disabled = true;
+                    }
+                } else {
+                    document.getElementById('plano-conta-pai-display').textContent = 'Nova Conta Raiz';
+                }
+
+                document.getElementById('plano-conta-codigo-pai').value = codigoPai;
+                document.getElementById('plano-conta-nivel').value = nivel;
+
+                // Auto-generate next code
+                const q = query(collectionRef, where("codigoPai", "==", codigoPai));
+                const siblingDocs = await getDocs(q);
+                let nextCode;
+
+                if (!siblingDocs.empty) {
+                    const lastSiblingCode = siblingDocs.docs
+                        .map(d => d.data().codigo)
+                        .sort((a, b) => {
+                            const aLast = parseInt(a.split('.').pop(), 10);
+                            const bLast = parseInt(b.split('.').pop(), 10);
+                            return aLast - bLast;
+                        })
+                        .pop();
+
+                    const parts = lastSiblingCode.split('.');
+                    const lastPart = parseInt(parts.pop(), 10) + 1;
+                    parts.push(lastPart);
+                    nextCode = parts.join('.');
+                } else {
+                    if (codigoPai) {
+                        nextCode = `${codigoPai}.1`;
+                    } else {
+                        const allAccountsSnap = await getDocs(collectionRef);
+                        const rootCodes = allAccountsSnap.docs
+                            .map(d => d.data())
+                            .filter(acc => !acc.codigoPai)
+                            .map(acc => parseInt(acc.codigo, 10));
+
+                        const lastRootCode = rootCodes.length > 0 ? Math.max(...rootCodes) : 0;
+                        nextCode = (lastRootCode + 1).toString();
+                    }
+                }
+                document.getElementById('plano-conta-codigo-new').value = nextCode;
             }
-        } catch (error) {
-            console.error("Erro ao buscar plano de conta para edição:", error);
+            planoContaModal.classList.remove('hidden');
         }
-    }
+
+        if (planoDeContasTreeContainer) {
+            planoDeContasTreeContainer.addEventListener('click', async (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const id = button.dataset.id;
+                if (button.classList.contains('add-sub-account-btn')) {
+                    openPlanoContaModal({ parentId: id });
+                }
+                if (button.classList.contains('edit-account-btn')) {
+                    openPlanoContaModal({ editId: id });
+                }
+                if (button.classList.contains('delete-account-btn')) {
+                    if (button.dataset.hasChildren === 'true') {
+                        alert("Não é possível excluir uma conta que possui sub-contas. Remova ou mova as sub-contas primeiro.");
+                        return;
+                    }
+                    // Check if account has been used
+                    const despesasQuery = query(collection(db, 'users', effectiveUserId, 'despesas'), where('categoriaId', '==', id));
+                    const receitasQuery = query(collection(db, 'users', effectiveUserId, 'receitas'), where('categoriaId', '==', id));
+                    const [despesasSnap, receitasSnap] = await Promise.all([getDocs(despesasQuery), getDocs(receitasQuery)]);
+
+                    if (!despesasSnap.empty || !receitasSnap.empty) {
+                        alert("Não é possível excluir uma conta que já foi utilizada em lançamentos. Considere inativá-la.");
+                        return;
+                    }
+
+                    if (confirm("Tem certeza que deseja excluir esta conta? A ação não pode ser desfeita.")) {
+                        await deleteDoc(doc(db, 'users', effectiveUserId, 'planosDeContas', id));
+                    }
+                }
+                if (button.classList.contains('toggle-active-btn')) {
+                    const isCurrentlyInactive = button.dataset.inativo === 'true';
+                    if (!isCurrentlyInactive && button.dataset.hasChildren === 'true') {
+                         alert("Não é possível inativar uma conta que possui sub-contas ativas.");
+                         return;
+                    }
+                     if (confirm(`Tem certeza que deseja ${isCurrentlyInactive ? 'reativar' : 'inativar'} esta conta?`)) {
+                        await updateDoc(doc(db, 'users', effectiveUserId, 'planosDeContas', id), {
+                            inativo: !isCurrentlyInactive
+                        });
+                    }
+                }
+            });
+        }
 
     async function openContaBancariaForEdit(id) {
         if (!effectiveUserId) return;
@@ -4376,34 +4670,69 @@
             showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
         }
     });
-    planoContaForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const feedbackId = 'plano-conta-form-feedback';
-        const userId = effectiveUserId;
-        if (!userId) {
-            showFeedback(feedbackId, "Usuário não autenticado.", true);
-            return;
-        }
+        if (planoContaFormNew) {
+            planoContaFormNew.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const feedbackId = 'plano-conta-form-feedback-new';
+                const userId = effectiveUserId;
+                if (!userId) {
+                    showFeedback(feedbackId, "Usuário não autenticado.", true);
+                    return;
+                }
 
-        const planoId = document.getElementById('plano-conta-id').value;
-        const data = { nome: document.getElementById('plano-conta-nome').value };
+                const id = document.getElementById('plano-conta-id-new').value;
+                const aceitaLancamento = document.querySelector('input[name="aceitaLancamento"]:checked').value === 'true';
+                let aplicavelEm = [];
+                if (aceitaLancamento) {
+                    document.querySelectorAll('input[name="aplicavelEm"]:checked').forEach(checkbox => {
+                        aplicavelEm.push(checkbox.value);
+                    });
+                }
 
-        try {
-            if (planoId) {
-                const docRef = doc(db, 'users', userId, 'planosDeContas', planoId);
-                await updateDoc(docRef, data);
-                showFeedback(feedbackId, "Categoria atualizada com sucesso!", false);
-            } else {
-                await addDoc(collection(db, 'users', userId, 'planosDeContas'), { ...data, createdAt: serverTimestamp(), adminId: userId });
-                showFeedback(feedbackId, "Categoria salva com sucesso!", false);
-            }
-            planoContaForm.reset();
-            document.getElementById('plano-conta-id').value = '';
-        } catch (error) {
-            console.error("Erro ao salvar plano de conta:", error);
-            showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+                const data = {
+                    codigo: document.getElementById('plano-conta-codigo-new').value,
+                    nome: document.getElementById('plano-conta-nome-new').value,
+                    tipo: document.getElementById('plano-conta-tipo').value,
+                    aceitaLancamento: aceitaLancamento,
+                    aplicavelEm: aplicavelEm,
+                    codigoPai: document.getElementById('plano-conta-codigo-pai').value,
+                    nivel: parseInt(document.getElementById('plano-conta-nivel').value, 10),
+                    inativo: false, // Always created as active
+                };
+
+                if (!data.codigo || !data.nome || !data.tipo) {
+                    showFeedback(feedbackId, "Código, Nome e Tipo são campos obrigatórios.", true);
+                    return;
+                }
+
+                try {
+                    if (id) {
+                        // Update
+                        const docRef = doc(db, 'users', userId, 'planosDeContas', id);
+                        await updateDoc(docRef, {
+                            nome: data.nome,
+                            // Type and nature are not editable if they have children, handled in open modal logic
+                            tipo: data.tipo,
+                            aceitaLancamento: data.aceitaLancamento,
+                            aplicavelEm: data.aplicavelEm
+                        });
+                        showFeedback(feedbackId, "Conta atualizada com sucesso!", false);
+                    } else {
+                        // Create
+                        await addDoc(collection(db, 'users', userId, 'planosDeContas'), {
+                            ...data,
+                            adminId: userId,
+                            createdAt: serverTimestamp()
+                        });
+                        showFeedback(feedbackId, "Conta criada com sucesso!", false);
+                    }
+                    closePlanoContaModal();
+                } catch (error) {
+                    console.error("Erro ao salvar plano de conta:", error);
+                    showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+                }
+            });
         }
-    });
     contaBancariaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const feedbackId = 'conta-bancaria-form-feedback';
@@ -5431,6 +5760,7 @@
                     favorecidoId: favorecidoNomeSelect.value,
                     favorecidoNome: favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text,
                     categoriaId: document.getElementById('despesa-categoria').value,
+                    codigoPlanoDeContas: document.getElementById('despesa-categoria').options[document.getElementById('despesa-categoria').selectedIndex].text.trim().split(' ')[0],
                     emissao: document.getElementById('despesa-emissao').value,
                     competencia: document.getElementById('despesa-competencia').value,
                     vencimento: vencimentoOriginal,
@@ -5578,6 +5908,7 @@
                     clienteId: document.getElementById('receita-cliente').value,
                     clienteNome: document.getElementById('receita-cliente').options[document.getElementById('receita-cliente').selectedIndex].text,
                     categoriaId: document.getElementById('receita-categoria').value,
+                    codigoPlanoDeContas: document.getElementById('receita-categoria').options[document.getElementById('receita-categoria').selectedIndex].text.trim().split(' ')[0],
                     dataEmissao: document.getElementById('receita-emissao').value,
                     dataCompetencia: document.getElementById('receita-competencia').value,
                     obs: document.getElementById('receita-obs').value,
