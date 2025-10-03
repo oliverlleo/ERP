@@ -4061,10 +4061,10 @@
         // Enable/disable 'Pagar' button
         let canPay = false;
         if (selectedCount > 0) {
-            // Check if ALL selected items are not paid
+            // A conta só pode ser paga se NENHUMA das despesas selecionadas já tiver o status 'Pago'.
             canPay = selectedIds.every(id => {
                 const despesaDoc = allDespesas.find(d => d.id === id);
-                return despesaDoc && !despesaDoc.data().pago;
+                return despesaDoc && despesaDoc.data().status !== 'Pago';
             });
         }
         pagarSelecionadasBtn.disabled = !canPay;
@@ -4607,72 +4607,127 @@
     despesaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userId = effectiveUserId;
-        if (!userId) return;
+        if (!userId) {
+            alert("Usuário não autenticado.");
+            return;
+        }
 
         const expenseId = document.getElementById('despesa-id').value;
         const formaPagamento = document.getElementById('forma-pagamento').value;
-        const userRef = collection(db, 'users', userId, 'despesas');
-
         const baseDescricao = document.getElementById('despesa-descricao').value;
         const valorOriginalCents = toCents(document.getElementById('despesa-valor').value);
+        const vencimentoOriginal = document.getElementById('despesa-vencimento').value;
 
         try {
-            const favorecidoTipo = favorecidoTipoSelect.value;
-            const favorecidoId = favorecidoNomeSelect.value;
-            const favorecidoNome = favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text;
+            // --- UPDATE LOGIC (Existing functionality, remains mostly unchanged) ---
+            if (expenseId) {
+                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
+                await updateDoc(docRef, {
+                    descricao: baseDescricao,
+                    favorecidoTipo: favorecidoTipoSelect.value,
+                    favorecidoId: favorecidoNomeSelect.value,
+                    favorecidoNome: favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text,
+                    categoriaId: document.getElementById('despesa-categoria').value,
+                    emissao: document.getElementById('despesa-emissao').value,
+                    competencia: document.getElementById('despesa-competencia').value,
+                    vencimento: vencimentoOriginal,
+                    obs: document.getElementById('despesa-obs').value,
+                });
+                closeModal();
+                return;
+            }
+
+            // --- CREATE LOGIC (New functionality for installments and recurring) ---
+            const userRef = collection(db, 'users', userId, 'despesas');
+            const despesasParaCriar = [];
 
             let baseData = {
                 descricao: baseDescricao,
-                numeroDocumento: document.getElementById('despesa-numero-documento').value,
-                favorecidoTipo,
-                favorecidoId,
-                favorecidoNome,
+                favorecidoTipo: favorecidoTipoSelect.value,
+                favorecidoId: favorecidoNomeSelect.value,
+                favorecidoNome: favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text,
                 categoriaId: document.getElementById('despesa-categoria').value,
-                valorOriginal: valorOriginalCents,
                 emissao: document.getElementById('despesa-emissao').value,
                 competencia: document.getElementById('despesa-competencia').value,
-                vencimento: document.getElementById('despesa-vencimento').value,
                 obs: document.getElementById('despesa-obs').value,
                 formaPagamento: formaPagamento,
                 criadoPor: currentUserName || 'sistema',
+                createdAt: serverTimestamp(),
+                status: 'Pendente',
+                totalPago: 0,
+                totalDescontos: 0,
+                totalJuros: 0,
             };
 
-            if (expenseId) {
-                // UPDATE logic
-                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
-                // Note: Security lock to prevent changing value is handled in openModalForEdit
-                await updateDoc(docRef, {
-                    // Only update fields that are safe to change
-                    descricao: baseData.descricao,
-                    favorecidoTipo: baseData.favorecidoTipo,
-                    favorecidoId: baseData.favorecidoId,
-                    favorecidoNome: baseData.favorecidoNome,
-                    categoriaId: baseData.categoriaId,
-                    emissao: baseData.emissao,
-                    competencia: baseData.competencia,
-                    vencimento: baseData.vencimento,
-                    obs: baseData.obs,
-                });
-            } else {
-                // CREATE logic
-                baseData.createdAt = serverTimestamp();
-                baseData.status = 'Pendente';
-                baseData.totalPago = 0;
-                baseData.valorSaldo = valorOriginalCents;
+            if (formaPagamento === 'parcelado' || formaPagamento === 'recorrente') {
+                let numIteracoes = 0;
+                let valorIteracao = valorOriginalCents;
+                let dataVencimento = new Date(vencimentoOriginal + 'T00:00:00');
+                let intervaloMeses = 1;
 
-                if (document.getElementById('marcar-pago-checkbox').checked) {
-                    const valorPagoCents = toCents(document.getElementById('pagamento-valor').value);
-                    baseData.status = valorPagoCents >= valorOriginalCents ? 'Pago' : 'Pago Parcialmente';
-                    baseData.totalPago = valorPagoCents;
-                    baseData.valorSaldo = valorOriginalCents - valorPagoCents;
-                    // Note: We'll create the payment document in the subcollection separately later
+                if (formaPagamento === 'parcelado') {
+                    numIteracoes = parseInt(document.getElementById('parcelas-numero').value, 10);
+                    if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de parcelas válido."); return; }
+                    valorIteracao = Math.round(valorOriginalCents / numIteracoes);
+                    const intervalo = document.getElementById('parcelas-intervalo').value;
+                    if(intervalo === 'quinzenal') intervaloMeses = 0.5; // Special handling needed
+                    if(intervalo === 'semanal') intervaloMeses = 0.25; // Special handling needed
+
+                } else { // recorrente
+                    numIteracoes = parseInt(document.getElementById('recorrencia-fim-ocorrencias').value, 10);
+                    if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de ocorrências válido para a recorrência."); return; }
+                    const freq = document.getElementById('recorrencia-frequencia').value;
+                    intervaloMeses = getRecurrenceMultiplier(freq);
                 }
 
-                await addDoc(userRef, baseData);
+                for (let i = 0; i < numIteracoes; i++) {
+                    let vencimentoIteracao = new Date(dataVencimento.getTime());
+                    if(intervaloMeses === 0.5) { // Quinzenal
+                         vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 15));
+                    } else if (intervaloMeses === 0.25) { // Semanal
+                         vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 7));
+                    } else { // Mensal, Bimestral, etc.
+                        vencimentoIteracao.setMonth(vencimentoIteracao.getMonth() + (i * intervaloMeses));
+                    }
+
+                    despesasParaCriar.push({
+                        ...baseData,
+                        descricao: `${baseDescricao} (${formaPagamento === 'parcelado' ? `Parcela ${i + 1}/${numIteracoes}` : `Recorrência ${i + 1}`})`,
+                        valorOriginal: valorIteracao,
+                        valorSaldo: valorIteracao,
+                        vencimento: vencimentoIteracao.toISOString().split('T')[0],
+                    });
+                }
+            } else {
+                // Logic for a single expense ('a_vista', 'boleto', etc.)
+                despesasParaCriar.push({
+                    ...baseData,
+                    valorOriginal: valorOriginalCents,
+                    valorSaldo: valorOriginalCents,
+                    vencimento: vencimentoOriginal,
+                });
             }
+
+            // Batch write all expenses to Firestore using a transaction for sequential numbering
+            const counterRef = doc(db, 'users', userId, 'counters', 'despesas');
+            await runTransaction(db, async (transaction) => {
+                const counterDoc = await transaction.get(counterRef);
+                let nextNumber = counterDoc.exists() ? counterDoc.data().currentNumber + 1 : 1;
+
+                for (const despesa of despesasParaCriar) {
+                    const newDocRef = doc(userRef); // Firestore generates a new ID
+                    despesa.numeroDocumento = String(nextNumber).padStart(4, '0');
+                    transaction.set(newDocRef, despesa);
+                    nextNumber++;
+                }
+
+                transaction.set(counterRef, { currentNumber: nextNumber - 1 }, { merge: true });
+            });
+
             closeModal();
         } catch (error) {
             console.error("Erro ao salvar despesa:", error);
+            alert("Ocorreu um erro ao salvar: " + error.message);
         }
     });
 
