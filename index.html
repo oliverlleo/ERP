@@ -1160,6 +1160,7 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descontos</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Devedor</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -3940,7 +3941,7 @@
         if (docs.length === 0) {
             const tr = despesasTableBody.insertRow();
             const td = tr.insertCell();
-            td.colSpan = 9; // Adjusted for the new column
+            td.colSpan = 10; // Increased colspan for the new column
             td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
             td.textContent = 'Nenhuma despesa encontrada.';
             return;
@@ -3960,9 +3961,15 @@
             const statusText = data.status || 'Pendente';
             const statusClass = statusClasses[statusText] || 'bg-gray-100 text-gray-800';
 
-            const valorOriginal = data.valorOriginal || data.valor || 0;
-            const totalPago = data.totalPago || data.valorPago || 0;
+            const valorOriginal = data.valorOriginal || 0;
+            const totalPago = data.totalPago || 0;
             const valorSaldo = data.valorSaldo ?? (valorOriginal - totalPago);
+
+            // Infer discount for paid items for display purposes, as requested.
+            let descontoImplicito = 0;
+            if (statusText === 'Pago' && valorSaldo <= 0) {
+                descontoImplicito = valorOriginal - totalPago;
+            }
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -3975,6 +3982,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-medium">${formatCurrency(descontoImplicito)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${formatCurrency(totalPago)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(valorSaldo)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -4375,12 +4383,14 @@
         if(visualizarDespesaModal) visualizarDespesaModal.classList.add('hidden');
     }
 
+    function closeConfirmarParcialModal() {
+        if(document.getElementById('confirmar-parcial-modal')) {
+            document.getElementById('confirmar-parcial-modal').classList.add('hidden');
+        }
+    }
+
     if(closeVisualizarModalBtn) closeVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
     if(okVisualizarModalBtn) okVisualizarModalBtn.addEventListener('click', closeVisualizarModal);
-
-    function closeConfirmarParcialModal() {
-        document.getElementById('confirmar-parcial-modal').classList.add('hidden');
-    }
 
     if(visualizarDespesaModal) {
         visualizarDespesaModal.addEventListener('click', (e) => {
@@ -4512,8 +4522,13 @@
                 const data = despesaSnap.data();
                 const saldoDevedorAtualCents = data.valorSaldo;
 
-                // A dívida é quitada se o valor pago + desconto for maior ou igual ao saldo devedor.
-                if ((valorPrincipalCents + descontosCents) < saldoDevedorAtualCents) {
+                // Lógica corrigida para verificação de pagamento parcial.
+                // Compara o total creditado (pagamento + desconto) com o saldo devedor.
+                // O uso de Math.round aqui é uma salvaguarda contra quaisquer imprecisões de ponto
+                // flutuante que possam existir em dados antigos, embora os novos dados sejam inteiros (centavos).
+                const totalCreditado = valorPrincipalCents + descontosCents;
+
+                if (Math.round(totalCreditado) < Math.round(saldoDevedorAtualCents)) {
                     abrirModalConfirmacaoParcial();
                 } else {
                     prosseguirComPagamento();
