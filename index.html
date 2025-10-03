@@ -1182,15 +1182,6 @@
 
                         <!-- Container da Visualização de Calendário (inicia oculto) -->
                         <div id="calendario-view" class="hidden">
-                            <div id="calendar-filters" class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg border">
-                                <label for="calendar-status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Status:</label>
-                                <select id="calendar-status-filter" class="form-select rounded-md border-gray-300 shadow-sm">
-                                    <option value="todas">Mostrar Todas</option>
-                                    <option value="pendente">Apenas Pendentes</option>
-                                    <option value="pago">Apenas Pagas</option>
-                                    <option value="vencido">Apenas Vencidas</option>
-                                </select>
-                            </div>
                             <div id="calendar" class="w-full"></div>
                         </div>
                     </div>
@@ -1818,7 +1809,6 @@
     const listaView = document.getElementById('lista-view');
     const calendarioView = document.getElementById('calendario-view');
     const calendarEl = document.getElementById('calendar');
-    const calendarStatusFilter = document.getElementById('calendar-status-filter');
     let calendarInstance = null;
 
 
@@ -1921,14 +1911,15 @@
 
         const events = docs.map(doc => {
             const data = doc.data();
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const status = data.status || 'Pendente';
 
-            let eventColor = '#f59e0b'; // Amarelo para Pendente
-            if (data.pago) {
-                eventColor = '#16a34a'; // Verde para Pago
-            } else if (vencimento < today) {
-                eventColor = '#dc2626'; // Vermelho para Vencido
-            }
+            const colorMap = {
+                'Pago': '#16a34a', // green-600
+                'Pago Parcialmente': '#f59e0b', // yellow-500
+                'Vencido': '#dc2626', // red-600
+                'Pendente': '#3b82f6' // blue-500
+            };
+            const eventColor = colorMap[status] || '#6b7280'; // gray-500 as fallback
 
             return {
                 id: doc.id,
@@ -1937,7 +1928,7 @@
                 backgroundColor: eventColor,
                 borderColor: eventColor,
                 extendedProps: {
-                    status: data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente')
+                    status: status
                 }
             };
         });
@@ -3978,6 +3969,9 @@
         });
 
         renderDespesasTable(filteredDocs);
+        if (calendarInstance) {
+            processAndRenderCalendarEvents(filteredDocs);
+        }
     }
 
     if (statusFilterGroup) {
@@ -4841,24 +4835,6 @@
         calendarioViewBtn.addEventListener('click', () => setContasView('calendario'));
     }
 
-    if(calendarStatusFilter) {
-        calendarStatusFilter.addEventListener('change', () => {
-            const status = calendarStatusFilter.value;
-            if (status === 'todas') {
-                processAndRenderCalendarEvents(allDespesas);
-            } else {
-                const filteredDespesas = allDespesas.filter(doc => {
-                    const data = doc.data();
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const vencimento = new Date(data.vencimento + 'T00:00:00');
-                    const docStatus = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-                    return docStatus === status;
-                });
-                processAndRenderCalendarEvents(filteredDespesas);
-            }
-        });
-    }
 
     // --- Lógica de Recorrência Inteligente ---
     function resetRecurrenceFields() {
