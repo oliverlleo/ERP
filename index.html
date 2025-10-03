@@ -152,6 +152,7 @@
                         </button>
                         <div id="financeiro-dropdown" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -269,6 +270,7 @@
                         </button>
                         <div id="financeiro-dropdown-cadastros" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -1059,6 +1061,7 @@
                         </button>
                         <div id="financeiro-dropdown-contas" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -1106,8 +1109,14 @@
                         <div class="flex justify-between items-center mb-4 pb-4 border-b">
                             <h2 class="text-gray-900 text-xl font-semibold">Contas a Pagar</h2>
                             <div class="flex items-center gap-2" id="view-toggle-buttons">
-                                <button id="lista-view-btn" class="px-3 py-1 text-sm font-medium rounded-md bg-blue-100 text-blue-700">Lista</button>
-                                <button id="calendario-view-btn" class="px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100">Calendário</button>
+                                <button id="lista-view-btn" class="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md bg-blue-100 text-blue-700">
+                                    <span class="material-symbols-outlined text-base">list</span>
+                                    <span>Lista</span>
+                                </button>
+                                <button id="calendario-view-btn" class="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100">
+                                    <span class="material-symbols-outlined text-base">calendar_month</span>
+                                    <span>Calendário</span>
+                                </button>
                             </div>
                         </div>
 
@@ -1563,6 +1572,471 @@
     </div>
   </div>
 
+  <!-- Container da Tela Financeiro - Contas a Receber -->
+  <div id="contas-a-receber-page" class="view-container min-h-screen w-full">
+    <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <div class="relative">
+                        <button id="financeiro-nav-link-receber" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
+                            <span>Financeiro</span>
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        <div id="financeiro-dropdown-receber" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
+                        </div>
+                    </div>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-button-receber" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-receber" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-receber" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-receber" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8 bg-gray-50">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Módulo Financeiro</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Gerencie suas contas a pagar, a receber e acompanhe o fluxo de caixa.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <div id="total-a-receber-card-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                            <p class="text-gray-800 text-base font-medium leading-normal">Total a Receber no Mês</p>
+                            <p id="total-a-receber-card" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                        </div>
+                        <div id="total-recebido-card-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                           <p class="text-gray-800 text-base font-medium leading-normal">Total Recebido no Mês</p>
+                            <p id="total-recebido-card" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
+                        </div>
+                        <div id="titulos-vencidos-card-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
+                            <p class="text-gray-800 text-base font-medium leading-normal">Títulos Vencidos</p>
+                            <p id="titulos-vencidos-card" class="text-red-600 text-3xl font-bold leading-tight">R$ 0,00</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                            <h2 class="text-gray-900 text-xl font-semibold">Contas a Receber</h2>
+                            <div class="flex items-center gap-2" id="view-toggle-buttons-receber">
+                                <button id="lista-view-btn-receber" class="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md bg-blue-100 text-blue-700">
+                                    <span class="material-symbols-outlined text-base">list</span>
+                                    <span>Lista</span>
+                                </button>
+                                <button id="calendario-view-btn-receber" class="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100">
+                                    <span class="material-symbols-outlined text-base">calendar_month</span>
+                                    <span>Calendário</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 mb-4">
+                             <button id="lancar-receita-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                                Novo Lançamento
+                            </button>
+                            <button id="receber-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">payments</span> Registrar Recebimento
+                            </button>
+                            <button id="visualizar-receita-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">visibility</span> Visualizar
+                            </button>
+                            <button id="editar-receita-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">edit</span> Editar
+                            </button>
+                            <button id="excluir-receitas-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">delete</span> Excluir
+                            </button>
+                        </div>
+
+                        <div id="filter-toolbar-receber" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                            <div class="flex-grow min-w-[200px]">
+                                <label for="search-input-receber" class="block text-sm font-medium text-gray-700">Buscar</label>
+                                <input type="text" id="search-input-receber" placeholder="Buscar por descrição, cliente..." class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="start-date-input-receber" class="block text-sm font-medium text-gray-700">Vencimento de</label>
+                                <input type="date" id="start-date-input-receber" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="end-date-input-receber" class="block text-sm font-medium text-gray-700">até</label>
+                                <input type="date" id="end-date-input-receber" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <div id="status-filter-group-receber" class="flex items-center gap-2 mt-1">
+                                    <button data-status="Pendente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
+                                    <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
+                                    <button data-status="Recebido Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
+                                    <button data-status="Recebido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Recebido</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lista-view-receber">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="p-4"><input id="select-all-checkbox-receber" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Recebido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Pendente</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="receitas-table-body" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="calendario-view-receber" class="hidden">
+                            <div id="calendar-receber" class="w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Lançamento de Receita -->
+  <div id="receita-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="text-2xl font-bold text-gray-900">Lançar Nova Receita</h3>
+              <button id="close-receita-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5">
+              <form id="receita-form" class="space-y-6">
+                  <input type="hidden" id="receita-id">
+                  <div class="p-4 border rounded-md">
+                      <h4 class="text-lg font-semibold text-gray-800 mb-4">Informações Essenciais</h4>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 col-span-2">
+                            <div class="md:col-span-2">
+                                <label for="receita-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                                <input type="text" id="receita-descricao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="Ex: Projeto de Arquitetura - Fase 1">
+                            </div>
+                            <div>
+                                <label for="receita-numero-documento" class="block text-sm font-medium text-gray-700">Número do Documento</label>
+                                <input type="text" id="receita-numero-documento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" placeholder="Gerado automaticamente" readonly>
+                            </div>
+                          </div>
+                          <div>
+                              <label for="receita-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+                              <select id="receita-cliente" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                  <option value="">Selecione um cliente</option>
+                              </select>
+                          </div>
+                          <div>
+                              <label for="receita-categoria" class="block text-sm font-medium text-gray-700">Plano de Contas / Categoria</label>
+                              <select id="receita-categoria" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                  <option value="">Selecione uma categoria</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="p-4 border rounded-md">
+                      <h4 class="text-lg font-semibold text-gray-800 mb-4">Valores, Prazos e Condições</h4>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                              <label for="receita-valor" class="block text-sm font-medium text-gray-700">Valor Original</label>
+                              <input type="text" id="receita-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
+                          </div>
+                          <div>
+                              <label for="receita-forma-pagamento" class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
+                              <select id="receita-forma-pagamento" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                  <option value="a_vista">À Vista / Título Único</option>
+                                  <option value="parcelado">Parcelado</option>
+                                  <option value="recorrente">Recorrente</option>
+                              </select>
+                          </div>
+                      </div>
+                      <div id="receita-parcelado-fields" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                              <label for="receita-parcelas-numero" class="block text-sm font-medium text-gray-700">Quantidade de Parcelas</label>
+                              <input type="number" id="receita-parcelas-numero" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ex: 3">
+                          </div>
+                          <div>
+                              <label for="receita-parcelas-intervalo" class="block text-sm font-medium text-gray-700">Intervalo</label>
+                              <select id="receita-parcelas-intervalo" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                  <option value="30">30 dias</option>
+                                  <option value="mensal">Mensal</option>
+                              </select>
+                          </div>
+                      </div>
+                      <div id="receita-recorrente-fields" class="hidden mt-4 space-y-4">
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                  <label for="receita-recorrencia-frequencia" class="block text-sm font-medium text-gray-700">Repetir a cada</label>
+                                  <select id="receita-recorrencia-frequencia" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                      <option value="mensal">Mês</option>
+                                      <option value="bimestral">Bimestre</option>
+                                      <option value="trimestral">Trimestre</option>
+                                      <option value="semestral">Semestre</option>
+                                      <option value="anual">Ano</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div>
+                              <label class="block text-sm font-medium text-gray-700">Fim da Recorrência</label>
+                              <div class="mt-2 space-y-2">
+                                  <div class="flex items-center">
+                                      <input type="radio" id="receita-recorrencia-fim-data-radio" name="receita-recorrencia-fim" value="data" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                      <label for="receita-recorrencia-fim-data-radio" class="ml-3 block text-sm font-medium text-gray-700">Em:</label>
+                                      <input type="date" id="receita-recorrencia-fim-data" class="form-input ml-2 block w-full rounded-md border-gray-300 shadow-sm">
+                                  </div>
+                                  <div class="flex items-center">
+                                      <input type="radio" id="receita-recorrencia-fim-ocorrencias-radio" name="receita-recorrencia-fim" value="ocorrencias" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                      <label for="receita-recorrencia-fim-ocorrencias-radio" class="ml-3 block text-sm font-medium text-gray-700">Após:</label>
+                                      <input type="number" id="receita-recorrencia-fim-ocorrencias" class="form-input ml-2 block w-24 rounded-md border-gray-300 shadow-sm">
+                                      <span class="ml-2 text-sm text-gray-600">ocorrências</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                              <label for="receita-emissao" class="block text-sm font-medium text-gray-700">Data de Emissão</label>
+                              <input type="date" id="receita-emissao" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                          </div>
+                          <div>
+                              <label for="receita-competencia" class="block text-sm font-medium text-gray-700">Data de Competência</label>
+                              <input type="date" id="receita-competencia" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                          </div>
+                          <div>
+                              <label for="receita-vencimento" class="block text-sm font-medium text-gray-700">Data de Vencimento</label>
+                              <input type="date" id="receita-vencimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="p-4 border rounded-md">
+                      <div class="flex items-center">
+                          <input id="marcar-recebido-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
+                          <label for="marcar-recebido-checkbox" class="ml-2 block text-sm font-medium text-gray-900">Registrar recebimento inicial?</label>
+                      </div>
+                      <div id="recebimento-info" class="hidden mt-4 space-y-4">
+                           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="recebimento-data" class="block text-sm font-medium text-gray-700">Data do Recebimento</label>
+                                    <input type="date" id="recebimento-data" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="recebimento-valor" class="block text-sm font-medium text-gray-700">Valor Recebido</label>
+                                    <input type="text" id="recebimento-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                                </div>
+                                <div>
+                                    <label for="recebimento-conta" class="block text-sm font-medium text-gray-700">Conta de Entrada</label>
+                                    <select id="recebimento-conta" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        <option value="">Selecione uma conta</option>
+                                    </select>
+                                </div>
+                           </div>
+                      </div>
+                  </div>
+
+                   <div class="p-4 border rounded-md">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Complementar</h4>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label for="receita-obs" class="block text-sm font-medium text-gray-700">Observações / Notas</label>
+                                <textarea id="receita-obs" rows="3" class="form-textarea mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                            </div>
+                             <div>
+                                <label for="receita-anexo" class="block text-sm font-medium text-gray-700">Anexar Comprovante ou Contrato</label>
+                                <input type="file" id="receita-anexo" class="form-input mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-[var(--primary-color)] hover:file:bg-blue-100">
+                            </div>
+                        </div>
+                   </div>
+
+                  <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                      <button type="button" id="cancel-receita-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                      <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Registro de Recebimento -->
+  <div id="receber-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="text-2xl font-bold text-gray-900">Registrar Recebimento</h3>
+              <button id="close-receber-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5">
+              <form id="receber-form" class="space-y-6">
+                  <input type="hidden" id="receber-receita-id">
+                  <div class="p-4 border rounded-md space-y-4">
+                      <h4 class="text-lg font-semibold text-gray-800 mb-4">Detalhes do Recebimento</h4>
+                      <p id="saldo-pendente-display" class="text-lg font-medium text-gray-700">Saldo Pendente: <span class="font-bold text-blue-600">R$ 0,00</span></p>
+                      <div>
+                          <label for="receber-data" class="block text-sm font-medium text-gray-700">Data do Recebimento</label>
+                          <input type="date" id="receber-data" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                      </div>
+                      <div>
+                          <label for="receber-valor" class="block text-sm font-medium text-gray-700">Valor a Receber (R$)</label>
+                          <input type="text" id="receber-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="receber-descontos" class="block text-sm font-medium text-gray-700">Descontos Concedidos (R$)</label>
+                          <input type="text" id="receber-descontos" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="receber-juros-multa" class="block text-sm font-medium text-gray-700">Juros / Multa Recebidos (R$)</label>
+                          <input type="text" id="receber-juros-multa" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
+                      </div>
+                      <div>
+                          <label for="receber-valor-final" class="block text-sm font-medium text-gray-700">Valor Final do Recebimento (R$)</label>
+                          <input type="text" id="receber-valor-final" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly>
+                      </div>
+                      <div>
+                          <label for="receber-conta-entrada" class="block text-sm font-medium text-gray-700">Conta de Entrada</label>
+                          <select id="receber-conta-entrada" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                              <option value="">Selecione a conta de entrada</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label for="receber-meio-pagamento" class="block text-sm font-medium text-gray-700">Meio de Pagamento</label>
+                          <select id="receber-meio-pagamento" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                              <option>PIX</option>
+                              <option>Boleto</option>
+                              <option>Transferência (TED/DOC)</option>
+                              <option>Cartão de Crédito</option>
+                              <option>Dinheiro</option>
+                          </select>
+                      </div>
+                  </div>
+                  <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                      <button type="button" id="cancel-receber-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                      <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Recebimento</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Visualização de Receita -->
+  <div id="visualizar-receita-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-10 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="text-2xl font-bold text-gray-900">Detalhes da Receita</h3>
+              <button id="close-visualizar-receita-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="md:col-span-2 space-y-4">
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Informações Gerais</h4>
+                  <div><p class="text-sm text-gray-500">Descrição</p><p id="view-receita-descricao" class="text-base font-medium text-gray-800"></p></div>
+                  <div><p class="text-sm text-gray-500">Cliente</p><p id="view-receita-cliente" class="text-base font-medium text-gray-800"></p></div>
+                  <div><p class="text-sm text-gray-500">Categoria (Plano de Contas)</p><p id="view-receita-categoria" class="text-base font-medium text-gray-800"></p></div>
+                  <div><p class="text-sm text-gray-500">Observações</p><p id="view-receita-obs" class="text-base text-gray-800 break-words"></p></div>
+
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2 pt-4">Histórico de Transações</h4>
+                  <div class="overflow-x-auto border rounded-lg">
+                      <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-50">
+                              <tr>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ação</th>
+                              </tr>
+                          </thead>
+                          <tbody id="recebimentos-history-table-body" class="bg-white divide-y divide-gray-200">
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+              <div class="space-y-4 bg-gray-50 p-4 rounded-lg border">
+                  <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Resumo Financeiro</h4>
+                  <div><p class="text-sm text-gray-500">Número do Documento</p><p id="view-receita-numero-documento" class="text-base font-medium text-gray-800"></p></div>
+                  <div>
+                      <p class="text-sm text-gray-500">Valor Original</p>
+                      <p id="view-receita-valor-original" class="text-2xl font-bold text-blue-600"></p>
+                  </div>
+                   <div>
+                      <p class="text-sm text-gray-500">Total Recebido</p>
+                      <p id="view-receita-total-recebido" class="text-2xl font-bold text-green-600"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Saldo Pendente</p>
+                      <p id="view-receita-saldo-pendente" class="text-2xl font-bold text-red-600"></p>
+                  </div>
+                   <div>
+                      <p class="text-sm text-gray-500">Status</p>
+                      <p id="view-receita-status" class="text-base font-medium px-2 py-1 rounded-full inline-block"></p>
+                  </div>
+              </div>
+          </div>
+          <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
+              <button type="button" id="ok-visualizar-receita-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">OK</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Confirmação de Recebimento Parcial -->
+  <div id="confirmar-recebimento-parcial-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900">Confirmar Recebimento Parcial</h3>
+            <button id="close-confirmar-recebimento-parcial-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <p id="confirmar-recebimento-parcial-mensagem" class="text-gray-700 text-base mb-4">O valor informado é menor que o saldo pendente. Deseja registrar um recebimento parcial? O saldo restante continuará em aberto.</p>
+            <div class="space-y-4">
+                <div>
+                    <label for="parcial-recebimento-nova-data-vencimento" class="block text-sm font-medium text-gray-700">
+                        Definir nova data de vencimento para o saldo restante? (Opcional)
+                    </label>
+                    <input type="date" id="parcial-recebimento-nova-data-vencimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+            </div>
+            <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
+                <button type="button" id="cancelar-recebimento-parcial-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                <button type="button" id="confirmar-recebimento-parcial-btn" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar e Salvar</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
   <!-- Modal de Login do Administrador -->
   <div id="admin-login-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
@@ -1656,6 +2130,7 @@
     const mainPage = document.getElementById('main-page');
     const cadastrosPage = document.getElementById('cadastros-page');
     const contasAPagarPage = document.getElementById('contas-a-pagar-page');
+    const contasAReceberPage = document.getElementById('contas-a-receber-page');
 
     // Forms e Modais de Login
     const userLoginForm = document.getElementById('user-login-form');
@@ -1685,6 +2160,10 @@
     const logoutButtonContas = document.getElementById('logout-button-contas');
     const profileButtonContas = document.getElementById('profile-button-contas');
     const profileDropdownContas = document.getElementById('profile-dropdown-contas');
+    const userEmailReceberSpan = document.getElementById('user-email-receber');
+    const logoutButtonReceber = document.getElementById('logout-button-receber');
+    const profileButtonReceber = document.getElementById('profile-button-receber');
+    const profileDropdownReceber = document.getElementById('profile-dropdown-receber');
 
     // Elementos do Dashboard
     const navLinks = document.querySelectorAll('.nav-link');
@@ -1708,6 +2187,7 @@
     let planosContasDropdownUnsubscribe = null;
     let contasBancariasDropdownUnsubscribe = null;
     let despesasUnsubscribe = null;
+    let receitasUnsubscribe = null;
 
     // --- Elementos da Tela de Cadastros ---
     const geraisCardLink = document.getElementById('gerais-card-link');
@@ -1748,6 +2228,10 @@
     const financeiroDropdownCadastros = document.getElementById('financeiro-dropdown-cadastros');
     const financeiroNavLinkContas = document.getElementById('financeiro-nav-link-contas');
     const financeiroDropdownContas = document.getElementById('financeiro-dropdown-contas');
+    const financeiroNavLinkReceber = document.getElementById('financeiro-nav-link-receber');
+    const financeiroDropdownReceber = document.getElementById('financeiro-dropdown-receber');
+
+    // --- Elementos da Tela Financeiro - Contas a Pagar ---
     const despesaModal = document.getElementById('despesa-modal');
     const lancarDespesaBtn = document.getElementById('lancar-despesa-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
@@ -1777,6 +2261,35 @@
     const closeVisualizarModalBtn = document.getElementById('close-visualizar-modal-btn');
     const okVisualizarModalBtn = document.getElementById('ok-visualizar-modal-btn');
 
+    // --- Elementos da Tela Financeiro - Contas a Receber ---
+    const receitaModal = document.getElementById('receita-modal');
+    const lancarReceitaBtn = document.getElementById('lancar-receita-btn');
+    const closeReceitaModalBtn = document.getElementById('close-receita-modal-btn');
+    const cancelReceitaModalBtn = document.getElementById('cancel-receita-modal-btn');
+    const receitaForm = document.getElementById('receita-form');
+    const marcarRecebidoCheckbox = document.getElementById('marcar-recebido-checkbox');
+    const recebimentoInfo = document.getElementById('recebimento-info');
+    const receitaClienteSelect = document.getElementById('receita-cliente');
+    const receitaCategoriaSelect = document.getElementById('receita-categoria');
+    const recebimentoContaSelect = document.getElementById('recebimento-conta');
+    const receitasTableBody = document.getElementById('receitas-table-body');
+    const receitaFormaPagamentoSelect = document.getElementById('receita-forma-pagamento');
+    const receitaParceladoFields = document.getElementById('receita-parcelado-fields');
+    const receitaRecorrenteFields = document.getElementById('receita-recorrente-fields');
+    const receberModal = document.getElementById('receber-modal');
+    const closeReceberModalBtn = document.getElementById('close-receber-modal-btn');
+    const cancelReceberModalBtn = document.getElementById('cancel-receber-modal-btn');
+    const receberForm = document.getElementById('receber-form');
+    const receberContaEntradaSelect = document.getElementById('receber-conta-entrada');
+    const receberSelecionadasBtn = document.getElementById('receber-selecionadas-btn');
+    const visualizarReceitaSelecionadaBtn = document.getElementById('visualizar-receita-selecionada-btn');
+    const editarReceitaSelecionadaBtn = document.getElementById('editar-receita-selecionada-btn');
+    const excluirReceitasSelecionadasBtn = document.getElementById('excluir-receitas-selecionadas-btn');
+    const selectAllCheckboxReceber = document.getElementById('select-all-checkbox-receber');
+    const visualizarReceitaModal = document.getElementById('visualizar-receita-modal');
+    const closeVisualizarReceitaModalBtn = document.getElementById('close-visualizar-receita-modal-btn');
+    const okVisualizarReceitaModalBtn = document.getElementById('ok-visualizar-receita-modal-btn');
+
     // --- Elementos de Recorrência Inteligente ---
     const despesaVencimentoInput = document.getElementById('despesa-vencimento');
     const recorrenciaFimDataRadio = document.getElementById('recorrencia-fim-data-radio');
@@ -1790,13 +2303,90 @@
     const endDateInput = document.getElementById('end-date-input');
     const statusFilterGroup = document.getElementById('status-filter-group');
     let allDespesas = []; // Holds all expenses for client-side filtering
+    let allReceitas = []; // Holds all receivables for client-side filtering
     let activeStatusFilters = new Set(['Pendente', 'Vencido', 'Pago Parcialmente']);
+    let activeReceitaStatusFilters = new Set(['Pendente', 'Vencido', 'Recebido Parcialmente']);
+
+    // --- Elementos do Filtro - Contas a Receber ---
+    const searchInputReceber = document.getElementById('search-input-receber');
+    const startDateInputReceber = document.getElementById('start-date-input-receber');
+    const endDateInputReceber = document.getElementById('end-date-input-receber');
+    const statusFilterGroupReceber = document.getElementById('status-filter-group-receber');
 
     function updateStatusFilterUI() {
         const buttons = document.querySelectorAll('.status-filter-btn');
         buttons.forEach(btn => {
             const status = btn.dataset.status;
             if (activeStatusFilters.has(status)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function applyReceitasFiltersAndRender() {
+        if (!allReceitas) return;
+        const searchTerm = searchInputReceber.value.toLowerCase();
+        const startDate = startDateInputReceber.value;
+        const endDate = endDateInputReceber.value;
+
+        const filteredDocs = allReceitas.filter(doc => {
+            const data = doc.data();
+            const status = data.status || 'Pendente';
+
+            if (activeReceitaStatusFilters.size > 0 && !activeReceitaStatusFilters.has(status)) {
+                return false;
+            }
+
+            let dateMatch = true;
+            const vencimentoField = data.dataVencimento || data.vencimento;
+            if (vencimentoField && (startDate || endDate)) {
+                const vencimento = new Date(vencimentoField + 'T00:00:00');
+                if (startDate && vencimento < new Date(startDate + 'T00:00:00')) dateMatch = false;
+                if (endDate && vencimento > new Date(endDate + 'T00:00:00')) dateMatch = false;
+            }
+
+            let searchMatch = true;
+            if (searchTerm) {
+                const descriptionMatch = (data.descricao || '').toLowerCase().includes(searchTerm);
+                const payeeMatch = (data.clienteNome || '').toLowerCase().includes(searchTerm);
+                searchMatch = descriptionMatch || payeeMatch;
+            }
+
+            return dateMatch && searchMatch;
+        });
+
+        renderReceitasTable(filteredDocs);
+        if (calendarReceberInstance) {
+            processAndRenderReceberCalendarEvents(filteredDocs);
+        }
+    }
+
+    if (statusFilterGroupReceber) {
+        statusFilterGroupReceber.addEventListener('click', (e) => {
+            if (e.target.classList.contains('status-filter-btn')) {
+                const status = e.target.dataset.status;
+                if (activeReceitaStatusFilters.has(status)) {
+                    activeReceitaStatusFilters.delete(status);
+                } else {
+                    activeReceitaStatusFilters.add(status);
+                }
+                updateReceitaStatusFilterUI();
+                applyReceitasFiltersAndRender();
+            }
+        });
+    }
+
+    if(searchInputReceber) searchInputReceber.addEventListener('input', applyReceitasFiltersAndRender);
+    if(startDateInputReceber) startDateInputReceber.addEventListener('change', applyReceitasFiltersAndRender);
+    if(endDateInputReceber) endDateInputReceber.addEventListener('change', applyReceitasFiltersAndRender);
+
+    function updateReceitaStatusFilterUI() {
+        const buttons = statusFilterGroupReceber.querySelectorAll('.status-filter-btn');
+        buttons.forEach(btn => {
+            const status = btn.dataset.status;
+            if (activeReceitaStatusFilters.has(status)) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
@@ -1812,6 +2402,14 @@
     const calendarEl = document.getElementById('calendar');
     let calendarInstance = null;
 
+    // --- Elementos da Visualização de Calendário - Contas a Receber ---
+    const listaViewBtnReceber = document.getElementById('lista-view-btn-receber');
+    const calendarioViewBtnReceber = document.getElementById('calendario-view-btn-receber');
+    const listaViewReceber = document.getElementById('lista-view-receber');
+    const calendarioViewReceber = document.getElementById('calendario-view-receber');
+    const calendarElReceber = document.getElementById('calendar-receber');
+    let calendarReceberInstance = null;
+
 
     // --- Funções Auxiliares ---
     function showView(viewId) {
@@ -1825,6 +2423,10 @@
         if (viewId === 'contas-a-pagar-page') {
             const savedView = localStorage.getItem('contasView') || 'lista';
             setContasView(savedView);
+        }
+        if (viewId === 'contas-a-receber-page') {
+            const savedReceitasView = localStorage.getItem('receitasView') || 'lista';
+            setReceitasView(savedReceitasView);
         }
     }
 
@@ -2560,6 +3162,14 @@
             }
         });
 
+        // --- Listener for Receitas Table ---
+        const receitasQuery = query(collection(db, 'users', userId, 'receitas'));
+        receitasUnsubscribe = onSnapshot(receitasQuery, (querySnapshot) => {
+            allReceitas = querySnapshot.docs;
+            applyReceitasFiltersAndRender();
+            // TODO: Update summary cards and dashboard for receivables
+        });
+
         // --- Listeners for Modal Dropdowns ---
         let favorecidoData = {
             fornecedores: [],
@@ -2617,6 +3227,7 @@
         if (planosContasDropdownUnsubscribe) planosContasDropdownUnsubscribe();
         if (contasBancariasDropdownUnsubscribe) contasBancariasDropdownUnsubscribe();
         if (despesasUnsubscribe) despesasUnsubscribe();
+        if (receitasUnsubscribe) receitasUnsubscribe();
     }
 
     function populateDropdown(selectElement, docs, collectionName = '') {
@@ -2702,9 +3313,78 @@
     }
 
 
+    function processAndRenderReceberCalendarEvents(docs) {
+        if (!calendarReceberInstance) return;
+
+        const events = docs.map(doc => {
+            const data = doc.data();
+            const status = data.status || 'Pendente';
+            const colorMap = {
+                'Recebido': '#16a34a',
+                'Recebido Parcialmente': '#f59e0b',
+                'Vencido': '#dc2626',
+                'Pendente': '#3b82f6'
+            };
+            const eventColor = colorMap[status] || '#6b7280';
+            const displayValue = status === 'Recebido' ? data.valorOriginal : (data.saldoPendente ?? data.valorOriginal);
+
+            return {
+                id: doc.id,
+                title: `${data.clienteNome}: ${formatCurrency(displayValue)}`,
+                start: data.dataVencimento || data.vencimento,
+                backgroundColor: eventColor,
+                borderColor: eventColor,
+                extendedProps: { status: status }
+            };
+        });
+
+        calendarReceberInstance.getEventSources().forEach(source => source.remove());
+        calendarReceberInstance.addEventSource(events);
+    }
+
+    function initializeReceberCalendar() {
+        if (calendarReceberInstance) return;
+        calendarReceberInstance = new FullCalendar.Calendar(calendarElReceber, {
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek'
+            },
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana' },
+            eventClick: function(info) {
+                if(info.event.id) openVisualizarReceitaModal(info.event.id);
+            }
+        });
+        calendarReceberInstance.render();
+    }
+
+    function setReceitasView(viewName) {
+        if (viewName === 'calendario') {
+            listaViewReceber.classList.add('hidden');
+            calendarioViewReceber.classList.remove('hidden');
+            listaViewBtnReceber.classList.remove('bg-blue-100', 'text-blue-700');
+            calendarioViewBtnReceber.classList.add('bg-blue-100', 'text-blue-700');
+            initializeReceberCalendar();
+            applyReceitasFiltersAndRender();
+        } else { // 'lista'
+            listaViewReceber.classList.remove('hidden');
+            calendarioViewReceber.classList.add('hidden');
+            calendarioViewBtnReceber.classList.remove('bg-blue-100', 'text-blue-700');
+            listaViewBtnReceber.classList.add('bg-blue-100', 'text-blue-700');
+        }
+        localStorage.setItem('receitasView', viewName);
+    }
+
+    if(listaViewBtnReceber) listaViewBtnReceber.addEventListener('click', () => setReceitasView('lista'));
+    if(calendarioViewBtnReceber) calendarioViewBtnReceber.addEventListener('click', () => setReceitasView('calendario'));
+
+
     // --- Lógica de Autenticação e Navegação ---
     function updateUiForUser(name) {
-        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan];
+        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan, userEmailReceberSpan];
         elements.forEach(el => {
             if (el) el.textContent = name || '';
         });
@@ -2734,6 +3414,7 @@
             setupListeners(effectiveUserId);
             showView('main-page');
             updateStatusFilterUI();
+            updateReceitaStatusFilterUI();
             return;
         }
 
@@ -2789,12 +3470,11 @@
 
           // Replicate auth success logic for test user
           detachListeners();
-          userEmailSpan.textContent = currentUserName;
-          userEmailCadastrosSpan.textContent = currentUserName;
-          userEmailContasSpan.textContent = currentUserName;
+          updateUiForUser(currentUserName);
           setupListeners(effectiveUserId); // Use a mock UID
           adminLoginModal.classList.add('hidden');
           showView('main-page');
+          updateStatusFilterUI();
           return; // Stop here for test user
       }
 
@@ -2957,8 +3637,9 @@
     logoutButton.addEventListener('click', performLogout);
     logoutButtonCadastros.addEventListener('click', performLogout);
     logoutButtonContas.addEventListener('click', performLogout);
+    logoutButtonReceber.addEventListener('click', performLogout);
 
-    [profileButton, profileButtonCadastros, profileButtonContas].forEach(btn => {
+    [profileButton, profileButtonCadastros, profileButtonContas, profileButtonReceber].forEach(btn => {
         if (btn) btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const dropdown = btn.nextElementSibling;
@@ -2975,6 +3656,9 @@
         }
         if(!profileDropdownContas.classList.contains('hidden')) {
             profileDropdownContas.classList.add('hidden');
+        }
+        if(!profileDropdownReceber.classList.contains('hidden')) {
+            profileDropdownReceber.classList.add('hidden');
         }
         if(!financeiroDropdown.classList.contains('hidden')) {
             financeiroDropdown.classList.add('hidden');
@@ -4243,6 +4927,7 @@
     setupDropdown(financeiroNavLink, financeiroDropdown);
     setupDropdown(financeiroNavLinkCadastros, financeiroDropdownCadastros);
     setupDropdown(financeiroNavLinkContas, financeiroDropdownContas);
+    setupDropdown(financeiroNavLinkReceber, financeiroDropdownReceber);
 
     function openModal(isEdit = false) {
         if(despesaModal) {
@@ -4705,6 +5390,23 @@
         });
     }
 
+    if(marcarRecebidoCheckbox) {
+        marcarRecebidoCheckbox.addEventListener('change', () => {
+            recebimentoInfo.classList.toggle('hidden', !marcarRecebidoCheckbox.checked);
+            if (marcarRecebidoCheckbox.checked) {
+                document.getElementById('recebimento-valor').value = document.getElementById('receita-valor').value;
+            }
+        });
+    }
+
+    if(receitaFormaPagamentoSelect) {
+        receitaFormaPagamentoSelect.addEventListener('change', (e) => {
+            const selection = e.target.value;
+            receitaParceladoFields.classList.toggle('hidden', selection !== 'parcelado');
+            receitaRecorrenteFields.classList.toggle('hidden', selection !== 'recorrente');
+        });
+    }
+
     despesaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userId = effectiveUserId;
@@ -4834,14 +5536,561 @@
         }
     });
 
+
+    if(receitaForm) {
+        receitaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = effectiveUserId;
+            if (!userId) {
+                alert("Usuário não autenticado.");
+                return;
+            }
+
+            const receitaId = document.getElementById('receita-id').value;
+            const formaPagamento = document.getElementById('receita-forma-pagamento').value;
+            const baseDescricao = document.getElementById('receita-descricao').value;
+            const valorOriginalCents = toCents(document.getElementById('receita-valor').value);
+            const vencimentoOriginal = document.getElementById('receita-vencimento').value;
+            const userRef = collection(db, 'users', userId, 'receitas');
+            const counterRef = doc(db, 'users', userId, 'counters', 'receitas');
+
+            try {
+                // --- UPDATE LOGIC ---
+                if (receitaId) {
+                    const docRef = doc(db, 'users', userId, 'receitas', receitaId);
+                    await updateDoc(docRef, {
+                        descricao: baseDescricao,
+                        clienteId: document.getElementById('receita-cliente').value,
+                        clienteNome: document.getElementById('receita-cliente').options[document.getElementById('receita-cliente').selectedIndex].text,
+                        categoriaId: document.getElementById('receita-categoria').value,
+                        dataEmissao: document.getElementById('receita-emissao').value,
+                        dataCompetencia: document.getElementById('receita-competencia').value,
+                        dataVencimento: vencimentoOriginal,
+                        obs: document.getElementById('receita-obs').value,
+                    });
+                    receitaModal.classList.add('hidden');
+                    return;
+                }
+
+                // --- CREATE LOGIC ---
+                let baseData = {
+                    descricao: baseDescricao,
+                    clienteId: document.getElementById('receita-cliente').value,
+                    clienteNome: document.getElementById('receita-cliente').options[document.getElementById('receita-cliente').selectedIndex].text,
+                    categoriaId: document.getElementById('receita-categoria').value,
+                    dataEmissao: document.getElementById('receita-emissao').value,
+                    dataCompetencia: document.getElementById('receita-competencia').value,
+                    obs: document.getElementById('receita-obs').value,
+                    criadoPor: currentUserName || 'sistema',
+                    createdAt: serverTimestamp(),
+                    status: 'Pendente',
+                    totalRecebido: 0,
+                };
+
+                await runTransaction(db, async (transaction) => {
+                    const counterDoc = await transaction.get(counterRef);
+                    let nextNumber = counterDoc.exists() ? counterDoc.data().currentNumber + 1 : 1;
+
+                    if (formaPagamento === 'parcelado') {
+                        const numParcelas = parseInt(document.getElementById('receita-parcelas-numero').value, 10);
+                        if (!numParcelas || numParcelas <= 0) { throw new Error("Número de parcelas inválido."); }
+
+                        const valoresParcelas = [];
+                        let valorBase = Math.floor(valorOriginalCents / numParcelas);
+                        let resto = valorOriginalCents % numParcelas;
+                        for (let i = 0; i < numParcelas; i++) { valoresParcelas.push(valorBase + (i < resto ? 1 : 0)); }
+
+                        const intervalo = document.getElementById('receita-parcelas-intervalo').value;
+                        let dataVencimentoBase = new Date(vencimentoOriginal + 'T00:00:00');
+                        const baseDocNumero = String(nextNumber).padStart(4, '0');
+
+                        for (let i = 0; i < numParcelas; i++) {
+                            let vencimentoParcela;
+                            if (i === 0) {
+                                vencimentoParcela = new Date(dataVencimentoBase.getTime());
+                            } else {
+                                if (intervalo === 'mensal') {
+                                    vencimentoParcela = new Date(dataVencimentoBase.getFullYear(), dataVencimentoBase.getMonth() + i, dataVencimentoBase.getDate());
+                                } else { // '30' for 30 days
+                                    vencimentoParcela = new Date(dataVencimentoBase.getTime());
+                                    vencimentoParcela.setDate(vencimentoParcela.getDate() + (i * 30));
+                                }
+                            }
+
+                            const newDocRef = doc(userRef);
+                            let receitaData = {
+                                ...baseData,
+                                descricao: `${baseDescricao} - Parcela ${i + 1}/${numParcelas}`,
+                                valorOriginal: valoresParcelas[i],
+                                saldoPendente: valoresParcelas[i],
+                                dataVencimento: vencimentoParcela.toISOString().split('T')[0],
+                                numeroDocumento: `${baseDocNumero}/${i + 1}`
+                            };
+                            transaction.set(newDocRef, receitaData);
+                        }
+                        transaction.set(counterRef, { currentNumber: nextNumber });
+
+                    } else if (formaPagamento === 'recorrente') {
+                        const recorrenciaData = {
+                            frequencia: document.getElementById('receita-recorrencia-frequencia').value,
+                            condicaoTermino: {
+                                tipo: document.querySelector('input[name="receita-recorrencia-fim"]:checked')?.value,
+                                valor: document.querySelector('input[name="receita-recorrencia-fim"]:checked')?.value === 'data'
+                                       ? document.getElementById('receita-recorrencia-fim-data').value
+                                       : parseInt(document.getElementById('receita-recorrencia-fim-ocorrencias').value, 10)
+                            },
+                            baseDescricao: baseDescricao,
+                            valorOriginal: valorOriginalCents,
+                            clienteId: baseData.clienteId,
+                            clienteNome: baseData.clienteNome,
+                            categoriaId: baseData.categoriaId,
+                            proximoVencimento: vencimentoOriginal,
+                            adminId: userId,
+                            createdAt: serverTimestamp()
+                        };
+                        const newRecorrenciaRef = doc(collection(db, 'users', userId, 'recorrencias'));
+                        transaction.set(newRecorrenciaRef, recorrenciaData);
+
+                        const newDocRef = doc(userRef);
+                        let receitaData = {
+                            ...baseData,
+                            valorOriginal: valorOriginalCents,
+                            saldoPendente: valorOriginalCents,
+                            dataVencimento: vencimentoOriginal,
+                            numeroDocumento: String(nextNumber).padStart(4, '0')
+                        };
+                        transaction.set(newDocRef, receitaData);
+                        transaction.set(counterRef, { currentNumber: nextNumber });
+
+                    } else { // Single payment
+                        const newDocRef = doc(userRef);
+                        let receitaData = {
+                            ...baseData,
+                            valorOriginal: valorOriginalCents,
+                            saldoPendente: valorOriginalCents,
+                            dataVencimento: vencimentoOriginal,
+                            numeroDocumento: String(nextNumber).padStart(4, '0'),
+                        };
+
+                        if (marcarRecebidoCheckbox.checked) {
+                            const valorRecebidoCents = toCents(document.getElementById('recebimento-valor').value);
+                            receitaData.totalRecebido = valorRecebidoCents;
+                            receitaData.saldoPendente = receitaData.valorOriginal - valorRecebidoCents;
+                            receitaData.status = receitaData.saldoPendente <= 0 ? 'Recebido' : 'Recebido Parcialmente';
+
+                            const recebimentoRef = doc(collection(newDocRef, 'recebimentos'));
+                            transaction.set(recebimentoRef, {
+                                tipoTransacao: "Recebimento",
+                                dataTransacao: document.getElementById('recebimento-data').value,
+                                valorPrincipal: valorRecebidoCents,
+                                jurosRecebidos: 0,
+                                descontosConcedidos: 0,
+                                contaEntradaId: document.getElementById('recebimento-conta').value,
+                                usuarioResponsavel: currentUserName || "N/A",
+                                createdAt: serverTimestamp()
+                            });
+                        }
+                        transaction.set(newDocRef, receitaData);
+                        transaction.set(counterRef, { currentNumber: nextNumber });
+                    }
+                });
+
+                receitaModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Erro ao salvar receita:", error);
+                alert("Ocorreu um erro ao salvar: " + error.message);
+            }
+        });
+    }
+
     // Expose functions for testing
     window.testHooks = { setupListeners, auth };
+
+    function getSelectedReceitaIds() {
+        return Array.from(receitasTableBody.querySelectorAll('.receita-checkbox:checked')).map(cb => cb.dataset.id);
+    }
+
+    function updateReceitaActionButtonsState() {
+        const selectedIds = getSelectedReceitaIds();
+        const selectedCount = selectedIds.length;
+
+        if (selectedCount === 0) {
+            visualizarReceitaSelecionadaBtn.disabled = true;
+            editarReceitaSelecionadaBtn.disabled = true;
+            excluirReceitasSelecionadasBtn.disabled = true;
+            receberSelecionadasBtn.disabled = true;
+            return;
+        }
+
+        const selectedReceitasData = selectedIds.map(id => allReceitas.find(d => d.id === id)?.data());
+        const anyReceived = selectedReceitasData.some(data => data && data.status === 'Recebido');
+
+        visualizarReceitaSelecionadaBtn.disabled = selectedCount !== 1;
+        editarReceitaSelecionadaBtn.disabled = selectedCount !== 1 || anyReceived;
+        excluirReceitasSelecionadasBtn.disabled = anyReceived;
+        receberSelecionadasBtn.disabled = anyReceived;
+    }
+
+    if (receitasTableBody) {
+        receitasTableBody.addEventListener('change', e => {
+            if (e.target.classList.contains('receita-checkbox')) {
+                updateReceitaActionButtonsState();
+            }
+        });
+    }
+
+    if (selectAllCheckboxReceber) {
+        selectAllCheckboxReceber.addEventListener('change', () => {
+            receitasTableBody.querySelectorAll('.receita-checkbox').forEach(checkbox => {
+                checkbox.checked = selectAllCheckboxReceber.checked;
+            });
+            updateReceitaActionButtonsState();
+        });
+    }
+
+    if (editarReceitaSelecionadaBtn) {
+        editarReceitaSelecionadaBtn.addEventListener('click', async () => {
+            const selectedIds = getSelectedReceitaIds();
+            if (selectedIds.length !== 1) return;
+            const id = selectedIds[0];
+            const userId = effectiveUserId;
+            if (!userId) return;
+
+            try {
+                const docRef = doc(db, 'users', userId, 'receitas', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    await openReceitaModal(true); // Open and populate dropdowns first
+                    const data = docSnap.data();
+
+                    document.getElementById('receita-id').value = docSnap.id;
+                    document.getElementById('receita-descricao').value = data.descricao || '';
+                    document.getElementById('receita-numero-documento').value = data.numeroDocumento || '';
+                    document.getElementById('receita-cliente').value = data.clienteId || '';
+                    document.getElementById('receita-categoria').value = data.categoriaId || '';
+
+                    const valorInput = document.getElementById('receita-valor');
+                    const valorOriginal = data.valorOriginal || 0;
+                    valorInput.value = fromCents(valorOriginal);
+
+                    document.getElementById('receita-emissao').value = data.dataEmissao || '';
+                    document.getElementById('receita-competencia').value = data.dataCompetencia || '';
+                    document.getElementById('receita-vencimento').value = data.dataVencimento || '';
+                    document.getElementById('receita-obs').value = data.obs || '';
+
+                    const totalRecebido = data.totalRecebido || 0;
+                    if (totalRecebido > 0) {
+                        valorInput.readOnly = true;
+                        valorInput.classList.add('bg-gray-200', 'cursor-not-allowed');
+                    } else {
+                        valorInput.readOnly = false;
+                        valorInput.classList.remove('bg-gray-200', 'cursor-not-allowed');
+                    }
+
+                    document.getElementById('marcar-recebido-checkbox').checked = false;
+                    document.getElementById('marcar-recebido-checkbox').disabled = true;
+                    document.getElementById('recebimento-info').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error("Error getting document for edit:", error);
+            }
+        });
+    }
+
+    if (receberSelecionadasBtn) {
+        receberSelecionadasBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedReceitaIds();
+            if (selectedIds.length === 0) return;
+            openReceberModal(selectedIds);
+        });
+    }
+
+    if (excluirReceitasSelecionadasBtn) {
+        excluirReceitasSelecionadasBtn.addEventListener('click', async () => {
+            const selectedIds = getSelectedReceitaIds();
+            if (selectedIds.length === 0) return;
+            if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} receita(s) selecionada(s)?`)) {
+                const batch = writeBatch(db);
+                selectedIds.forEach(id => {
+                    const ref = doc(db, 'users', effectiveUserId, 'receitas', id);
+                    batch.delete(ref);
+                });
+                await batch.commit();
+                selectAllCheckboxReceber.checked = false;
+                updateReceitaActionButtonsState();
+            }
+        });
+    }
+
+    if (visualizarReceitaSelecionadaBtn) {
+        visualizarReceitaSelecionadaBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedReceitaIds();
+            if (selectedIds.length !== 1) return;
+            openVisualizarReceitaModal(selectedIds[0]);
+        });
+    }
+
+    async function openVisualizarReceitaModal(receitaId) {
+        if (!visualizarReceitaModal) return;
+        const userId = effectiveUserId;
+        if (!userId) return;
+
+        try {
+            const receitaRef = doc(db, 'users', userId, 'receitas', receitaId);
+            const recebimentosRef = collection(receitaRef, 'recebimentos');
+
+            const [receitaSnap, recebimentosSnap] = await Promise.all([
+                getDoc(receitaRef),
+                getDocs(recebimentosRef)
+            ]);
+
+            if (!receitaSnap.exists()) return;
+
+            const data = receitaSnap.data();
+            const categoriaPromise = data.categoriaId ? getDoc(doc(db, 'users', userId, 'planosDeContas', data.categoriaId)) : Promise.resolve(null);
+            const [categoriaSnap] = await Promise.all([categoriaPromise]);
+            const categoriaNome = categoriaSnap?.exists() ? categoriaSnap.data().nome : 'N/A';
+
+            document.getElementById('view-receita-descricao').textContent = data.descricao || 'N/A';
+            document.getElementById('view-receita-cliente').textContent = data.clienteNome || 'N/A';
+            document.getElementById('view-receita-categoria').textContent = categoriaNome;
+            document.getElementById('view-receita-obs').textContent = data.obs || 'Nenhuma';
+            document.getElementById('view-receita-numero-documento').textContent = data.numeroDocumento || 'N/A';
+
+            const valorOriginal = data.valorOriginal || 0;
+            const totalRecebido = data.totalRecebido || 0;
+            const saldoPendente = data.saldoPendente ?? (valorOriginal - totalRecebido);
+
+            document.getElementById('view-receita-valor-original').textContent = formatCurrency(valorOriginal);
+            document.getElementById('view-receita-total-recebido').textContent = formatCurrency(totalRecebido);
+            document.getElementById('view-receita-saldo-pendente').textContent = formatCurrency(saldoPendente);
+
+            const statusEl = document.getElementById('view-receita-status');
+            statusEl.textContent = data.status || 'Pendente';
+            const statusClasses = { 'Recebido': 'bg-green-100 text-green-800', 'Recebido Parcialmente': 'bg-yellow-100 text-yellow-800', 'Pendente': 'bg-blue-100 text-blue-800', 'Vencido': 'bg-red-100 text-red-800' };
+            statusEl.className = `text-base font-medium px-2 py-1 rounded-full inline-block ${statusClasses[statusEl.textContent] || 'bg-gray-100'}`;
+
+            const historyBody = document.getElementById('recebimentos-history-table-body');
+            historyBody.innerHTML = '';
+            if (recebimentosSnap.empty) {
+                historyBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Nenhuma transação registrada.</td></tr>';
+            } else {
+                recebimentosSnap.docs.forEach(recebimentoDoc => {
+                    const pData = recebimentoDoc.data();
+                    const tr = historyBody.insertRow();
+                    tr.innerHTML = `
+                        <td class="px-4 py-2 text-sm">${pData.tipoTransacao}</td>
+                        <td class="px-4 py-2 text-sm">${new Date(pData.dataTransacao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td class="px-4 py-2 text-sm">${formatCurrency(pData.valorPrincipal || 0)}</td>
+                        <td class="px-4 py-2 text-sm">
+                            ${pData.tipoTransacao === 'Recebimento' ? `<button class="estornar-recebimento-btn text-red-500 hover:underline" data-recebimento-id="${recebimentoDoc.id}" data-receita-id="${receitaId}">Estornar</button>` : ''}
+                        </td>
+                    `;
+                });
+            }
+            visualizarReceitaModal.classList.remove('hidden');
+        } catch (error) {
+            console.error("Erro ao abrir modal de visualização de receita:", error);
+        }
+    }
+
+    if(closeVisualizarReceitaModalBtn) closeVisualizarReceitaModalBtn.addEventListener('click', () => visualizarReceitaModal.classList.add('hidden'));
+    if(okVisualizarReceitaModalBtn) okVisualizarReceitaModalBtn.addEventListener('click', () => visualizarReceitaModal.classList.add('hidden'));
+
+    function openReceberModal(receitaIds) {
+        if (!receberModal || receitaIds.length === 0) return;
+        receberForm.reset();
+        const userId = effectiveUserId;
+        if (!userId) return;
+
+        document.getElementById('receber-receita-id').value = receitaIds.join(',');
+
+        let totalSaldoPendente = 0;
+        const promises = receitaIds.map(id => getDoc(doc(db, 'users', userId, 'receitas', id)));
+
+        Promise.all(promises).then(docs => {
+            docs.forEach(docSnap => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    totalSaldoPendente += data.saldoPendente || 0;
+                }
+            });
+
+            document.getElementById('saldo-pendente-display').querySelector('span').textContent = formatCurrency(totalSaldoPendente);
+            document.getElementById('receber-valor').value = fromCents(totalSaldoPendente);
+            document.getElementById('receber-valor-final').value = fromCents(totalSaldoPendente);
+            document.getElementById('receber-data').value = new Date().toISOString().split('T')[0];
+
+            receberModal.classList.remove('hidden');
+
+            const modalTitle = receberModal.querySelector('h3');
+            modalTitle.textContent = receitaIds.length > 1
+                ? `Registrar Recebimento de ${receitaIds.length} Contas`
+                : 'Registrar Recebimento';
+        }).catch(error => console.error("Error getting documents for receiving payment:", error));
+    }
+
+    if(closeReceberModalBtn) closeReceberModalBtn.addEventListener('click', () => receberModal.classList.add('hidden'));
+    if(cancelReceberModalBtn) cancelReceberModalBtn.addEventListener('click', () => receberModal.classList.add('hidden'));
+
+    if(receberForm) {
+        const receberValorInput = document.getElementById('receber-valor');
+        const receberDescontosInput = document.getElementById('receber-descontos');
+        const receberJurosMultaInput = document.getElementById('receber-juros-multa');
+        const receberValorFinalInput = document.getElementById('receber-valor-final');
+
+        function calculateFinalRecebimento() {
+            const valorCents = toCents(receberValorInput.value);
+            const descontosCents = toCents(receberDescontosInput.value);
+            const jurosMultaCents = toCents(receberJurosMultaInput.value);
+            const valorFinalCents = (valorCents + jurosMultaCents) - descontosCents;
+            receberValorFinalInput.value = fromCents(valorFinalCents);
+        }
+
+        [receberValorInput, receberDescontosInput, receberJurosMultaInput].forEach(input => {
+            if (input) input.addEventListener('input', calculateFinalRecebimento);
+        });
+
+        receberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const receitaId = document.getElementById('receber-receita-id').value.split(',')[0];
+            if (!receitaId) return;
+
+            const receitaRef = doc(db, 'users', effectiveUserId, 'receitas', receitaId);
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const receitaDoc = await transaction.get(receitaRef);
+                    if (!receitaDoc.exists()) throw "Receita não encontrada.";
+
+                    const data = receitaDoc.data();
+                    const valorRecebidoCents = toCents(document.getElementById('receber-valor-final').value);
+
+                    const novoTotalRecebido = (data.totalRecebido || 0) + valorRecebidoCents;
+                    const novoSaldoPendente = data.valorOriginal - novoTotalRecebido;
+                    const novoStatus = novoSaldoPendente <= 0 ? 'Recebido' : 'Recebido Parcialmente';
+
+                    transaction.update(receitaRef, {
+                        totalRecebido: novoTotalRecebido,
+                        saldoPendente: novoSaldoPendente,
+                        status: novoStatus
+                    });
+
+                    const recebimentoRef = doc(collection(receitaRef, 'recebimentos'));
+                    transaction.set(recebimentoRef, {
+                        tipoTransacao: "Recebimento",
+                        dataTransacao: document.getElementById('receber-data').value,
+                        valorPrincipal: valorRecebidoCents,
+                        jurosRecebidos: toCents(document.getElementById('receber-juros-multa').value),
+                        descontosConcedidos: toCents(document.getElementById('receber-descontos').value),
+                        contaEntradaId: document.getElementById('receber-conta-entrada').value,
+                        usuarioResponsavel: currentUserName,
+                        createdAt: serverTimestamp()
+                    });
+                });
+                receberModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Erro ao registrar recebimento: ", error);
+                alert("Falha ao registrar recebimento: " + error);
+            }
+        });
+    }
+
+    if(lancarReceitaBtn) {
+        lancarReceitaBtn.addEventListener('click', () => openReceitaModal(false));
+    }
+    if(closeReceitaModalBtn) {
+        closeReceitaModalBtn.addEventListener('click', () => receitaModal.classList.add('hidden'));
+    }
+    if(cancelReceitaModalBtn) {
+        cancelReceitaModalBtn.addEventListener('click', () => receitaModal.classList.add('hidden'));
+    }
+
+
+    async function openReceitaModal(isEdit = false) {
+        if (!receitaModal) return;
+
+        const clienteQuery = query(collection(db, 'users', effectiveUserId, 'clientes'));
+        const categoriasQuery = query(collection(db, 'users', effectiveUserId, 'planosDeContas'));
+        const contasQuery = query(collection(db, 'users', effectiveUserId, 'contasBancarias'));
+
+        const [clienteSnap, categoriaSnap, contaSnap] = await Promise.all([
+            getDocs(clienteQuery),
+            getDocs(categoriasQuery),
+            getDocs(contasQuery)
+        ]);
+
+        populateDropdown(receitaClienteSelect, clienteSnap.docs, 'clientes');
+        populateDropdown(receitaCategoriaSelect, categoriaSnap.docs);
+        populateDropdown(recebimentoContaSelect, contaSnap.docs);
+        populateDropdown(receberContaEntradaSelect, contaSnap.docs);
+
+
+        if (!isEdit) {
+            receitaForm.reset();
+            document.getElementById('receita-id').value = '';
+            const counterRef = doc(db, 'users', effectiveUserId, 'counters', 'receitas');
+            const newNumber = await runTransaction(db, async (transaction) => {
+                const counterDoc = await transaction.get(counterRef);
+                const currentNumber = counterDoc.exists() ? counterDoc.data().currentNumber : 0;
+                const nextNumber = currentNumber + 1;
+                transaction.set(counterRef, { currentNumber: nextNumber }, { merge: true });
+                return nextNumber;
+            });
+            document.getElementById('receita-numero-documento').value = String(newNumber).padStart(4, '0');
+        }
+        document.querySelector('#receita-modal h3').textContent = isEdit ? 'Editar Receita' : 'Lançar Nova Receita';
+        recebimentoInfo.classList.add('hidden');
+        receitaModal.classList.remove('hidden');
+    }
+
 
     if(listaViewBtn) {
         listaViewBtn.addEventListener('click', () => setContasView('lista'));
     }
     if(calendarioViewBtn) {
         calendarioViewBtn.addEventListener('click', () => setContasView('calendario'));
+    }
+
+    function renderReceitasTable(docs) {
+        if (!receitasTableBody) return;
+        receitasTableBody.innerHTML = '';
+        if (docs.length === 0) {
+            const tr = receitasTableBody.insertRow();
+            tr.innerHTML = `<td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhuma receita encontrada.</td>`;
+            return;
+        }
+
+        docs.forEach(doc => {
+            const data = doc.data();
+            const tr = receitasTableBody.insertRow();
+            tr.setAttribute('data-id', doc.id);
+
+            const statusClasses = {
+                'Recebido': 'bg-green-100 text-green-800',
+                'Recebido Parcialmente': 'bg-yellow-100 text-yellow-800',
+                'Pendente': 'bg-blue-100 text-blue-800',
+                'Vencido': 'bg-red-100 text-red-800',
+            };
+            const statusText = data.status || 'Pendente';
+            const statusClass = statusClasses[statusText] || 'bg-gray-100 text-gray-800';
+
+            const valorOriginal = data.valorOriginal || 0;
+            const totalRecebido = data.totalRecebido || 0;
+            const saldoPendente = data.saldoPendente ?? (valorOriginal - totalRecebido);
+
+            tr.innerHTML = `
+                <td class="p-4"><input type="checkbox" class="receita-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${doc.id}"></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.numeroDocumento || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.clienteNome || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date((data.dataVencimento || data.vencimento) + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${formatCurrency(totalRecebido)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(saldoPendente)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${statusText}</span></td>
+            `;
+        });
     }
 
 
@@ -4914,6 +6163,60 @@
     if(recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.addEventListener('input', handleRecurrenceInteraction);
     if(recorrenciaFimDataInput) recorrenciaFimDataInput.addEventListener('change', handleRecurrenceInteraction);
     if(document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').addEventListener('change', handleRecurrenceInteraction);
+
+    function handleReceitaRecurrenceInteraction() {
+        const dueDateInput = document.getElementById('receita-vencimento');
+        const occurrencesInput = document.getElementById('receita-recorrencia-fim-ocorrencias');
+        const endDateInput = document.getElementById('receita-recorrencia-fim-data');
+        const freqSelect = document.getElementById('receita-recorrencia-frequencia');
+        const occurrencesRadio = document.getElementById('receita-recorrencia-fim-ocorrencias-radio');
+        const endDateRadio = document.getElementById('receita-recorrencia-fim-data-radio');
+
+        if (!dueDateInput || !occurrencesInput || !endDateInput || !freqSelect) return;
+
+        const freq = freqSelect.value;
+        const multiplier = getRecurrenceMultiplier(freq);
+        const activeEl = document.activeElement;
+
+        // Validation
+        if ((activeEl === occurrencesInput || activeEl === endDateInput) && !dueDateInput.value) {
+            dueDateInput.classList.add('border-red-500', 'ring-red-500');
+            return;
+        }
+        dueDateInput.classList.remove('border-red-500', 'ring-red-500');
+
+        const dueDate = dueDateInput.value ? new Date(dueDateInput.value + 'T00:00:00') : null;
+        const occurrences = occurrencesInput.value ? parseInt(occurrencesInput.value, 10) : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T00:00:00') : null;
+
+        if (activeEl === occurrencesInput) endDateInput.value = '';
+        if (activeEl === endDateInput) occurrencesInput.value = '';
+
+        if (dueDate && occurrences) {
+            occurrencesRadio.checked = true;
+            const calculatedEndDate = new Date(dueDate.getTime());
+            calculatedEndDate.setMonth(calculatedEndDate.getMonth() + (multiplier * (occurrences - 1)));
+            endDateInput.value = calculatedEndDate.toISOString().split('T')[0];
+        } else if (dueDate && endDate) {
+            if (endDate >= dueDate) {
+                endDateRadio.checked = true;
+                const monthDiff = (endDate.getFullYear() - dueDate.getFullYear()) * 12 + (endDate.getMonth() - dueDate.getMonth());
+                const calculatedOccurrences = Math.floor(monthDiff / multiplier) + 1;
+                occurrencesInput.value = calculatedOccurrences > 0 ? calculatedOccurrences : '';
+            }
+        } else if (occurrences && endDate) {
+            occurrencesRadio.checked = true;
+            const calculatedStartDate = new Date(endDate.getTime());
+            calculatedStartDate.setMonth(calculatedStartDate.getMonth() - (multiplier * (occurrences - 1)));
+            dueDateInput.value = calculatedStartDate.toISOString().split('T')[0];
+        }
+    }
+
+    // Add listeners for the new "Contas a Receber" recurrence fields
+    document.getElementById('receita-vencimento')?.addEventListener('change', handleReceitaRecurrenceInteraction);
+    document.getElementById('receita-recorrencia-fim-ocorrencias')?.addEventListener('input', handleReceitaRecurrenceInteraction);
+    document.getElementById('receita-recorrencia-fim-data')?.addEventListener('change', handleReceitaRecurrenceInteraction);
+    document.getElementById('receita-recorrencia-frequencia')?.addEventListener('change', handleReceitaRecurrenceInteraction);
 
     // --- Lógica da Tela de Login de Usuário ---
     // Popula o dropdown de empresas na tela de login assim que a página carrega
