@@ -1164,6 +1164,7 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma de Pagamento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descontos</th>
@@ -1485,6 +1486,24 @@
                           </thead>
                           <tbody id="pagamentos-history-table-body" class="bg-white divide-y divide-gray-200">
                               <!-- Linhas do histórico serão inseridas aqui -->
+                          </tbody>
+                      </table>
+                  </div>
+
+                  <!-- Seção de Parcelamento/Recorrência -->
+                  <h4 id="parcelamento-section-title" class="text-lg font-semibold text-gray-800 border-b pb-2 pt-4 hidden"></h4>
+                  <div id="parcelamento-table-container" class="hidden overflow-x-auto border rounded-lg">
+                      <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-50">
+                              <tr>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                              </tr>
+                          </thead>
+                          <tbody id="parcelamento-table-body" class="bg-white divide-y divide-gray-200">
+                              <!-- Linhas do parcelamento serão inseridas aqui -->
                           </tbody>
                       </table>
                   </div>
@@ -4012,6 +4031,8 @@
             const totalDescontos = data.totalDescontos || 0;
             const totalJuros = data.totalJuros || 0;
             const valorSaldo = data.valorSaldo ?? (valorOriginal + totalJuros - totalPago - totalDescontos);
+            const formaPagamentoText = (data.formaPagamento || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -4022,6 +4043,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.numeroDocumento || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formaPagamentoText}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600 font-bold">${formatCurrency(totalDescontos)}</td>
@@ -4162,21 +4184,55 @@
     }
 
     if (excluirSelecionadasBtn) {
-        excluirSelecionadasBtn.addEventListener('click', () => {
+        excluirSelecionadasBtn.addEventListener('click', async () => {
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length === 0) return;
-            if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
-                const userId = effectiveUserId;
-                if (!userId) {
-                    console.error("Ação de excluir falhou: ID de usuário efetivo não encontrado.");
-                    return;
+            const userId = effectiveUserId;
+            if (!userId) return;
+
+            const firstSelectedId = selectedIds[0];
+            const docRef = doc(db, 'users', userId, 'despesas', firstSelectedId);
+            const docSnap = await getDoc(docRef);
+
+            let deletePromise;
+
+            if (docSnap.exists() && docSnap.data().groupId) {
+                const groupId = docSnap.data().groupId;
+                const userChoice = confirm("Esta despesa faz parte de um grupo. Pressione 'OK' para excluir todas as despesas do grupo, ou 'Cancelar' para excluir apenas esta.");
+
+                if (userChoice) {
+                    // Delete all in group
+                    const q = query(collection(db, 'users', userId, 'despesas'), where("groupId", "==", groupId));
+                    const groupDocsSnap = await getDocs(q);
+                    const batch = writeBatch(db);
+                    groupDocsSnap.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    deletePromise = batch.commit();
+                } else {
+                    // Delete single
+                    deletePromise = deleteDoc(docRef);
                 }
-                selectedIds.forEach(id => {
-                    deleteDoc(doc(db, 'users', userId, 'despesas', id));
-                });
-                // Reset selection
+            } else {
+                // Standard deletion for single or multiple non-grouped items
+                if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
+                    const batch = writeBatch(db);
+                    selectedIds.forEach(id => {
+                        const ref = doc(db, 'users', userId, 'despesas', id);
+                        batch.delete(ref);
+                    });
+                    deletePromise = batch.commit();
+                } else {
+                    return; // User cancelled
+                }
+            }
+
+            try {
+                await deletePromise;
                 selectAllCheckbox.checked = false;
                 updateActionButtonsState();
+            } catch (error) {
+                console.error("Erro ao excluir despesa(s):", error);
             }
         });
     }
@@ -4266,6 +4322,15 @@
         const userId = effectiveUserId;
         if (!userId) return;
 
+        const parcelamentoSectionTitle = document.getElementById('parcelamento-section-title');
+        const parcelamentoTableContainer = document.getElementById('parcelamento-table-container');
+        const parcelamentoTableBody = document.getElementById('parcelamento-table-body');
+
+        // Reset and hide the installments section initially
+        parcelamentoSectionTitle.classList.add('hidden');
+        parcelamentoTableContainer.classList.add('hidden');
+        parcelamentoTableBody.innerHTML = '';
+
         try {
             const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
             const pagamentosRef = collection(despesaRef, 'pagamentos');
@@ -4330,6 +4395,36 @@
                         </td>
                     `;
                 });
+            }
+
+            // Populate linked installments/recurrent expenses if groupId exists
+            if (data.groupId) {
+                parcelamentoSectionTitle.textContent = data.formaPagamento === 'parcelado' ? 'Parcelas' : 'Recorrências';
+                parcelamentoSectionTitle.classList.remove('hidden');
+                parcelamentoTableContainer.classList.remove('hidden');
+
+                const q = query(collection(db, 'users', userId, 'despesas'), where("groupId", "==", data.groupId));
+                const groupDocsSnap = await getDocs(q);
+
+                groupDocsSnap.docs
+                    .sort((a, b) => new Date(a.data().vencimento) - new Date(b.data().vencimento)) // Sort by due date
+                    .forEach(doc => {
+                        const installmentData = doc.data();
+                        const tr = parcelamentoTableBody.insertRow();
+                        const statusText = installmentData.status || 'Pendente';
+                        const statusClass = statusClasses[statusText] || 'bg-gray-100 text-gray-800';
+
+                        tr.innerHTML = `
+                            <td class="px-4 py-2 text-sm">${installmentData.descricao}</td>
+                            <td class="px-4 py-2 text-sm">${new Date(installmentData.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                            <td class="px-4 py-2 text-sm">${formatCurrency(installmentData.valorOriginal)}</td>
+                            <td class="px-4 py-2 text-sm"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${statusText}</span></td>
+                        `;
+                        // Highlight the current row
+                        if (doc.id === despesaId) {
+                            tr.classList.add('bg-blue-50', 'font-bold');
+                        }
+                    });
             }
 
             visualizarDespesaModal.classList.remove('hidden');
@@ -4663,6 +4758,7 @@
             };
 
             if (formaPagamento === 'parcelado' || formaPagamento === 'recorrente') {
+                const groupId = doc(collection(db, 'users', userId, 'despesas')).id; // Generate a unique ID for the group
                 let numIteracoes = 0;
                 let valorIteracao = valorOriginalCents;
                 let dataVencimento = new Date(vencimentoOriginal + 'T00:00:00');
@@ -4695,6 +4791,7 @@
 
                     despesasParaCriar.push({
                         ...baseData,
+                        groupId: groupId, // Link the installments
                         descricao: `${baseDescricao} (${formaPagamento === 'parcelado' ? `Parcela ${i + 1}/${numIteracoes}` : `Recorrência ${i + 1}`})`,
                         valorOriginal: valorIteracao,
                         valorSaldo: valorIteracao,
