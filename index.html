@@ -4071,23 +4071,31 @@
         const selectedIds = getSelectedDespesaIds();
         const selectedCount = selectedIds.length;
 
-        // Enable/disable 'Editar' and 'Visualizar' buttons
-        editarSelecionadaBtn.disabled = selectedCount !== 1;
+        // Disable all buttons if nothing is selected
+        if (selectedCount === 0) {
+            visualizarSelecionadaBtn.disabled = true;
+            editarSelecionadaBtn.disabled = true;
+            excluirSelecionadasBtn.disabled = true;
+            pagarSelecionadasBtn.disabled = true;
+            return;
+        }
+
+        const selectedExpensesData = selectedIds.map(id => allDespesas.find(d => d.id === id)?.data());
+
+        // Check if any selected expense is 'Pago'
+        const anyPaid = selectedExpensesData.some(data => data && data.status === 'Pago');
+
+        // Visualizar: only one can be selected, regardless of status
         visualizarSelecionadaBtn.disabled = selectedCount !== 1;
 
-        // Enable/disable 'Excluir' button
-        excluirSelecionadasBtn.disabled = selectedCount === 0;
+        // Editar: only one can be selected, and it cannot be 'Pago'
+        editarSelecionadaBtn.disabled = selectedCount !== 1 || anyPaid;
 
-        // Enable/disable 'Pagar' button
-        let canPay = false;
-        if (selectedCount > 0) {
-            // A conta só pode ser paga se NENHUMA das despesas selecionadas já tiver o status 'Pago'.
-            canPay = selectedIds.every(id => {
-                const despesaDoc = allDespesas.find(d => d.id === id);
-                return despesaDoc && despesaDoc.data().status !== 'Pago';
-            });
-        }
-        pagarSelecionadasBtn.disabled = !canPay;
+        // Excluir: one or more can be selected, but none can be 'Pago'
+        excluirSelecionadasBtn.disabled = anyPaid;
+
+        // Pagar: one or more can be selected, but none can be 'Pago'
+        pagarSelecionadasBtn.disabled = anyPaid;
     }
 
     if (despesasTableBody) {
