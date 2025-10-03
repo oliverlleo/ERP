@@ -1674,10 +1674,10 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Status</label>
                                 <div id="status-filter-group-receber" class="flex items-center gap-2 mt-1">
-                                    <button data-status="Pendente" class="status-filter-btn-receber px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
-                                    <button data-status="Vencido" class="status-filter-btn-receber px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
-                                    <button data-status="Recebido Parcialmente" class="status-filter-btn-receber px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
-                                    <button data-status="Recebido" class="status-filter-btn-receber px-3 py-1 text-sm font-medium rounded-md">Recebido</button>
+                                    <button data-status="Pendente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
+                                    <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
+                                    <button data-status="Recebido Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
+                                    <button data-status="Recebido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Recebido</button>
                                 </div>
                             </div>
                         </div>
@@ -2293,12 +2293,88 @@
     let allDespesas = []; // Holds all expenses for client-side filtering
     let allReceitas = []; // Holds all receivables for client-side filtering
     let activeStatusFilters = new Set(['Pendente', 'Vencido', 'Pago Parcialmente']);
+    let activeReceitaStatusFilters = new Set(['Pendente', 'Vencido', 'Recebido Parcialmente']);
+
+    // --- Elementos do Filtro - Contas a Receber ---
+    const searchInputReceber = document.getElementById('search-input-receber');
+    const startDateInputReceber = document.getElementById('start-date-input-receber');
+    const endDateInputReceber = document.getElementById('end-date-input-receber');
+    const statusFilterGroupReceber = document.getElementById('status-filter-group-receber');
 
     function updateStatusFilterUI() {
         const buttons = document.querySelectorAll('.status-filter-btn');
         buttons.forEach(btn => {
             const status = btn.dataset.status;
             if (activeStatusFilters.has(status)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function applyReceitasFiltersAndRender() {
+        if (!allReceitas) return;
+        const searchTerm = searchInputReceber.value.toLowerCase();
+        const startDate = startDateInputReceber.value;
+        const endDate = endDateInputReceber.value;
+
+        const filteredDocs = allReceitas.filter(doc => {
+            const data = doc.data();
+            const status = data.status || 'Pendente';
+
+            if (activeReceitaStatusFilters.size > 0 && !activeReceitaStatusFilters.has(status)) {
+                return false;
+            }
+
+            let dateMatch = true;
+            const vencimentoField = data.dataVencimento || data.vencimento;
+            if (vencimentoField && (startDate || endDate)) {
+                const vencimento = new Date(vencimentoField + 'T00:00:00');
+                if (startDate && vencimento < new Date(startDate + 'T00:00:00')) dateMatch = false;
+                if (endDate && vencimento > new Date(endDate + 'T00:00:00')) dateMatch = false;
+            }
+
+            let searchMatch = true;
+            if (searchTerm) {
+                const descriptionMatch = (data.descricao || '').toLowerCase().includes(searchTerm);
+                const payeeMatch = (data.clienteNome || '').toLowerCase().includes(searchTerm);
+                searchMatch = descriptionMatch || payeeMatch;
+            }
+
+            return dateMatch && searchMatch;
+        });
+
+        renderReceitasTable(filteredDocs);
+        if (calendarReceberInstance) {
+            processAndRenderReceberCalendarEvents(filteredDocs);
+        }
+    }
+
+    if (statusFilterGroupReceber) {
+        statusFilterGroupReceber.addEventListener('click', (e) => {
+            if (e.target.classList.contains('status-filter-btn')) {
+                const status = e.target.dataset.status;
+                if (activeReceitaStatusFilters.has(status)) {
+                    activeReceitaStatusFilters.delete(status);
+                } else {
+                    activeReceitaStatusFilters.add(status);
+                }
+                updateReceitaStatusFilterUI();
+                applyReceitasFiltersAndRender();
+            }
+        });
+    }
+
+    if(searchInputReceber) searchInputReceber.addEventListener('input', applyReceitasFiltersAndRender);
+    if(startDateInputReceber) startDateInputReceber.addEventListener('change', applyReceitasFiltersAndRender);
+    if(endDateInputReceber) endDateInputReceber.addEventListener('change', applyReceitasFiltersAndRender);
+
+    function updateReceitaStatusFilterUI() {
+        const buttons = statusFilterGroupReceber.querySelectorAll('.status-filter-btn');
+        buttons.forEach(btn => {
+            const status = btn.dataset.status;
+            if (activeReceitaStatusFilters.has(status)) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
@@ -2313,6 +2389,14 @@
     const calendarioView = document.getElementById('calendario-view');
     const calendarEl = document.getElementById('calendar');
     let calendarInstance = null;
+
+    // --- Elementos da Visualização de Calendário - Contas a Receber ---
+    const listaViewBtnReceber = document.getElementById('lista-view-btn-receber');
+    const calendarioViewBtnReceber = document.getElementById('calendario-view-btn-receber');
+    const listaViewReceber = document.getElementById('lista-view-receber');
+    const calendarioViewReceber = document.getElementById('calendario-view-receber');
+    const calendarElReceber = document.getElementById('calendar-receber');
+    let calendarReceberInstance = null;
 
 
     // --- Funções Auxiliares ---
@@ -2329,9 +2413,8 @@
             setContasView(savedView);
         }
         if (viewId === 'contas-a-receber-page') {
-            // Placeholder for similar view logic for receivables
-            // const savedReceitasView = localStorage.getItem('receitasView') || 'lista';
-            // setReceitasView(savedReceitasView);
+            const savedReceitasView = localStorage.getItem('receitasView') || 'lista';
+            setReceitasView(savedReceitasView);
         }
     }
 
@@ -3071,7 +3154,7 @@
         const receitasQuery = query(collection(db, 'users', userId, 'receitas'));
         receitasUnsubscribe = onSnapshot(receitasQuery, (querySnapshot) => {
             allReceitas = querySnapshot.docs;
-            renderReceitasTable(allReceitas);
+            applyReceitasFiltersAndRender();
             // TODO: Update summary cards and dashboard for receivables
         });
 
@@ -3218,6 +3301,75 @@
     }
 
 
+    function processAndRenderReceberCalendarEvents(docs) {
+        if (!calendarReceberInstance) return;
+
+        const events = docs.map(doc => {
+            const data = doc.data();
+            const status = data.status || 'Pendente';
+            const colorMap = {
+                'Recebido': '#16a34a',
+                'Recebido Parcialmente': '#f59e0b',
+                'Vencido': '#dc2626',
+                'Pendente': '#3b82f6'
+            };
+            const eventColor = colorMap[status] || '#6b7280';
+            const displayValue = status === 'Recebido' ? data.valorOriginal : (data.saldoPendente ?? data.valorOriginal);
+
+            return {
+                id: doc.id,
+                title: `${data.clienteNome}: ${formatCurrency(displayValue)}`,
+                start: data.dataVencimento || data.vencimento,
+                backgroundColor: eventColor,
+                borderColor: eventColor,
+                extendedProps: { status: status }
+            };
+        });
+
+        calendarReceberInstance.getEventSources().forEach(source => source.remove());
+        calendarReceberInstance.addEventSource(events);
+    }
+
+    function initializeReceberCalendar() {
+        if (calendarReceberInstance) return;
+        calendarReceberInstance = new FullCalendar.Calendar(calendarElReceber, {
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek'
+            },
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana' },
+            eventClick: function(info) {
+                if(info.event.id) openVisualizarReceitaModal(info.event.id);
+            }
+        });
+        calendarReceberInstance.render();
+    }
+
+    function setReceitasView(viewName) {
+        if (viewName === 'calendario') {
+            listaViewReceber.classList.add('hidden');
+            calendarioViewReceber.classList.remove('hidden');
+            listaViewBtnReceber.classList.remove('bg-blue-100', 'text-blue-700');
+            calendarioViewBtnReceber.classList.add('bg-blue-100', 'text-blue-700');
+            initializeReceberCalendar();
+            applyReceitasFiltersAndRender();
+        } else { // 'lista'
+            listaViewReceber.classList.remove('hidden');
+            calendarioViewReceber.classList.add('hidden');
+            calendarioViewBtnReceber.classList.remove('bg-blue-100', 'text-blue-700');
+            listaViewBtnReceber.classList.add('bg-blue-100', 'text-blue-700');
+        }
+        localStorage.setItem('receitasView', viewName);
+    }
+
+    if(listaViewBtnReceber) listaViewBtnReceber.addEventListener('click', () => setReceitasView('lista'));
+    if(calendarioViewBtnReceber) calendarioViewBtnReceber.addEventListener('click', () => setReceitasView('calendario'));
+
+
     // --- Lógica de Autenticação e Navegação ---
     function updateUiForUser(name) {
         const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan, userEmailReceberSpan];
@@ -3250,6 +3402,7 @@
             setupListeners(effectiveUserId);
             showView('main-page');
             updateStatusFilterUI();
+            updateReceitaStatusFilterUI();
             return;
         }
 
