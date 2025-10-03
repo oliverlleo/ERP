@@ -4448,11 +4448,30 @@
                 partialPaymentContext = {};
                  selectAllCheckbox.checked = false;
                 selectAllCheckbox.dispatchEvent(new Event('change'));
+                forceRefreshDespesasView(); // Force UI update
 
             } catch (error) {
                 console.error("Erro ao registrar pagamento parcial:", error);
             }
         });
+    }
+
+    async function forceRefreshDespesasView() {
+        const userId = effectiveUserId;
+        if (!userId) return;
+        try {
+            const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
+            const querySnapshot = await getDocs(despesasQuery);
+            allDespesas = querySnapshot.docs;
+            applyFiltersAndRender();
+            updateSummaryCards(allDespesas);
+            updateDashboardIndicators(allDespesas);
+            if (calendarInstance) {
+                processAndRenderCalendarEvents(allDespesas);
+            }
+        } catch (error) {
+            console.error("Error during forced refresh of expenses:", error);
+        }
     }
 
     if(pagarForm) {
@@ -4558,6 +4577,7 @@
             closePagarModal();
             selectAllCheckbox.checked = false;
             selectAllCheckbox.dispatchEvent(new Event('change'));
+            forceRefreshDespesasView(); // Force UI update
         }
 
         pagarForm.addEventListener('submit', async (e) => {
@@ -4579,12 +4599,16 @@
 
                 if (despesaSnap.exists()) {
                     const saldoDevedorAtual = despesaSnap.data().valorSaldo ?? despesaSnap.data().valor;
+                    const valorAPagar = parseFloat(document.getElementById('pagar-valor').value) || 0;
 
-                    if (valorFinalPago < saldoDevedorAtual) {
-                        // É um pagamento parcial. Chame a função para abrir o modal de confirmação.
+                    // A comparação chave: o valor que o usuário quer pagar (antes de juros/descontos)
+                    // é menor que o saldo devedor? Se for, é parcial.
+                    // O valorFinalPago (que inclui descontos) é usado para o registro.
+                    if (valorAPagar < saldoDevedorAtual) {
+                        // É um pagamento parcial.
                         abrirModalConfirmacaoParcial(saldoDevedorAtual, valorFinalPago, despesaId);
                     } else {
-                        // É um pagamento total. Prossiga com a lógica de quitação normal.
+                        // É um pagamento total (ou valor maior, que quita a dívida).
                          const paymentData = {
                             paymentDate: document.getElementById('pagar-data').value,
                             paymentAccount: document.getElementById('pagar-conta-saida').value,
