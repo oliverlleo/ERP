@@ -1762,7 +1762,7 @@
                               <input type="text" id="receita-valor" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="0,00">
                           </div>
                           <div>
-                              <label for="receita-forma-pagamento" class="block text-sm font-medium text-gray-700">Condição de Pagamento</label>
+                              <label for="receita-forma-pagamento" class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
                               <select id="receita-forma-pagamento" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                   <option value="a_vista">À Vista / Título Único</option>
                                   <option value="parcelado">Parcelado</option>
@@ -1786,31 +1786,29 @@
                       <div id="receita-recorrente-fields" class="hidden mt-4 space-y-4">
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                  <label for="receita-recorrencia-frequencia" class="block text-sm font-medium text-gray-700">Frequência</label>
+                                  <label for="receita-recorrencia-frequencia" class="block text-sm font-medium text-gray-700">Repetir a cada</label>
                                   <select id="receita-recorrencia-frequencia" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                      <option value="mensal">Mensal</option>
-                                      <option value="bimestral">Bimestral</option>
-                                      <option value="anual">Anual</option>
+                                      <option value="mensal">Mês</option>
+                                      <option value="bimestral">Bimestre</option>
+                                      <option value="trimestral">Trimestre</option>
+                                      <option value="semestral">Semestre</option>
+                                      <option value="anual">Ano</option>
                                   </select>
-                              </div>
-                               <div>
-                                  <label for="receita-recorrencia-primeiro-vencimento" class="block text-sm font-medium text-gray-700">Data do Primeiro Vencimento</label>
-                                  <input type="date" id="receita-recorrencia-primeiro-vencimento" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                               </div>
                           </div>
                           <div>
-                              <label class="block text-sm font-medium text-gray-700">Condição de Término</label>
+                              <label class="block text-sm font-medium text-gray-700">Fim da Recorrência</label>
                               <div class="mt-2 space-y-2">
+                                  <div class="flex items-center">
+                                      <input type="radio" id="receita-recorrencia-fim-data-radio" name="receita-recorrencia-fim" value="data" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                      <label for="receita-recorrencia-fim-data-radio" class="ml-3 block text-sm font-medium text-gray-700">Em:</label>
+                                      <input type="date" id="receita-recorrencia-fim-data" class="form-input ml-2 block w-full rounded-md border-gray-300 shadow-sm">
+                                  </div>
                                   <div class="flex items-center">
                                       <input type="radio" id="receita-recorrencia-fim-ocorrencias-radio" name="receita-recorrencia-fim" value="ocorrencias" class="h-4 w-4 text-indigo-600 border-gray-300">
                                       <label for="receita-recorrencia-fim-ocorrencias-radio" class="ml-3 block text-sm font-medium text-gray-700">Após:</label>
                                       <input type="number" id="receita-recorrencia-fim-ocorrencias" class="form-input ml-2 block w-24 rounded-md border-gray-300 shadow-sm">
                                       <span class="ml-2 text-sm text-gray-600">ocorrências</span>
-                                  </div>
-                                  <div class="flex items-center">
-                                      <input type="radio" id="receita-recorrencia-fim-data-radio" name="receita-recorrencia-fim" value="data" class="h-4 w-4 text-indigo-600 border-gray-300">
-                                      <label for="receita-recorrencia-fim-data-radio" class="ml-3 block text-sm font-medium text-gray-700">Até a data:</label>
-                                      <input type="date" id="receita-recorrencia-fim-data" class="form-input ml-2 block w-full rounded-md border-gray-300 shadow-sm">
                                   </div>
                               </div>
                           </div>
@@ -5388,6 +5386,8 @@
             const baseDescricao = document.getElementById('receita-descricao').value;
             const valorOriginalCents = toCents(document.getElementById('receita-valor').value);
             const vencimentoOriginal = document.getElementById('receita-vencimento').value;
+            const userRef = collection(db, 'users', userId, 'receitas');
+            const counterRef = doc(db, 'users', userId, 'counters', 'receitas');
 
             try {
                 // --- UPDATE LOGIC ---
@@ -5408,9 +5408,6 @@
                 }
 
                 // --- CREATE LOGIC ---
-                const userRef = collection(db, 'users', userId, 'receitas');
-                const receitasParaCriar = [];
-
                 let baseData = {
                     descricao: baseDescricao,
                     clienteId: document.getElementById('receita-cliente').value,
@@ -5425,79 +5422,92 @@
                     totalRecebido: 0,
                 };
 
-                if (formaPagamento === 'parcelado') {
-                    const groupId = doc(collection(db, 'users', userId, 'receitas')).id;
-                    const numParcelas = parseInt(document.getElementById('receita-parcelas-numero').value, 10);
-                    if (!numParcelas || numParcelas <= 0) { alert("Número de parcelas inválido."); return; }
-
-                    const valoresParcelas = [];
-                    let valorBase = Math.floor(valorOriginalCents / numParcelas);
-                    let resto = valorOriginalCents % numParcelas;
-                    for (let i = 0; i < numParcelas; i++) {
-                        valoresParcelas.push(valorBase + (i < resto ? 1 : 0));
-                    }
-
-                    let dataVencimento = new Date(vencimentoOriginal + 'T00:00:00');
-
-                    for (let i = 0; i < numParcelas; i++) {
-                        let vencimentoParcela = new Date(dataVencimento.getTime());
-                        vencimentoParcela.setMonth(vencimentoParcela.getMonth() + i);
-
-                        receitasParaCriar.push({
-                            ...baseData,
-                            groupId: groupId,
-                            descricao: `${baseDescricao} - Parcela ${i + 1}/${numParcelas}`,
-                            valorOriginal: valoresParcelas[i],
-                            saldoPendente: valoresParcelas[i],
-                            dataVencimento: vencimentoParcela.toISOString().split('T')[0],
-                        });
-                    }
-                } else if (formaPagamento === 'recorrente') {
-                    const recorrenciaData = {
-                        frequencia: document.getElementById('receita-recorrencia-frequencia').value,
-                        condicaoTermino: {
-                            tipo: document.querySelector('input[name="receita-recorrencia-fim"]:checked')?.value,
-                            valor: document.querySelector('input[name="receita-recorrencia-fim"]:checked')?.value === 'data'
-                                   ? document.getElementById('receita-recorrencia-fim-data').value
-                                   : parseInt(document.getElementById('receita-recorrencia-fim-ocorrencias').value, 10)
-                        },
-                        baseDescricao: baseDescricao,
-                        valorOriginal: valorOriginalCents,
-                        clienteId: baseData.clienteId,
-                        clienteNome: baseData.clienteNome,
-                        categoriaId: baseData.categoriaId,
-                        proximoVencimento: document.getElementById('receita-recorrencia-primeiro-vencimento').value,
-                        adminId: userId,
-                        createdAt: serverTimestamp()
-                    };
-                    await addDoc(collection(db, 'users', userId, 'recorrencias'), recorrenciaData);
-
-                    receitasParaCriar.push({
-                        ...baseData,
-                        valorOriginal: valorOriginalCents,
-                        saldoPendente: valorOriginalCents,
-                        dataVencimento: document.getElementById('receita-recorrencia-primeiro-vencimento').value,
-                    });
-                } else {
-                    receitasParaCriar.push({
-                        ...baseData,
-                        valorOriginal: valorOriginalCents,
-                        saldoPendente: valorOriginalCents,
-                        dataVencimento: vencimentoOriginal,
-                    });
-                }
-
-                const counterRef = doc(db, 'users', userId, 'counters', 'receitas');
                 await runTransaction(db, async (transaction) => {
                     const counterDoc = await transaction.get(counterRef);
                     let nextNumber = counterDoc.exists() ? counterDoc.data().currentNumber + 1 : 1;
 
-                    for (let i = 0; i < receitasParaCriar.length; i++) {
-                        const receitaData = receitasParaCriar[i];
-                        const newDocRef = doc(userRef);
-                        receitaData.numeroDocumento = String(nextNumber).padStart(4, '0');
+                    if (formaPagamento === 'parcelado') {
+                        const numParcelas = parseInt(document.getElementById('receita-parcelas-numero').value, 10);
+                        if (!numParcelas || numParcelas <= 0) { throw new Error("Número de parcelas inválido."); }
 
-                        if (i === 0 && marcarRecebidoCheckbox.checked) {
+                        const valoresParcelas = [];
+                        let valorBase = Math.floor(valorOriginalCents / numParcelas);
+                        let resto = valorOriginalCents % numParcelas;
+                        for (let i = 0; i < numParcelas; i++) { valoresParcelas.push(valorBase + (i < resto ? 1 : 0)); }
+
+                        const intervalo = document.getElementById('receita-parcelas-intervalo').value;
+                        let dataVencimentoBase = new Date(vencimentoOriginal + 'T00:00:00');
+                        const baseDocNumero = String(nextNumber).padStart(4, '0');
+
+                        for (let i = 0; i < numParcelas; i++) {
+                            let vencimentoParcela;
+                            if (i === 0) {
+                                vencimentoParcela = new Date(dataVencimentoBase.getTime());
+                            } else {
+                                if (intervalo === 'mensal') {
+                                    vencimentoParcela = new Date(dataVencimentoBase.getFullYear(), dataVencimentoBase.getMonth() + i, dataVencimentoBase.getDate());
+                                } else { // '30' for 30 days
+                                    vencimentoParcela = new Date(dataVencimentoBase.getTime());
+                                    vencimentoParcela.setDate(vencimentoParcela.getDate() + (i * 30));
+                                }
+                            }
+
+                            const newDocRef = doc(userRef);
+                            let receitaData = {
+                                ...baseData,
+                                descricao: `${baseDescricao} - Parcela ${i + 1}/${numParcelas}`,
+                                valorOriginal: valoresParcelas[i],
+                                saldoPendente: valoresParcelas[i],
+                                dataVencimento: vencimentoParcela.toISOString().split('T')[0],
+                                numeroDocumento: `${baseDocNumero}/${i + 1}`
+                            };
+                            transaction.set(newDocRef, receitaData);
+                        }
+                        transaction.set(counterRef, { currentNumber: nextNumber });
+
+                    } else if (formaPagamento === 'recorrente') {
+                        const recorrenciaData = {
+                            frequencia: document.getElementById('receita-recorrencia-frequencia').value,
+                            condicaoTermino: {
+                                tipo: document.querySelector('input[name="receita-recorrencia-fim"]:checked')?.value,
+                                valor: document.querySelector('input[name="receita-recorrencia-fim"]:checked')?.value === 'data'
+                                       ? document.getElementById('receita-recorrencia-fim-data').value
+                                       : parseInt(document.getElementById('receita-recorrencia-fim-ocorrencias').value, 10)
+                            },
+                            baseDescricao: baseDescricao,
+                            valorOriginal: valorOriginalCents,
+                            clienteId: baseData.clienteId,
+                            clienteNome: baseData.clienteNome,
+                            categoriaId: baseData.categoriaId,
+                            proximoVencimento: vencimentoOriginal,
+                            adminId: userId,
+                            createdAt: serverTimestamp()
+                        };
+                        const newRecorrenciaRef = doc(collection(db, 'users', userId, 'recorrencias'));
+                        transaction.set(newRecorrenciaRef, recorrenciaData);
+
+                        const newDocRef = doc(userRef);
+                        let receitaData = {
+                            ...baseData,
+                            valorOriginal: valorOriginalCents,
+                            saldoPendente: valorOriginalCents,
+                            dataVencimento: vencimentoOriginal,
+                            numeroDocumento: String(nextNumber).padStart(4, '0')
+                        };
+                        transaction.set(newDocRef, receitaData);
+                        transaction.set(counterRef, { currentNumber: nextNumber });
+
+                    } else { // Single payment
+                        const newDocRef = doc(userRef);
+                        let receitaData = {
+                            ...baseData,
+                            valorOriginal: valorOriginalCents,
+                            saldoPendente: valorOriginalCents,
+                            dataVencimento: vencimentoOriginal,
+                            numeroDocumento: String(nextNumber).padStart(4, '0'),
+                        };
+
+                        if (marcarRecebidoCheckbox.checked) {
                             const valorRecebidoCents = toCents(document.getElementById('recebimento-valor').value);
                             receitaData.totalRecebido = valorRecebidoCents;
                             receitaData.saldoPendente = receitaData.valorOriginal - valorRecebidoCents;
@@ -5515,12 +5525,9 @@
                                 createdAt: serverTimestamp()
                             });
                         }
-
                         transaction.set(newDocRef, receitaData);
-                        nextNumber++;
+                        transaction.set(counterRef, { currentNumber: nextNumber });
                     }
-
-                    transaction.set(counterRef, { currentNumber: nextNumber - 1 }, { merge: true });
                 });
 
                 receitaModal.classList.add('hidden');
@@ -5991,6 +5998,60 @@
     if(recorrenciaFimOcorrenciasInput) recorrenciaFimOcorrenciasInput.addEventListener('input', handleRecurrenceInteraction);
     if(recorrenciaFimDataInput) recorrenciaFimDataInput.addEventListener('change', handleRecurrenceInteraction);
     if(document.getElementById('recorrencia-frequencia')) document.getElementById('recorrencia-frequencia').addEventListener('change', handleRecurrenceInteraction);
+
+    function handleReceitaRecurrenceInteraction() {
+        const dueDateInput = document.getElementById('receita-vencimento');
+        const occurrencesInput = document.getElementById('receita-recorrencia-fim-ocorrencias');
+        const endDateInput = document.getElementById('receita-recorrencia-fim-data');
+        const freqSelect = document.getElementById('receita-recorrencia-frequencia');
+        const occurrencesRadio = document.getElementById('receita-recorrencia-fim-ocorrencias-radio');
+        const endDateRadio = document.getElementById('receita-recorrencia-fim-data-radio');
+
+        if (!dueDateInput || !occurrencesInput || !endDateInput || !freqSelect) return;
+
+        const freq = freqSelect.value;
+        const multiplier = getRecurrenceMultiplier(freq);
+        const activeEl = document.activeElement;
+
+        // Validation
+        if ((activeEl === occurrencesInput || activeEl === endDateInput) && !dueDateInput.value) {
+            dueDateInput.classList.add('border-red-500', 'ring-red-500');
+            return;
+        }
+        dueDateInput.classList.remove('border-red-500', 'ring-red-500');
+
+        const dueDate = dueDateInput.value ? new Date(dueDateInput.value + 'T00:00:00') : null;
+        const occurrences = occurrencesInput.value ? parseInt(occurrencesInput.value, 10) : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T00:00:00') : null;
+
+        if (activeEl === occurrencesInput) endDateInput.value = '';
+        if (activeEl === endDateInput) occurrencesInput.value = '';
+
+        if (dueDate && occurrences) {
+            occurrencesRadio.checked = true;
+            const calculatedEndDate = new Date(dueDate.getTime());
+            calculatedEndDate.setMonth(calculatedEndDate.getMonth() + (multiplier * (occurrences - 1)));
+            endDateInput.value = calculatedEndDate.toISOString().split('T')[0];
+        } else if (dueDate && endDate) {
+            if (endDate >= dueDate) {
+                endDateRadio.checked = true;
+                const monthDiff = (endDate.getFullYear() - dueDate.getFullYear()) * 12 + (endDate.getMonth() - dueDate.getMonth());
+                const calculatedOccurrences = Math.floor(monthDiff / multiplier) + 1;
+                occurrencesInput.value = calculatedOccurrences > 0 ? calculatedOccurrences : '';
+            }
+        } else if (occurrences && endDate) {
+            occurrencesRadio.checked = true;
+            const calculatedStartDate = new Date(endDate.getTime());
+            calculatedStartDate.setMonth(calculatedStartDate.getMonth() - (multiplier * (occurrences - 1)));
+            dueDateInput.value = calculatedStartDate.toISOString().split('T')[0];
+        }
+    }
+
+    // Add listeners for the new "Contas a Receber" recurrence fields
+    document.getElementById('receita-vencimento')?.addEventListener('change', handleReceitaRecurrenceInteraction);
+    document.getElementById('receita-recorrencia-fim-ocorrencias')?.addEventListener('input', handleReceitaRecurrenceInteraction);
+    document.getElementById('receita-recorrencia-fim-data')?.addEventListener('change', handleReceitaRecurrenceInteraction);
+    document.getElementById('receita-recorrencia-frequencia')?.addEventListener('change', handleReceitaRecurrenceInteraction);
 
     // --- Lógica da Tela de Login de Usuário ---
     // Popula o dropdown de empresas na tela de login assim que a página carrega
