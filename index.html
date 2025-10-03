@@ -47,6 +47,16 @@
       background-size: cover;
       background-position: center;
     }
+    .status-filter-btn.active {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        border: 1px solid var(--primary-color) !important;
+    }
+    .status-filter-btn {
+        background-color: #F3F4F6;
+        color: #374151;
+        border: 1px solid #D1D5DB;
+    }
   </style>
 </head>
 
@@ -171,21 +181,21 @@
                     <div>
                         <h2 class="text-gray-900 text-xl font-semibold leading-tight tracking-tight mb-4">Indicadores Financeiros</h2>
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                            <div id="dashboard-total-a-pagar-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <span class="material-symbols-outlined text-yellow-500"> calendar_month </span>
                                     <p class="text-gray-800 text-base font-medium leading-normal">Total a Pagar no Mês</p>
                                 </div>
                                 <p id="dashboard-total-a-pagar" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                             </div>
-                            <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                            <div id="dashboard-total-pago-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <span class="material-symbols-outlined text-green-500"> check_circle </span>
                                     <p class="text-gray-800 text-base font-medium leading-normal">Total Pago no Mês</p>
                                 </div>
                                 <p id="dashboard-total-pago" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                             </div>
-                            <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                            <div id="dashboard-contas-vencidas-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <span class="material-symbols-outlined text-red-500"> error </span>
                                     <p class="text-gray-800 text-base font-medium leading-normal">Contas Vencidas</p>
@@ -1077,15 +1087,15 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                        <div id="total-a-pagar-card-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
                             <p class="text-gray-800 text-base font-medium leading-normal">Total a Pagar no Mês</p>
                             <p id="total-a-pagar-card" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                         </div>
-                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                        <div id="total-pago-card-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
                            <p class="text-gray-800 text-base font-medium leading-normal">Total Pago no Mês</p>
                             <p id="total-pago-card" class="text-gray-900 text-3xl font-bold leading-tight">R$ 0,00</p>
                         </div>
-                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                        <div id="contas-vencidas-card-container" class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
                             <p class="text-gray-800 text-base font-medium leading-normal">Contas Vencidas</p>
                             <p id="contas-vencidas-card" class="text-red-600 text-3xl font-bold leading-tight">R$ 0,00</p>
                         </div>
@@ -1120,36 +1130,33 @@
                             </button>
                         </div>
 
-                        <!-- Container da Visualização de Lista -->
-                        <div id="lista-view">
-                             <!-- Toolbar de Filtros e Busca -->
-                            <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                                <div class="flex-grow min-w-[200px]">
-                                    <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
-                                    <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full">
-                                </div>
-                                <div>
-                                    <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
-                                    <input type="date" id="start-date-input" class="form-input mt-1 block w-full">
-                                </div>
-                                <div>
-                                    <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
-                                    <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
-                                </div>
-                                <div>
-                                    <label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
-                                    <select id="status-filter" class="form-select mt-1 block w-full">
-                                        <option value="todas">Todas</option>
-                                        <option value="pendente">Pendente</option>
-                                        <option value="pago">Pago</option>
-                                        <option value="vencido">Vencido</option>
-                                    </select>
-                                </div>
-                                <div class="flex items-center h-full pt-7">
-                                    <input id="include-paid-checkbox" type="checkbox" class="h-4 w-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300 rounded">
-                                    <label for="include-paid-checkbox" class="ml-2 block text-sm font-medium text-gray-900">Incluir Pagos</label>
+                        <!-- Toolbar de Filtros e Busca -->
+                        <div id="filter-toolbar" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                            <div class="flex-grow min-w-[200px]">
+                                <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar</label>
+                                <input type="text" id="search-input" placeholder="Buscar por descrição, fornecedor..." class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="start-date-input" class="block text-sm font-medium text-gray-700">Vencimento de</label>
+                                <input type="date" id="start-date-input" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="end-date-input" class="block text-sm font-medium text-gray-700">até</label>
+                                <input type="date" id="end-date-input" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <div id="status-filter-group" class="flex items-center gap-2 mt-1">
+                                    <button data-status="Pendente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pendente</button>
+                                    <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
+                                    <button data-status="Pago Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
+                                    <button data-status="Pago" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Pago</button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Container da Visualização de Lista -->
+                        <div id="lista-view">
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
@@ -1158,8 +1165,11 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorecido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma de Pagamento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descontos</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Juros</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Devedor</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1173,15 +1183,6 @@
 
                         <!-- Container da Visualização de Calendário (inicia oculto) -->
                         <div id="calendario-view" class="hidden">
-                            <div id="calendar-filters" class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg border">
-                                <label for="calendar-status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Status:</label>
-                                <select id="calendar-status-filter" class="form-select rounded-md border-gray-300 shadow-sm">
-                                    <option value="todas">Mostrar Todas</option>
-                                    <option value="pendente">Apenas Pendentes</option>
-                                    <option value="pago">Apenas Pagas</option>
-                                    <option value="vencido">Apenas Vencidas</option>
-                                </select>
-                            </div>
                             <div id="calendar" class="w-full"></div>
                         </div>
                     </div>
@@ -1445,7 +1446,7 @@
 
   <!-- Modal de Visualização de Despesa -->
   <div id="visualizar-despesa-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+      <div class="relative top-10 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white">
           <div class="flex justify-between items-center border-b pb-3">
               <h3 class="text-2xl font-bold text-gray-900">Detalhes da Despesa</h3>
               <button id="close-visualizar-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
@@ -1480,6 +1481,24 @@
                           </tbody>
                       </table>
                   </div>
+
+                  <!-- Seção de Parcelamento/Recorrência -->
+                  <h4 id="parcelamento-section-title" class="text-lg font-semibold text-gray-800 border-b pb-2 pt-4 hidden"></h4>
+                  <div id="parcelamento-table-container" class="hidden overflow-x-auto border rounded-lg">
+                      <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-50">
+                              <tr>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                              </tr>
+                          </thead>
+                          <tbody id="parcelamento-table-body" class="bg-white divide-y divide-gray-200">
+                              <!-- Linhas do parcelamento serão inseridas aqui -->
+                          </tbody>
+                      </table>
+                  </div>
               </div>
               <!-- Coluna 2: Status e Valores -->
               <div class="space-y-4 bg-gray-50 p-4 rounded-lg border">
@@ -1488,6 +1507,14 @@
                   <div>
                       <p class="text-sm text-gray-500">Valor Original</p>
                       <p id="view-despesa-valor-original" class="text-2xl font-bold text-blue-600"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Descontos Concedidos</p>
+                      <p id="view-despesa-descontos" class="text-2xl font-bold text-yellow-600"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Juros Pagos</p>
+                      <p id="view-despesa-juros" class="text-2xl font-bold text-orange-600"></p>
                   </div>
                    <div>
                       <p class="text-sm text-gray-500">Total Pago</p>
@@ -1606,7 +1633,7 @@
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -1761,11 +1788,21 @@
     const searchInput = document.getElementById('search-input');
     const startDateInput = document.getElementById('start-date-input');
     const endDateInput = document.getElementById('end-date-input');
-    const statusFilter = document.getElementById('status-filter');
-    const filterBtn = document.getElementById('filter-btn');
-    const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    const includePaidCheckbox = document.getElementById('include-paid-checkbox');
+    const statusFilterGroup = document.getElementById('status-filter-group');
     let allDespesas = []; // Holds all expenses for client-side filtering
+    let activeStatusFilters = new Set(['Pendente', 'Vencido', 'Pago Parcialmente']);
+
+    function updateStatusFilterUI() {
+        const buttons = document.querySelectorAll('.status-filter-btn');
+        buttons.forEach(btn => {
+            const status = btn.dataset.status;
+            if (activeStatusFilters.has(status)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
 
     // --- Elementos da Visualização de Calendário ---
     const listaViewBtn = document.getElementById('lista-view-btn');
@@ -1773,7 +1810,6 @@
     const listaView = document.getElementById('lista-view');
     const calendarioView = document.getElementById('calendario-view');
     const calendarEl = document.getElementById('calendar');
-    const calendarStatusFilter = document.getElementById('calendar-status-filter');
     let calendarInstance = null;
 
 
@@ -1823,10 +1859,8 @@
             if (!calendarInstance) {
                 initializeCalendar();
             }
-            // Ao trocar para a visualização de calendário, os dados já carregados
-            // são processados e renderizados. A chamada onSnapshot cuidará das
-            // atualizações subsequentes.
-            processAndRenderCalendarEvents(allDespesas);
+            // Now, when switching to calendar view, it will apply the current filters.
+            applyFiltersAndRender();
         } else { // 'lista'
             listaView.classList.remove('hidden');
             calendarioView.classList.add('hidden');
@@ -1876,23 +1910,26 @@
 
         const events = docs.map(doc => {
             const data = doc.data();
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const status = data.status || 'Pendente';
 
-            let eventColor = '#f59e0b'; // Amarelo para Pendente
-            if (data.pago) {
-                eventColor = '#16a34a'; // Verde para Pago
-            } else if (vencimento < today) {
-                eventColor = '#dc2626'; // Vermelho para Vencido
-            }
+            const colorMap = {
+                'Pago': '#16a34a', // green-600
+                'Pago Parcialmente': '#f59e0b', // yellow-500
+                'Vencido': '#dc2626', // red-600
+                'Pendente': '#3b82f6' // blue-500
+            };
+            const eventColor = colorMap[status] || '#6b7280'; // gray-500 as fallback
+
+            const displayValue = status === 'Pago' ? data.valorOriginal : (data.valorSaldo ?? data.valorOriginal);
 
             return {
                 id: doc.id,
-                title: `${data.favorecidoNome}: ${formatCurrency(data.valor)}`,
+                title: `${data.favorecidoNome}: ${formatCurrency(displayValue)}`,
                 start: data.vencimento,
                 backgroundColor: eventColor,
                 borderColor: eventColor,
                 extendedProps: {
-                    status: data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente')
+                    status: status
                 }
             };
         });
@@ -1923,10 +1960,13 @@
     }
 
     function formatCurrency(valueInCents) {
-        if (typeof valueInCents !== 'number' || isNaN(valueInCents)) {
-             valueInCents = 0;
-        }
-        const value = valueInCents / 100;
+        // Coerce the input to a number. If it's not a valid number (e.g., undefined, null), it becomes 0.
+        const numericValue = Number(valueInCents) || 0;
+
+        // Now, we are sure numericValue is a number.
+        const value = numericValue / 100;
+
+        // The toLocaleString should now be safe to call.
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
@@ -2479,13 +2519,44 @@
 
         // --- Listener for Despesas Table ---
         const despesasQuery = query(collection(db, 'users', userId, 'despesas'));
-        despesasUnsubscribe = onSnapshot(despesasQuery, (querySnapshot) => {
+        despesasUnsubscribe = onSnapshot(despesasQuery, async (querySnapshot) => {
             allDespesas = querySnapshot.docs; // Store all documents
             applyFiltersAndRender(); // Apply current filters and render for the list
-            updateSummaryCards(allDespesas);
-            updateDashboardIndicators(allDespesas);
+
+            // New logic to fetch payments and calculate Total Pago no Mês
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            let totalPagoNoMes = 0;
+
+            // This is inefficient (N+1 problem) but necessary for accuracy without schema changes.
+            const paymentPromises = allDespesas.map(despesaDoc => {
+                const pagamentosRef = collection(db, 'users', userId, 'despesas', despesaDoc.id, 'pagamentos');
+                return getDocs(pagamentosRef);
+            });
+
+            const paymentSnapshots = await Promise.all(paymentPromises);
+
+            paymentSnapshots.forEach(paymentSnapshot => {
+                paymentSnapshot.forEach(paymentDoc => {
+                    const paymentData = paymentDoc.data();
+                    if (paymentData.dataTransacao) {
+                        const paymentDate = new Date(paymentData.dataTransacao + 'T00:00:00');
+                        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+                            if (paymentData.tipoTransacao === 'Pagamento') {
+                                totalPagoNoMes += paymentData.valorPrincipal || 0;
+                            } else if (paymentData.tipoTransacao === 'Estorno') {
+                                totalPagoNoMes -= paymentData.valorPrincipal || 0;
+                            }
+                        }
+                    }
+                });
+            });
+
+            updateSummaryCards(allDespesas, totalPagoNoMes);
+            updateDashboardIndicators(allDespesas, totalPagoNoMes);
             if (calendarInstance) {
-                processAndRenderCalendarEvents(allDespesas); // Process for calendar
+                processAndRenderCalendarEvents(allDespesas);
             }
         });
 
@@ -2589,14 +2660,13 @@
         selectElement.value = currentVal;
     }
 
-    function updateSummaryCards(docs) {
+    function updateSummaryCards(docs, totalPagoNoMes) {
         const today = new Date();
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
         today.setHours(0, 0, 0, 0);
 
         let totalAPagar = 0;
-        let totalPago = 0;
         let contasVencidas = 0;
 
         docs.forEach(doc => {
@@ -2611,16 +2681,6 @@
                 totalAPagar += valorSaldo;
             }
 
-            // Total Pago no Mês (based on payments in the subcollection, but for now we use totalPago)
-            if (data.dataPagamento) { // This condition needs to be more robust later
-                const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
-                 if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    // This is tricky without querying the subcollection. We'll approximate.
-                    // Let's assume `totalPago` reflects the sum of payments.
-                    totalPago += data.totalPago || data.valorPago || 0;
-                 }
-            }
-
             // Contas Vencidas (based on remaining balance)
             if (status !== 'Pago' && vencimento < today) {
                 contasVencidas += valorSaldo;
@@ -2628,14 +2688,14 @@
         });
 
         document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagar);
-        document.getElementById('total-pago-card').textContent = formatCurrency(totalPago);
+        document.getElementById('total-pago-card').textContent = formatCurrency(totalPagoNoMes);
         document.getElementById('contas-vencidas-card').textContent = formatCurrency(contasVencidas);
     }
 
-    function updateDashboardIndicators(docs) {
+    function updateDashboardIndicators(docs, totalPagoNoMes) {
         // This function can now simply call updateSummaryCards and map the values,
         // as the logic is identical.
-        updateSummaryCards(docs); // Recalculates card values
+        updateSummaryCards(docs, totalPagoNoMes); // Recalculates card values
         document.getElementById('dashboard-total-a-pagar').textContent = document.getElementById('total-a-pagar-card').textContent;
         document.getElementById('dashboard-total-pago').textContent = document.getElementById('total-pago-card').textContent;
         document.getElementById('dashboard-contas-vencidas').textContent = document.getElementById('contas-vencidas-card').textContent;
@@ -2673,6 +2733,7 @@
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
             showView('main-page');
+            updateStatusFilterUI();
             return;
         }
 
@@ -2688,6 +2749,7 @@
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
                 showView('main-page');
+                updateStatusFilterUI();
                 return;
             }
         }
@@ -3874,24 +3936,14 @@
         const searchTerm = searchInput.value.toLowerCase();
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
-        const status = statusFilter.value;
-        const includePaid = includePaidCheckbox.checked;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
 
         const filteredDocs = allDespesas.filter(doc => {
             const data = doc.data();
-
-            // Paid filter (primary filter)
-            if (!includePaid && data.pago) {
-                return false;
-            }
+            const status = data.status || 'Pendente';
 
             // Status filter
-            let statusMatch = true;
-            if (status !== 'todas') {
-                const docStatus = data.pago ? 'pago' : (new Date(data.vencimento + 'T00:00:00') < today ? 'vencido' : 'pendente');
-                if (status !== docStatus) statusMatch = false;
+            if (activeStatusFilters.size > 0 && !activeStatusFilters.has(status)) {
+                return false;
             }
 
             // Date filter
@@ -3914,25 +3966,33 @@
                 searchMatch = descriptionMatch || payeeMatch;
             }
 
-            return statusMatch && dateMatch && searchMatch;
+            return dateMatch && searchMatch;
         });
 
         renderDespesasTable(filteredDocs);
+        if (calendarInstance) {
+            processAndRenderCalendarEvents(filteredDocs);
+        }
     }
 
-    if(filterBtn) filterBtn.addEventListener('click', applyFiltersAndRender);
-    if(searchInput) searchInput.addEventListener('keyup', applyFiltersAndRender);
-    if(includePaidCheckbox) includePaidCheckbox.addEventListener('change', applyFiltersAndRender);
-    if(clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            startDateInput.value = '';
-            endDateInput.value = '';
-            statusFilter.value = 'todas';
-            includePaidCheckbox.checked = false;
-            applyFiltersAndRender();
+    if (statusFilterGroup) {
+        statusFilterGroup.addEventListener('click', (e) => {
+            if (e.target.classList.contains('status-filter-btn')) {
+                const status = e.target.dataset.status;
+                if (activeStatusFilters.has(status)) {
+                    activeStatusFilters.delete(status);
+                } else {
+                    activeStatusFilters.add(status);
+                }
+                updateStatusFilterUI();
+                applyFiltersAndRender();
+            }
         });
     }
+
+    if(searchInput) searchInput.addEventListener('input', applyFiltersAndRender);
+    if(startDateInput) startDateInput.addEventListener('change', applyFiltersAndRender);
+    if(endDateInput) endDateInput.addEventListener('change', applyFiltersAndRender);
 
 
     function renderDespesasTable(docs) {
@@ -3941,7 +4001,7 @@
         if (docs.length === 0) {
             const tr = despesasTableBody.insertRow();
             const td = tr.insertCell();
-            td.colSpan = 9; // Adjusted for the new column
+            td.colSpan = 11; // Adjusted for the new column
             td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
             td.textContent = 'Nenhuma despesa encontrada.';
             return;
@@ -3963,7 +4023,11 @@
 
             const valorOriginal = data.valorOriginal || data.valor || 0;
             const totalPago = data.totalPago || data.valorPago || 0;
-            const valorSaldo = data.valorSaldo ?? (valorOriginal - totalPago);
+            const totalDescontos = data.totalDescontos || 0;
+            const totalJuros = data.totalJuros || 0;
+            const valorSaldo = data.valorSaldo ?? (valorOriginal + totalJuros - totalPago - totalDescontos);
+            const formaPagamentoText = (data.formaPagamento || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -3974,8 +4038,11 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.numeroDocumento || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formaPagamentoText}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600 font-bold">${formatCurrency(totalDescontos)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-bold">${formatCurrency(totalJuros)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${formatCurrency(totalPago)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(valorSaldo)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -4004,23 +4071,31 @@
         const selectedIds = getSelectedDespesaIds();
         const selectedCount = selectedIds.length;
 
-        // Enable/disable 'Editar' and 'Visualizar' buttons
-        editarSelecionadaBtn.disabled = selectedCount !== 1;
+        // Disable all buttons if nothing is selected
+        if (selectedCount === 0) {
+            visualizarSelecionadaBtn.disabled = true;
+            editarSelecionadaBtn.disabled = true;
+            excluirSelecionadasBtn.disabled = true;
+            pagarSelecionadasBtn.disabled = true;
+            return;
+        }
+
+        const selectedExpensesData = selectedIds.map(id => allDespesas.find(d => d.id === id)?.data());
+
+        // Check if any selected expense is 'Pago'
+        const anyPaid = selectedExpensesData.some(data => data && data.status === 'Pago');
+
+        // Visualizar: only one can be selected, regardless of status
         visualizarSelecionadaBtn.disabled = selectedCount !== 1;
 
-        // Enable/disable 'Excluir' button
-        excluirSelecionadasBtn.disabled = selectedCount === 0;
+        // Editar: only one can be selected, and it cannot be 'Pago'
+        editarSelecionadaBtn.disabled = selectedCount !== 1 || anyPaid;
 
-        // Enable/disable 'Pagar' button
-        let canPay = false;
-        if (selectedCount > 0) {
-            // Check if ALL selected items are not paid
-            canPay = selectedIds.every(id => {
-                const despesaDoc = allDespesas.find(d => d.id === id);
-                return despesaDoc && !despesaDoc.data().pago;
-            });
-        }
-        pagarSelecionadasBtn.disabled = !canPay;
+        // Excluir: one or more can be selected, but none can be 'Pago'
+        excluirSelecionadasBtn.disabled = anyPaid;
+
+        // Pagar: one or more can be selected, but none can be 'Pago'
+        pagarSelecionadasBtn.disabled = anyPaid;
     }
 
     if (despesasTableBody) {
@@ -4112,21 +4187,55 @@
     }
 
     if (excluirSelecionadasBtn) {
-        excluirSelecionadasBtn.addEventListener('click', () => {
+        excluirSelecionadasBtn.addEventListener('click', async () => {
             const selectedIds = getSelectedDespesaIds();
             if (selectedIds.length === 0) return;
-            if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
-                const userId = effectiveUserId;
-                if (!userId) {
-                    console.error("Ação de excluir falhou: ID de usuário efetivo não encontrado.");
-                    return;
+            const userId = effectiveUserId;
+            if (!userId) return;
+
+            const firstSelectedId = selectedIds[0];
+            const docRef = doc(db, 'users', userId, 'despesas', firstSelectedId);
+            const docSnap = await getDoc(docRef);
+
+            let deletePromise;
+
+            if (docSnap.exists() && docSnap.data().groupId) {
+                const groupId = docSnap.data().groupId;
+                const userChoice = confirm("Esta despesa faz parte de um grupo. Pressione 'OK' para excluir todas as despesas do grupo, ou 'Cancelar' para excluir apenas esta.");
+
+                if (userChoice) {
+                    // Delete all in group
+                    const q = query(collection(db, 'users', userId, 'despesas'), where("groupId", "==", groupId));
+                    const groupDocsSnap = await getDocs(q);
+                    const batch = writeBatch(db);
+                    groupDocsSnap.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    deletePromise = batch.commit();
+                } else {
+                    // Delete single
+                    deletePromise = deleteDoc(docRef);
                 }
-                selectedIds.forEach(id => {
-                    deleteDoc(doc(db, 'users', userId, 'despesas', id));
-                });
-                // Reset selection
+            } else {
+                // Standard deletion for single or multiple non-grouped items
+                if (confirm(`Tem certeza que deseja excluir ${selectedIds.length} despesa(s) selecionada(s)?`)) {
+                    const batch = writeBatch(db);
+                    selectedIds.forEach(id => {
+                        const ref = doc(db, 'users', userId, 'despesas', id);
+                        batch.delete(ref);
+                    });
+                    deletePromise = batch.commit();
+                } else {
+                    return; // User cancelled
+                }
+            }
+
+            try {
+                await deletePromise;
                 selectAllCheckbox.checked = false;
                 updateActionButtonsState();
+            } catch (error) {
+                console.error("Erro ao excluir despesa(s):", error);
             }
         });
     }
@@ -4216,6 +4325,15 @@
         const userId = effectiveUserId;
         if (!userId) return;
 
+        const parcelamentoSectionTitle = document.getElementById('parcelamento-section-title');
+        const parcelamentoTableContainer = document.getElementById('parcelamento-table-container');
+        const parcelamentoTableBody = document.getElementById('parcelamento-table-body');
+
+        // Reset and hide the installments section initially
+        parcelamentoSectionTitle.classList.add('hidden');
+        parcelamentoTableContainer.classList.add('hidden');
+        parcelamentoTableBody.innerHTML = '';
+
         try {
             const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
             const pagamentosRef = collection(despesaRef, 'pagamentos');
@@ -4241,9 +4359,13 @@
 
             const valorOriginal = data.valorOriginal || 0;
             const totalPago = data.totalPago || 0;
-            const valorSaldo = data.valorSaldo ?? (valorOriginal - totalPago);
+            const totalDescontos = data.totalDescontos || 0;
+            const totalJuros = data.totalJuros || 0;
+            const valorSaldo = data.valorSaldo ?? (valorOriginal + totalJuros - totalPago - totalDescontos);
 
             document.getElementById('view-despesa-valor-original').textContent = formatCurrency(valorOriginal);
+            document.getElementById('view-despesa-descontos').textContent = formatCurrency(totalDescontos);
+            document.getElementById('view-despesa-juros').textContent = formatCurrency(totalJuros);
             document.getElementById('view-despesa-total-pago').textContent = formatCurrency(totalPago);
             document.getElementById('view-despesa-saldo-devedor').textContent = formatCurrency(valorSaldo);
 
@@ -4276,6 +4398,36 @@
                         </td>
                     `;
                 });
+            }
+
+            // Populate linked installments/recurrent expenses if groupId exists
+            if (data.groupId) {
+                parcelamentoSectionTitle.textContent = data.formaPagamento === 'parcelado' ? 'Parcelas' : 'Recorrências';
+                parcelamentoSectionTitle.classList.remove('hidden');
+                parcelamentoTableContainer.classList.remove('hidden');
+
+                const q = query(collection(db, 'users', userId, 'despesas'), where("groupId", "==", data.groupId));
+                const groupDocsSnap = await getDocs(q);
+
+                groupDocsSnap.docs
+                    .sort((a, b) => new Date(a.data().vencimento) - new Date(b.data().vencimento)) // Sort by due date
+                    .forEach(doc => {
+                        const installmentData = doc.data();
+                        const tr = parcelamentoTableBody.insertRow();
+                        const statusText = installmentData.status || 'Pendente';
+                        const statusClass = statusClasses[statusText] || 'bg-gray-100 text-gray-800';
+
+                        tr.innerHTML = `
+                            <td class="px-4 py-2 text-sm">${installmentData.descricao}</td>
+                            <td class="px-4 py-2 text-sm">${new Date(installmentData.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                            <td class="px-4 py-2 text-sm">${formatCurrency(installmentData.valorOriginal)}</td>
+                            <td class="px-4 py-2 text-sm"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${statusText}</span></td>
+                        `;
+                        // Highlight the current row
+                        if (doc.id === despesaId) {
+                            tr.classList.add('bg-blue-50', 'font-bold');
+                        }
+                    });
             }
 
             visualizarDespesaModal.classList.remove('hidden');
@@ -4409,6 +4561,7 @@
             if (!despesaId) return;
 
             const valorFinalPagoCents = toCents(document.getElementById('pagar-valor-final').value);
+            const descontosCents = toCents(document.getElementById('pagar-descontos').value);
 
             try {
                 const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
@@ -4420,7 +4573,9 @@
                 const totalPago = data.totalPago || 0;
                 const saldoDevedorAtualCents = data.valorSaldo ?? (valorOriginal - totalPago);
 
-                if (valorFinalPagoCents < saldoDevedorAtualCents) {
+                // The total amount being settled is the cash paid + discounts.
+                // Compare this to the balance to see if it's a partial payment.
+                if ((valorFinalPagoCents + descontosCents) < saldoDevedorAtualCents) {
                     abrirModalConfirmacaoParcial();
                 } else {
                     prosseguirComPagamento();
@@ -4451,7 +4606,7 @@
         }
 
         // Gather data from forms
-        const valorPrincipalCents = toCents(document.getElementById('pagar-valor').value);
+        const valorPrincipalCents = toCents(document.getElementById('pagar-valor-final').value);
         const descontosCents = toCents(document.getElementById('pagar-descontos').value);
         const jurosCents = toCents(document.getElementById('pagar-juros-multa').value);
         const dataTransacao = document.getElementById('pagar-data').value;
@@ -4473,7 +4628,10 @@
                 const saldoAtual = data.valorSaldo;
 
                 const novoTotalPago = (data.totalPago || 0) + valorPrincipalCents;
-                const novoSaldo = saldoAtual - valorPrincipalCents;
+                const novoTotalDescontos = (data.totalDescontos || 0) + descontosCents;
+                const novoTotalJuros = (data.totalJuros || 0) + jurosCents;
+                // Recalculate saldo from scratch to ensure accuracy
+                const novoSaldo = (data.valorOriginal + novoTotalJuros) - novoTotalPago - novoTotalDescontos;
 
                 let novoStatus = 'Pendente';
                 if (novoSaldo <= 0) {
@@ -4498,6 +4656,8 @@
                 const updateData = {
                     totalPago: novoTotalPago,
                     valorSaldo: novoSaldo,
+                    totalDescontos: novoTotalDescontos,
+                    totalJuros: novoTotalJuros,
                     status: novoStatus,
                 };
 
@@ -4548,72 +4708,129 @@
     despesaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userId = effectiveUserId;
-        if (!userId) return;
+        if (!userId) {
+            alert("Usuário não autenticado.");
+            return;
+        }
 
         const expenseId = document.getElementById('despesa-id').value;
         const formaPagamento = document.getElementById('forma-pagamento').value;
-        const userRef = collection(db, 'users', userId, 'despesas');
-
         const baseDescricao = document.getElementById('despesa-descricao').value;
         const valorOriginalCents = toCents(document.getElementById('despesa-valor').value);
+        const vencimentoOriginal = document.getElementById('despesa-vencimento').value;
 
         try {
-            const favorecidoTipo = favorecidoTipoSelect.value;
-            const favorecidoId = favorecidoNomeSelect.value;
-            const favorecidoNome = favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text;
+            // --- UPDATE LOGIC (Existing functionality, remains mostly unchanged) ---
+            if (expenseId) {
+                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
+                await updateDoc(docRef, {
+                    descricao: baseDescricao,
+                    favorecidoTipo: favorecidoTipoSelect.value,
+                    favorecidoId: favorecidoNomeSelect.value,
+                    favorecidoNome: favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text,
+                    categoriaId: document.getElementById('despesa-categoria').value,
+                    emissao: document.getElementById('despesa-emissao').value,
+                    competencia: document.getElementById('despesa-competencia').value,
+                    vencimento: vencimentoOriginal,
+                    obs: document.getElementById('despesa-obs').value,
+                });
+                closeModal();
+                return;
+            }
+
+            // --- CREATE LOGIC (New functionality for installments and recurring) ---
+            const userRef = collection(db, 'users', userId, 'despesas');
+            const despesasParaCriar = [];
 
             let baseData = {
                 descricao: baseDescricao,
-                numeroDocumento: document.getElementById('despesa-numero-documento').value,
-                favorecidoTipo,
-                favorecidoId,
-                favorecidoNome,
+                favorecidoTipo: favorecidoTipoSelect.value,
+                favorecidoId: favorecidoNomeSelect.value,
+                favorecidoNome: favorecidoNomeSelect.options[favorecidoNomeSelect.selectedIndex].text,
                 categoriaId: document.getElementById('despesa-categoria').value,
-                valorOriginal: valorOriginalCents,
                 emissao: document.getElementById('despesa-emissao').value,
                 competencia: document.getElementById('despesa-competencia').value,
-                vencimento: document.getElementById('despesa-vencimento').value,
                 obs: document.getElementById('despesa-obs').value,
                 formaPagamento: formaPagamento,
                 criadoPor: currentUserName || 'sistema',
+                createdAt: serverTimestamp(),
+                status: 'Pendente',
+                totalPago: 0,
+                totalDescontos: 0,
+                totalJuros: 0,
             };
 
-            if (expenseId) {
-                // UPDATE logic
-                const docRef = doc(db, 'users', userId, 'despesas', expenseId);
-                // Note: Security lock to prevent changing value is handled in openModalForEdit
-                await updateDoc(docRef, {
-                    // Only update fields that are safe to change
-                    descricao: baseData.descricao,
-                    favorecidoTipo: baseData.favorecidoTipo,
-                    favorecidoId: baseData.favorecidoId,
-                    favorecidoNome: baseData.favorecidoNome,
-                    categoriaId: baseData.categoriaId,
-                    emissao: baseData.emissao,
-                    competencia: baseData.competencia,
-                    vencimento: baseData.vencimento,
-                    obs: baseData.obs,
-                });
-            } else {
-                // CREATE logic
-                baseData.createdAt = serverTimestamp();
-                baseData.status = 'Pendente';
-                baseData.totalPago = 0;
-                baseData.valorSaldo = valorOriginalCents;
+            if (formaPagamento === 'parcelado' || formaPagamento === 'recorrente') {
+                const groupId = doc(collection(db, 'users', userId, 'despesas')).id; // Generate a unique ID for the group
+                let numIteracoes = 0;
+                let valorIteracao = valorOriginalCents;
+                let dataVencimento = new Date(vencimentoOriginal + 'T00:00:00');
+                let intervaloMeses = 1;
 
-                if (document.getElementById('marcar-pago-checkbox').checked) {
-                    const valorPagoCents = toCents(document.getElementById('pagamento-valor').value);
-                    baseData.status = valorPagoCents >= valorOriginalCents ? 'Pago' : 'Pago Parcialmente';
-                    baseData.totalPago = valorPagoCents;
-                    baseData.valorSaldo = valorOriginalCents - valorPagoCents;
-                    // Note: We'll create the payment document in the subcollection separately later
+                if (formaPagamento === 'parcelado') {
+                    numIteracoes = parseInt(document.getElementById('parcelas-numero').value, 10);
+                    if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de parcelas válido."); return; }
+                    valorIteracao = Math.round(valorOriginalCents / numIteracoes);
+                    const intervalo = document.getElementById('parcelas-intervalo').value;
+                    if(intervalo === 'quinzenal') intervaloMeses = 0.5; // Special handling needed
+                    if(intervalo === 'semanal') intervaloMeses = 0.25; // Special handling needed
+
+                } else { // recorrente
+                    numIteracoes = parseInt(document.getElementById('recorrencia-fim-ocorrencias').value, 10);
+                    if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de ocorrências válido para a recorrência."); return; }
+                    const freq = document.getElementById('recorrencia-frequencia').value;
+                    intervaloMeses = getRecurrenceMultiplier(freq);
                 }
 
-                await addDoc(userRef, baseData);
+                for (let i = 0; i < numIteracoes; i++) {
+                    let vencimentoIteracao = new Date(dataVencimento.getTime());
+                    if(intervaloMeses === 0.5) { // Quinzenal
+                         vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 15));
+                    } else if (intervaloMeses === 0.25) { // Semanal
+                         vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 7));
+                    } else { // Mensal, Bimestral, etc.
+                        vencimentoIteracao.setMonth(vencimentoIteracao.getMonth() + (i * intervaloMeses));
+                    }
+
+                    despesasParaCriar.push({
+                        ...baseData,
+                        groupId: groupId, // Link the installments
+                        descricao: `${baseDescricao} (${formaPagamento === 'parcelado' ? `Parcela ${i + 1}/${numIteracoes}` : `Recorrência ${i + 1}`})`,
+                        valorOriginal: valorIteracao,
+                        valorSaldo: valorIteracao,
+                        vencimento: vencimentoIteracao.toISOString().split('T')[0],
+                    });
+                }
+            } else {
+                // Logic for a single expense ('a_vista', 'boleto', etc.)
+                despesasParaCriar.push({
+                    ...baseData,
+                    valorOriginal: valorOriginalCents,
+                    valorSaldo: valorOriginalCents,
+                    vencimento: vencimentoOriginal,
+                });
             }
+
+            // Batch write all expenses to Firestore using a transaction for sequential numbering
+            const counterRef = doc(db, 'users', userId, 'counters', 'despesas');
+            await runTransaction(db, async (transaction) => {
+                const counterDoc = await transaction.get(counterRef);
+                let nextNumber = counterDoc.exists() ? counterDoc.data().currentNumber + 1 : 1;
+
+                for (const despesa of despesasParaCriar) {
+                    const newDocRef = doc(userRef); // Firestore generates a new ID
+                    despesa.numeroDocumento = String(nextNumber).padStart(4, '0');
+                    transaction.set(newDocRef, despesa);
+                    nextNumber++;
+                }
+
+                transaction.set(counterRef, { currentNumber: nextNumber - 1 }, { merge: true });
+            });
+
             closeModal();
         } catch (error) {
             console.error("Erro ao salvar despesa:", error);
+            alert("Ocorreu um erro ao salvar: " + error.message);
         }
     });
 
@@ -4627,24 +4844,6 @@
         calendarioViewBtn.addEventListener('click', () => setContasView('calendario'));
     }
 
-    if(calendarStatusFilter) {
-        calendarStatusFilter.addEventListener('change', () => {
-            const status = calendarStatusFilter.value;
-            if (status === 'todas') {
-                processAndRenderCalendarEvents(allDespesas);
-            } else {
-                const filteredDespesas = allDespesas.filter(doc => {
-                    const data = doc.data();
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const vencimento = new Date(data.vencimento + 'T00:00:00');
-                    const docStatus = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-                    return docStatus === status;
-                });
-                processAndRenderCalendarEvents(filteredDespesas);
-            }
-        });
-    }
 
     // --- Lógica de Recorrência Inteligente ---
     function resetRecurrenceFields() {
@@ -4723,6 +4922,54 @@
         populateEmpresaDropdown(loginEmpresaSelect, querySnapshot.docs);
     });
 
+    // --- Lógica dos Filtros do Dashboard ---
+    const cardMappings = [
+        // Contas a Pagar Page
+        { id: 'total-a-pagar-card-container', type: 'aPagarMes' },
+        { id: 'total-pago-card-container', type: 'pagoMes' },
+        { id: 'contas-vencidas-card-container', type: 'vencidas' },
+        // Main Dashboard Page
+        { id: 'dashboard-total-a-pagar-container', type: 'aPagarMes' },
+        { id: 'dashboard-total-pago-container', type: 'pagoMes' },
+        { id: 'dashboard-contas-vencidas-container', type: 'vencidas' }
+    ];
+
+    cardMappings.forEach(mapping => {
+        const card = document.getElementById(mapping.id);
+        if (card) {
+            card.addEventListener('click', () => {
+                // Clear existing filters first
+                searchInput.value = '';
+                startDateInput.value = '';
+                endDateInput.value = '';
+
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth();
+
+                switch (mapping.type) {
+                    case 'aPagarMes':
+                        activeStatusFilters = new Set(['Pendente', 'Vencido', 'Pago Parcialmente']);
+                        startDateInput.value = new Date(year, month, 1).toISOString().split('T')[0];
+                        endDateInput.value = new Date(year, month + 1, 0).toISOString().split('T')[0];
+                        break;
+                    case 'pagoMes':
+                        activeStatusFilters = new Set(['Pago']);
+                        startDateInput.value = new Date(year, month, 1).toISOString().split('T')[0];
+                        endDateInput.value = new Date(year, month + 1, 0).toISOString().split('T')[0];
+                        break;
+                    case 'vencidas':
+                        activeStatusFilters = new Set(['Vencido']);
+                        // No date filter for all overdue items
+                        break;
+                }
+
+                showView('contas-a-pagar-page');
+                updateStatusFilterUI();
+                applyFiltersAndRender();
+            });
+        }
+    });
   </script>
 
 </body>
