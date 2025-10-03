@@ -2592,79 +2592,52 @@
         const today = new Date();
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
+        today.setHours(0, 0, 0, 0);
 
         let totalAPagar = 0;
-        let totalPago = 0;
+        let totalPagoNoMes = 0;
         let contasVencidas = 0;
 
         docs.forEach(doc => {
             const data = doc.data();
             const vencimento = new Date(data.vencimento + 'T00:00:00');
+            const status = data.status || (data.pago ? 'Pago' : 'Pendente');
+            const valorSaldo = data.valorSaldo ?? ((data.valorOriginal || data.valor) - (data.totalPago || 0));
 
-            // Total a Pagar no Mês
-            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && !data.pago) {
-                totalAPagar += data.valor;
+
+            // Total a Pagar no Mês (based on remaining balance)
+            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && status !== 'Pago') {
+                totalAPagar += valorSaldo;
             }
 
-            // Total Pago no Mês
-            if (data.pago && data.dataPagamento) {
+            // Total Pago no Mês (based on payments in the subcollection, but for now we use totalPago)
+            if (data.dataPagamento) { // This condition needs to be more robust later
                 const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
-                if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    totalPago += data.valorPago || data.valor;
-                }
+                 if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
+                    // This is tricky without querying the subcollection. We'll approximate.
+                    // Let's assume `totalPago` reflects the sum of payments.
+                    totalPagoNoMes += data.totalPago || data.valorPago || 0;
+                 }
             }
 
-            // Contas Vencidas
-            if (!data.pago && vencimento < today) {
-                contasVencidas += data.valor;
+            // Contas Vencidas (based on remaining balance)
+            if (status !== 'Pago' && vencimento < today) {
+                contasVencidas += valorSaldo;
             }
         });
 
         document.getElementById('total-a-pagar-card').textContent = formatCurrency(totalAPagar);
-        document.getElementById('total-pago-card').textContent = formatCurrency(totalPago);
+        document.getElementById('total-pago-card').textContent = formatCurrency(totalPagoNoMes);
         document.getElementById('contas-vencidas-card').textContent = formatCurrency(contasVencidas);
     }
 
     function updateDashboardIndicators(docs) {
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-
-        let totalAPagar = 0;
-        let totalPago = 0;
-        let contasVencidas = 0;
-
-        docs.forEach(doc => {
-            const data = doc.data();
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
-
-            // Total a Pagar no Mês
-            if (vencimento.getMonth() === currentMonth && vencimento.getFullYear() === currentYear && !data.pago) {
-                totalAPagar += data.valor;
-            }
-
-            // Total Pago no Mês
-            if (data.pago && data.dataPagamento) {
-                const dataPagamento = new Date(data.dataPagamento + 'T00:00:00');
-                if (dataPagamento.getMonth() === currentMonth && dataPagamento.getFullYear() === currentYear) {
-                    totalPago += data.valorPago || data.valor;
-                }
-            }
-
-            // Contas Vencidas
-            if (!data.pago && vencimento < today) {
-                contasVencidas += data.valor;
-            }
-        });
-
-        // Update dashboard-specific elements
-        const dashTotalAPagarEl = document.getElementById('dashboard-total-a-pagar');
-        const dashTotalPagoEl = document.getElementById('dashboard-total-pago');
-        const dashContasVencidasEl = document.getElementById('dashboard-contas-vencidas');
-
-        if (dashTotalAPagarEl) dashTotalAPagarEl.textContent = formatCurrency(totalAPagar);
-        if (dashTotalPagoEl) dashTotalPagoEl.textContent = formatCurrency(totalPago);
-        if (dashContasVencidasEl) dashContasVencidasEl.textContent = formatCurrency(contasVencidas);
+        // This function can now simply call updateSummaryCards and map the values,
+        // as the logic is identical.
+        updateSummaryCards(docs); // Recalculates card values
+        document.getElementById('dashboard-total-a-pagar').textContent = document.getElementById('total-a-pagar-card').textContent;
+        document.getElementById('dashboard-total-pago').textContent = document.getElementById('total-pago-card').textContent;
+        document.getElementById('dashboard-contas-vencidas').textContent = document.getElementById('contas-vencidas-card').textContent;
     }
 
 
@@ -3967,7 +3940,7 @@
         if (docs.length === 0) {
             const tr = despesasTableBody.insertRow();
             const td = tr.insertCell();
-            td.colSpan = 8; // Adjusted for the new column
+            td.colSpan = 9; // Adjusted for the new column
             td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center';
             td.textContent = 'Nenhuma despesa encontrada.';
             return;
@@ -3978,18 +3951,18 @@
             const tr = despesasTableBody.insertRow();
             tr.setAttribute('data-id', doc.id);
 
-            const statusInfo = {
-                pago: { text: 'Pago', color: 'green', icon: '🟢' },
-                pendente: { text: 'Pendente', color: 'yellow', icon: '🟡' },
-                vencido: { text: 'Vencido', color: 'red', icon: '🔴' }
+            const statusClasses = {
+                'Pago': 'bg-green-100 text-green-800',
+                'Pago Parcialmente': 'bg-yellow-100 text-yellow-800',
+                'Pendente': 'bg-blue-100 text-blue-800',
+                'Vencido': 'bg-red-100 text-red-800',
             };
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const vencimento = new Date(data.vencimento + 'T00:00:00');
-            const status = data.pago ? 'pago' : (vencimento < today ? 'vencido' : 'pendente');
-            const currentStatus = statusInfo[status];
+            const statusText = data.status || 'Pendente';
+            const statusClass = statusClasses[statusText] || 'bg-gray-100 text-gray-800';
 
-            const valorPagoHtml = data.pago ? formatCurrency(data.valorPago || 0) : '—';
+            const valorOriginal = data.valorOriginal || data.valor || 0;
+            const totalPago = data.totalPago || data.valorPago || 0;
+            const valorSaldo = data.valorSaldo ?? (valorOriginal - totalPago);
 
             tr.innerHTML = `
                 <td class="p-4">
@@ -4001,11 +3974,12 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.descricao}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.favorecidoNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(data.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(data.valor)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${valorPagoHtml}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${formatCurrency(totalPago)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(valorSaldo)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${currentStatus.color}-100 text-${currentStatus.color}-800">
-                        ${currentStatus.text}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                        ${statusText}
                     </span>
                 </td>
             `;
@@ -4071,52 +4045,56 @@
             if (selectedIds.length !== 1) return;
             const id = selectedIds[0];
             const userId = effectiveUserId;
-            if (!userId) {
-                console.error("Ação de editar falhou: ID de usuário efetivo não encontrado.");
-                return;
-            }
+            if (!userId) return;
+
             try {
                 const docRef = doc(db, 'users', userId, 'despesas', id);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    openModal(true); // Open modal first
+
+                    // Populate form
                     document.getElementById('despesa-id').value = docSnap.id;
-                    document.getElementById('despesa-descricao').value = data.descricao;
+                    document.getElementById('despesa-descricao').value = data.descricao || '';
                     document.getElementById('despesa-numero-documento').value = data.numeroDocumento || '';
+
+                    // Handle favorecido dropdown
                     if (data.favorecidoTipo && data.favorecidoId) {
                         favorecidoTipoSelect.value = data.favorecidoTipo;
                         favorecidoTipoSelect.dispatchEvent(new Event('change'));
                         setTimeout(() => {
                             favorecidoNomeSelect.value = data.favorecidoId;
-                        }, 150);
-                    } else if (data.fornecedorId) { // Legacy fallback
-                        favorecidoTipoSelect.value = 'fornecedores';
-                        favorecidoTipoSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => {
-                            favorecidoNomeSelect.value = data.fornecedorId;
-                        }, 150);
+                        }, 150); // Small delay to allow options to populate
                     }
-                    document.getElementById('despesa-categoria').value = data.categoriaId;
-                    document.getElementById('despesa-valor').value = data.valor;
+
+                    document.getElementById('despesa-categoria').value = data.categoriaId || '';
+                    const valorInput = document.getElementById('despesa-valor');
+                    const valorOriginal = data.valorOriginal || data.valor || 0;
+                    valorInput.value = fromCents(valorOriginal);
+
                     document.getElementById('despesa-emissao').value = data.emissao || '';
-                    document.getElementById('despesa-competencia').value = data.competencia;
-                    document.getElementById('despesa-vencimento').value = data.vencimento;
+                    document.getElementById('despesa-competencia').value = data.competencia || '';
+                    document.getElementById('despesa-vencimento').value = data.vencimento || '';
                     document.getElementById('despesa-obs').value = data.obs || '';
-                    const pagoCheckbox = document.getElementById('marcar-pago-checkbox');
-                    pagoCheckbox.checked = data.pago;
-                    const pagamentoInfoDiv = document.getElementById('pagamento-info');
-                    if (data.pago) {
-                        pagamentoInfoDiv.classList.remove('hidden');
-                        document.getElementById('pagamento-data').value = data.dataPagamento || '';
-                        document.getElementById('pagamento-valor').value = data.valorPago || '';
-                        document.getElementById('pagamento-conta').value = data.contaSaidaId || '';
+
+                    // Security Lock: Disable value field if already paid
+                    const totalPago = data.totalPago || 0;
+                    if (totalPago > 0) {
+                        valorInput.readOnly = true;
+                        valorInput.classList.add('bg-gray-200', 'cursor-not-allowed');
                     } else {
-                        pagamentoInfoDiv.classList.add('hidden');
+                        valorInput.readOnly = false;
+                        valorInput.classList.remove('bg-gray-200', 'cursor-not-allowed');
                     }
-                    openModal(true);
+
+                    // Hide and disable payment section for edits
+                    document.getElementById('marcar-pago-checkbox').checked = false;
+                    document.getElementById('marcar-pago-checkbox').disabled = true;
+                    document.getElementById('pagamento-info').classList.add('hidden');
                 }
             } catch (error) {
-                console.error("Error getting document:", error);
+                console.error("Error getting document for edit:", error);
             }
         });
     }
@@ -4257,44 +4235,48 @@
 
     function openPagarModal(despesaIds) {
         if (!pagarModal || despesaIds.length === 0) return;
+        pagarForm.reset();
         const userId = effectiveUserId;
-        if (!userId) {
-            console.error("Cannot open payment modal: User ID not found.");
-            return;
-        }
+        if (!userId) return;
 
         document.getElementById('pagar-despesa-id').value = despesaIds.join(',');
 
-        // Calculate the total value of all selected expenses
-        let totalValor = 0;
+        // Add a display for the outstanding balance
+        const saldoDevedorDisplay = document.createElement('p');
+        saldoDevedorDisplay.id = 'saldo-devedor-display';
+        saldoDevedorDisplay.className = 'text-lg font-medium text-gray-700';
+        const pagarFormDiv = pagarForm.querySelector('div');
+        if (pagarFormDiv.firstChild.id !== 'saldo-devedor-display') {
+             pagarFormDiv.insertBefore(saldoDevedorDisplay, pagarFormDiv.firstChild);
+        }
+
+
+        let totalSaldoDevedor = 0;
         const promises = despesaIds.map(id => getDoc(doc(db, 'users', userId, 'despesas', id)));
 
         Promise.all(promises).then(docs => {
             docs.forEach(docSnap => {
                 if (docSnap.exists()) {
-                    totalValor += docSnap.data().valor;
+                    const data = docSnap.data();
+                    const valorOriginal = data.valorOriginal || data.valor || 0;
+                    const totalPago = data.totalPago || 0;
+                    totalSaldoDevedor += (data.valorSaldo ?? (valorOriginal - totalPago));
                 }
             });
 
-            // Update the modal UI
+            document.getElementById('saldo-devedor-display').innerHTML = `Saldo Devedor: <span class="font-bold text-blue-600">${formatCurrency(totalSaldoDevedor)}</span>`;
             const valorInput = document.getElementById('pagar-valor');
-            valorInput.value = totalValor.toFixed(2);
-            // Make the total value read-only to avoid partial payment complexity for batches
-            valorInput.readOnly = despesaIds.length > 1;
+            valorInput.value = fromCents(totalSaldoDevedor);
+            document.getElementById('pagar-valor-final').value = fromCents(totalSaldoDevedor);
 
             document.getElementById('pagar-data').value = new Date().toISOString().split('T')[0];
             pagarModal.classList.remove('hidden');
 
-            // Update modal title
             const modalTitle = pagarModal.querySelector('h3');
-            if (despesaIds.length > 1) {
-                modalTitle.textContent = `Registrar Pagamento de ${despesaIds.length} Contas`;
-            } else {
-                modalTitle.textContent = 'Registrar Pagamento';
-            }
-        }).catch(error => {
-            console.error("Error getting documents for payment:", error);
-        });
+            modalTitle.textContent = despesaIds.length > 1
+                ? `Registrar Pagamento de ${despesaIds.length} Contas`
+                : 'Registrar Pagamento';
+        }).catch(error => console.error("Error getting documents for payment:", error));
     }
 
     function closePagarModal() {
