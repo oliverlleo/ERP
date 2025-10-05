@@ -962,15 +962,15 @@
                                     </div>
                                     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700">Esta é uma conta...</label>
-                                            <div class="mt-2 space-y-2">
+                                            <label class="block text-sm font-medium text-gray-700">Tipo de Conta</label>
+                                            <div class="mt-2 flex items-center space-x-6">
                                                 <div class="flex items-center">
                                                     <input id="plano-conta-tipo-sintetica" name="plano-conta-tipo-lancamento" type="radio" value="false" class="h-4 w-4 text-indigo-600 border-gray-300" checked>
-                                                    <label for="plano-conta-tipo-sintetica" class="ml-3 block text-sm font-medium text-gray-700">Sintética (Agrupadora)</label>
+                                                    <label for="plano-conta-tipo-sintetica" class="ml-2 block text-sm font-medium text-gray-700">Sintética (Agrupadora)</label>
                                                 </div>
                                                 <div class="flex items-center">
                                                     <input id="plano-conta-tipo-analitica" name="plano-conta-tipo-lancamento" type="radio" value="true" class="h-4 w-4 text-indigo-600 border-gray-300">
-                                                    <label for="plano-conta-tipo-analitica" class="ml-3 block text-sm font-medium text-gray-700">Analítica (De Lançamento)</label>
+                                                    <label for="plano-conta-tipo-analitica" class="ml-2 block text-sm font-medium text-gray-700">Analítica (De Lançamento)</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -1006,10 +1006,6 @@
                                 <div class="mt-8 border-t pt-6">
                                     <div class="flex justify-between items-center mb-4">
                                         <h3 class="text-lg font-medium text-gray-900">Estrutura do Plano de Contas</h3>
-                                        <button type="button" id="add-top-level-account-btn" class="inline-flex items-center justify-center rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-200">
-                                            <span class="material-symbols-outlined text-base mr-1">add</span>
-                                            Nova Conta Principal
-                                        </button>
                                     </div>
                                     <div id="plano-contas-tree" class="border rounded-md p-4 bg-gray-50 min-h-[200px]">
                                         <!-- A árvore de contas será renderizada aqui pelo JavaScript -->
@@ -2837,13 +2833,38 @@
         }
     }
 
+    async function initializeChartOfAccounts(userId) {
+      const userPlanoContasRef = collection(db, 'users', userId, 'planosDeContas');
+
+      const rootAccounts = [
+        { codigo: "1", nome: "RECEITAS", tipo: "receita", nivel: 1, aceitaLancamento: false, codigoPai: null, aplicavelEm: [], inativo: false, isRoot: true },
+        { codigo: "2", nome: "DESPESAS", tipo: "despesa", nivel: 1, aceitaLancamento: false, codigoPai: null, aplicavelEm: [], inativo: false, isRoot: true },
+        { codigo: "3", nome: "CUSTOS", tipo: "custo", nivel: 1, aceitaLancamento: false, codigoPai: null, aplicavelEm: [], inativo: false, isRoot: true },
+        { codigo: "4", nome: "MOVIMENTAÇÕES NÃO OPERACIONAIS", tipo: "investimento", nivel: 1, aceitaLancamento: false, codigoPai: null, aplicavelEm: [], inativo: false, isRoot: true }
+      ];
+
+      const batch = writeBatch(db);
+
+      for (const rootAccount of rootAccounts) {
+        const q = query(userPlanoContasRef, where("codigo", "==", rootAccount.codigo));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+          console.log(`Criando conta raiz: ${rootAccount.nome}`);
+          const newDocRef = doc(userPlanoContasRef);
+          batch.set(newDocRef, { ...rootAccount, createdAt: serverTimestamp(), adminId: userId });
+        }
+      }
+
+      await batch.commit();
+    }
+
     function setupListeners(userId) {
         if (!userId && window.IS_TEST_RUN) {
             userId = 'test-user-123';
         }
         if (!userId) return;
 
-        // Dashboard indicators are now driven by the despesas listener
+        initializeChartOfAccounts(userId);
 
         // Cadastros - Empresas (Admin View)
         const empresasQuery = query(collection(db, 'empresas'), where("adminId", "==", userId));
@@ -3083,12 +3104,14 @@
                     accountName += ' (Inativa)';
                 }
 
+                const isRoot = node.isRoot === true;
+
                 el.innerHTML = `
                     <span>${accountName}</span>
                     <div class="space-x-2">
                         <button title="Adicionar Sub-conta" class="add-sub-account-btn text-green-600 hover:text-green-800" data-id="${node.id}" ${node.inativo ? 'disabled' : ''}><span class="material-symbols-outlined text-base">add_circle</span></button>
-                        <button title="Editar" class="edit-plano-conta-btn text-blue-600 hover:text-blue-800" data-id="${node.id}"><span class="material-symbols-outlined text-base">edit</span></button>
-                        <button title="Excluir/Inativar" class="delete-plano-conta-btn text-red-600 hover:text-red-800" data-id="${node.id}"><span class="material-symbols-outlined text-base">delete</span></button>
+                        <button title="Editar" class="edit-plano-conta-btn text-blue-600 hover:text-blue-800" data-id="${node.id}" ${isRoot ? 'disabled' : ''}><span class="material-symbols-outlined text-base">edit</span></button>
+                        <button title="Excluir/Inativar" class="delete-plano-conta-btn text-red-600 hover:text-red-800" data-id="${node.id}" ${isRoot ? 'disabled' : ''}><span class="material-symbols-outlined text-base">delete</span></button>
                     </div>
                 `;
                 return el;
@@ -3159,21 +3182,7 @@
             }
         });
 
-        document.getElementById('add-top-level-account-btn').addEventListener('click', async () => {
-            const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
-            const topLevelCodes = allContas
-                .filter(c => c.nivel === 1)
-                .map(c => parseInt(c.codigo, 10));
-            const nextCode = topLevelCodes.length > 0 ? Math.max(...topLevelCodes) + 1 : 1;
-
-            resetAndHidePlanoContaForm();
-            planoContaForm.style.display = 'block';
-            document.getElementById('plano-conta-codigo').value = nextCode.toString();
-            document.getElementById('plano-conta-nivel').value = 1;
-            document.getElementById('plano-conta-tipo-sintetica').checked = true; // Top level must be synthetic
-            document.getElementById('plano-conta-tipo-analitica').disabled = true;
-            planoContaForm.scrollIntoView({ behavior: 'smooth' });
-        });
+        // The 'add-top-level-account-btn' was removed, so its listener is no longer needed.
 
         // Cadastros - Contas Bancárias
         const contasBancariasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
