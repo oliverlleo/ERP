@@ -3159,6 +3159,8 @@
 
                 const tipoSelect = document.getElementById('plano-conta-tipo');
                 tipoSelect.value = parent.tipo; // Inherit parent type
+                tipoSelect.disabled = true; // LOCK the type for sub-accounts to ensure data integrity.
+                handleAplicavelEmLogic(parent.tipo); // Also trigger the logic for the checkboxes
 
                 planoContaForm.scrollIntoView({ behavior: 'smooth' });
             } else if (button.classList.contains('edit-plano-conta-btn')) {
@@ -3202,41 +3204,55 @@
             const pagamentosCheckbox = document.getElementById('plano-conta-aplicavel-pagamentos');
             const recebimentosCheckbox = document.getElementById('plano-conta-aplicavel-recebimentos');
 
-            // Reset state
-            pagamentosCheckbox.checked = false;
+            // Reset state by enabling both first
             pagamentosCheckbox.disabled = false;
-            recebimentosCheckbox.checked = false;
             recebimentosCheckbox.disabled = false;
 
+            // Apply logic
             if (tipo === 'receita') {
+                pagamentosCheckbox.checked = false;
                 recebimentosCheckbox.checked = true;
+                pagamentosCheckbox.disabled = true; // Lock both
                 recebimentosCheckbox.disabled = true;
             } else if (tipo === 'despesa' || tipo === 'custo') {
                 pagamentosCheckbox.checked = true;
-                pagamentosCheckbox.disabled = true;
+                recebimentosCheckbox.checked = false;
+                pagamentosCheckbox.disabled = true; // Lock both
+                recebimentosCheckbox.disabled = true;
+            } else { // For 'investimento' or other types, keep them enabled
+                pagamentosCheckbox.checked = false;
+                recebimentosCheckbox.checked = false;
             }
-            // For 'investimento', both remain enabled for user choice.
         }
 
         document.getElementById('plano-conta-tipo').addEventListener('change', async (e) => {
-            if (document.getElementById('plano-conta-tipo').disabled) {
+            const tipoSelect = e.target;
+            // Do not run if the field is locked
+            if (tipoSelect.disabled) {
                 return;
             }
 
-            const tipoSelecionado = e.target.value;
+            const tipoSelecionado = tipoSelect.value;
             handleAplicavelEmLogic(tipoSelecionado);
 
-            const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
-            const rootCode = rootCodeMap[tipoSelecionado];
+            // This part of the logic is for determining the code for a NEW TOP-LEVEL account
+            const isEditing = document.getElementById('plano-conta-id').value;
+            const isSubAccount = document.getElementById('plano-conta-codigo-pai').value && !isEditing;
 
-            const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
-            const siblings = allContas.filter(c => c.codigoPai === rootCode);
+            // Only suggest a new top-level code if we are NOT editing and NOT creating a sub-account.
+            if (!isEditing && !isSubAccount) {
+                 const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
+                 const rootCode = rootCodeMap[tipoSelecionado];
 
-            const nextCode = `${rootCode}.${siblings.length + 1}`;
+                 const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
+                 // Find direct children of the root (e.g., 2.1, 2.2)
+                 const siblings = allContas.filter(c => c.codigo.startsWith(rootCode + '.') && c.nivel === 2);
+                 const nextCode = `${rootCode}.${siblings.length + 1}`;
 
-            document.getElementById('plano-conta-codigo').value = nextCode;
-            document.getElementById('plano-conta-codigo-pai').value = rootCode;
-            document.getElementById('plano-conta-nivel').value = 2;
+                 document.getElementById('plano-conta-codigo').value = nextCode;
+                 document.getElementById('plano-conta-codigo-pai').value = rootCode;
+                 document.getElementById('plano-conta-nivel').value = 2;
+            }
         });
 
         // Cadastros - Contas Bancárias
@@ -4423,6 +4439,7 @@
                 document.getElementById('plano-conta-codigo-pai').value = data.codigoPai || '';
                 document.getElementById('plano-conta-nivel').value = data.nivel || 0;
                 document.getElementById('plano-conta-tipo').value = data.tipo || 'despesa';
+                document.getElementById('plano-conta-tipo').disabled = false; // Ensure type is editable
 
                 if (data.aceitaLancamento) {
                     document.getElementById('plano-conta-tipo-analitica').checked = true;
@@ -4839,13 +4856,17 @@
     }
 
     if (planoContaFormContainer) {
-        // Hide form initially
         planoContaFormContainer.style.display = 'none';
 
         document.querySelectorAll('input[name="plano-conta-tipo-lancamento"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const isAnalitica = e.target.value === 'true';
                 planoContaAnaliticaFields.classList.toggle('hidden', !isAnalitica);
+                    // When showing the fields, trigger the locking logic
+                    if (isAnalitica) {
+                        const tipoSelecionado = document.getElementById('plano-conta-tipo').value;
+                        handleAplicavelEmLogic(tipoSelecionado);
+                    }
             });
         });
     }
