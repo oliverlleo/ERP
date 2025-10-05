@@ -3210,8 +3210,10 @@
 
             if (tipo === 'receita') {
                 recebimentosCheckbox.checked = true;
+                recebimentosCheckbox.disabled = true;
             } else if (tipo === 'despesa' || tipo === 'custo') {
                 pagamentosCheckbox.checked = true;
+                pagamentosCheckbox.disabled = true;
             }
             // For 'investimento', both remain enabled for user choice.
         }
@@ -4425,7 +4427,7 @@
                 if (data.aceitaLancamento) {
                     document.getElementById('plano-conta-tipo-analitica').checked = true;
                     planoContaAnaliticaFields.classList.remove('hidden');
-                    handleAplicavelEmLogic(data.tipo); // Call the new logic
+                    handleAplicavelEmLogic(data.tipo);
                 } else {
                     document.getElementById('plano-conta-tipo-sintetica').checked = true;
                     planoContaAnaliticaFields.classList.add('hidden');
