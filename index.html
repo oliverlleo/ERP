@@ -3199,12 +3199,34 @@
             document.getElementById('plano-conta-tipo-sintetica').disabled = false;
         });
 
+        function handleAplicavelEmLogic(tipo) {
+            const pagamentosCheckbox = document.getElementById('plano-conta-aplicavel-pagamentos');
+            const recebimentosCheckbox = document.getElementById('plano-conta-aplicavel-recebimentos');
+
+            // Reset state
+            pagamentosCheckbox.checked = false;
+            pagamentosCheckbox.disabled = false;
+            recebimentosCheckbox.checked = false;
+            recebimentosCheckbox.disabled = false;
+
+            if (tipo === 'receita') {
+                recebimentosCheckbox.checked = true;
+                recebimentosCheckbox.disabled = true;
+            } else if (tipo === 'despesa' || tipo === 'custo') {
+                pagamentosCheckbox.checked = true;
+                pagamentosCheckbox.disabled = true;
+            }
+            // For 'investimento', both remain enabled for user choice.
+        }
+
         document.getElementById('plano-conta-tipo').addEventListener('change', async (e) => {
             if (document.getElementById('plano-conta-tipo').disabled) {
                 return;
             }
 
             const tipoSelecionado = e.target.value;
+            handleAplicavelEmLogic(tipoSelecionado);
+
             const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
             const rootCode = rootCodeMap[tipoSelecionado];
 
@@ -4406,10 +4428,7 @@
                 if (data.aceitaLancamento) {
                     document.getElementById('plano-conta-tipo-analitica').checked = true;
                     planoContaAnaliticaFields.classList.remove('hidden');
-                    (data.aplicavelEm || []).forEach(val => {
-                        const checkbox = document.getElementById(`plano-conta-aplicavel-${val}`);
-                        if (checkbox) checkbox.checked = true;
-                    });
+                    handleAplicavelEmLogic(data.tipo); // Call the new logic
                 } else {
                     document.getElementById('plano-conta-tipo-sintetica').checked = true;
                     planoContaAnaliticaFields.classList.add('hidden');
