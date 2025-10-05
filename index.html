@@ -1006,6 +1006,10 @@
                                 <div class="mt-8 border-t pt-6">
                                     <div class="flex justify-between items-center mb-4">
                                         <h3 class="text-lg font-medium text-gray-900">Estrutura do Plano de Contas</h3>
+                                        <button type="button" id="add-new-account-btn" class="inline-flex items-center justify-center rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-200">
+                                            <span class="material-symbols-outlined text-base mr-1">add</span>
+                                            Nova Conta
+                                        </button>
                                     </div>
                                     <div id="plano-contas-tree" class="border rounded-md p-4 bg-gray-50 min-h-[200px]">
                                         <!-- A árvore de contas será renderizada aqui pelo JavaScript -->
@@ -3152,7 +3156,11 @@
                 document.getElementById('plano-conta-codigo').value = nextCode;
                 document.getElementById('plano-conta-codigo-pai').value = parent.codigo;
                 document.getElementById('plano-conta-nivel').value = parent.nivel + 1;
-                document.getElementById('plano-conta-tipo').value = parent.tipo; // Inherit parent type
+
+                const tipoSelect = document.getElementById('plano-conta-tipo');
+                tipoSelect.value = parent.tipo; // Inherit parent type
+                tipoSelect.disabled = true; // Disable changing the group
+
                 planoContaForm.scrollIntoView({ behavior: 'smooth' });
             } else if (button.classList.contains('edit-plano-conta-btn')) {
                 openPlanoContaForEdit(id);
@@ -3182,7 +3190,33 @@
             }
         });
 
-        // The 'add-top-level-account-btn' was removed, so its listener is no longer needed.
+        document.getElementById('add-new-account-btn').addEventListener('click', () => {
+            resetAndHidePlanoContaForm();
+            planoContaForm.style.display = 'block';
+            planoContaForm.scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById('plano-conta-tipo-analitica').disabled = false;
+            document.getElementById('plano-conta-tipo-sintetica').disabled = false;
+        });
+
+        document.getElementById('plano-conta-tipo').addEventListener('change', async (e) => {
+            if (document.getElementById('plano-conta-tipo').disabled) {
+                return;
+            }
+
+            const tipoSelecionado = e.target.value;
+            const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
+            const rootCode = rootCodeMap[tipoSelecionado];
+
+            const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
+            const siblings = allContas.filter(c => c.codigoPai === rootCode);
+
+            const nextCode = `${rootCode}.${siblings.length + 1}`;
+
+            document.getElementById('plano-conta-codigo').value = nextCode;
+            document.getElementById('plano-conta-codigo-pai').value = rootCode;
+            document.getElementById('plano-conta-nivel').value = 2;
+        });
 
         // Cadastros - Contas Bancárias
         const contasBancariasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
@@ -4779,6 +4813,11 @@
         document.getElementById('plano-conta-codigo-pai').value = '';
         document.getElementById('plano-conta-nivel').value = '';
         document.getElementById('plano-conta-tipo-sintetica').checked = true;
+
+            // Re-enable fields that might be disabled
+            document.getElementById('plano-conta-tipo').disabled = false;
+            document.getElementById('plano-conta-tipo-analitica').disabled = false;
+            document.getElementById('plano-conta-tipo-sintetica').disabled = false;
     }
 
     if (planoContaFormContainer) {
