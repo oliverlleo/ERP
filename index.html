@@ -3159,7 +3159,6 @@
 
                 const tipoSelect = document.getElementById('plano-conta-tipo');
                 tipoSelect.value = parent.tipo; // Inherit parent type
-                tipoSelect.disabled = true; // Disable changing the group
 
                 planoContaForm.scrollIntoView({ behavior: 'smooth' });
             } else if (button.classList.contains('edit-plano-conta-btn')) {
@@ -3211,10 +3210,8 @@
 
             if (tipo === 'receita') {
                 recebimentosCheckbox.checked = true;
-                recebimentosCheckbox.disabled = true;
             } else if (tipo === 'despesa' || tipo === 'custo') {
                 pagamentosCheckbox.checked = true;
-                pagamentosCheckbox.disabled = true;
             }
             // For 'investimento', both remain enabled for user choice.
         }
