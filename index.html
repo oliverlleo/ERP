@@ -3153,6 +3153,11 @@
 
                 resetAndHidePlanoContaForm();
                 planoContaForm.style.display = 'block';
+
+                // Default to Analitica for new sub-accounts
+                document.getElementById('plano-conta-tipo-analitica').checked = true;
+                planoContaAnaliticaFields.classList.remove('hidden');
+
                 document.getElementById('plano-conta-codigo').value = nextCode;
                 document.getElementById('plano-conta-codigo-pai').value = parent.codigo;
                 document.getElementById('plano-conta-nivel').value = parent.nivel + 1;
