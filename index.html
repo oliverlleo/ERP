@@ -4437,7 +4437,7 @@
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                planoContaForm.reset();
+                    // Do not reset the form. Explicitly set all fields to avoid unexpected defaults.
                 planoContaForm.style.display = 'block';
 
                 document.getElementById('plano-conta-id').value = docSnap.id;
