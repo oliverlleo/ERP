@@ -521,9 +521,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         chartInstances = {};
     }
 
-    // --- Chart Rendering ---
-    let chartInstances = {};
-
     function destroyAllCharts() {
         Object.values(chartInstances).forEach(chart => {
             if (chart) chart.destroy();
