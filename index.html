@@ -3191,35 +3191,55 @@
             }
         });
 
-        document.getElementById('add-new-account-btn').addEventListener('click', () => {
+        async function suggestTopLevelCode(tipoSelecionado) {
+            const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
+            const rootCode = rootCodeMap[tipoSelecionado];
+            if (!rootCode || !effectiveUserId) return;
+
+            const planosContasQuery = query(collection(db, 'users', effectiveUserId, 'planosDeContas'));
+            const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
+            // Find direct children of the root (e.g., 2.1, 2.2)
+            const siblings = allContas.filter(c => c.codigo.startsWith(rootCode + '.') && c.nivel === 2);
+            const nextCode = `${rootCode}.${siblings.length + 1}`;
+
+            document.getElementById('plano-conta-codigo').value = nextCode;
+            document.getElementById('plano-conta-codigo-pai').value = rootCode;
+            document.getElementById('plano-conta-nivel').value = 2;
+        }
+
+        document.getElementById('add-new-account-btn').addEventListener('click', async () => {
             resetAndHidePlanoContaForm();
             planoContaForm.style.display = 'block';
             planoContaForm.scrollIntoView({ behavior: 'smooth' });
 
             document.getElementById('plano-conta-tipo-analitica').disabled = false;
             document.getElementById('plano-conta-tipo-sintetica').disabled = false;
+
+            // Immediately set and suggest for the default type, which is 'receita'.
+            const tipoSelect = document.getElementById('plano-conta-tipo');
+            tipoSelect.value = 'receita';
+            await suggestTopLevelCode('receita');
+            handleAplicavelEmLogic('receita'); // Also ensure checkboxes are correctly set
         });
 
         function handleAplicavelEmLogic(tipo) {
             const pagamentosCheckbox = document.getElementById('plano-conta-aplicavel-pagamentos');
             const recebimentosCheckbox = document.getElementById('plano-conta-aplicavel-recebimentos');
 
-            // Reset state by enabling both first
             pagamentosCheckbox.disabled = false;
             recebimentosCheckbox.disabled = false;
 
-            // Apply logic
             if (tipo === 'receita') {
                 pagamentosCheckbox.checked = false;
                 recebimentosCheckbox.checked = true;
-                pagamentosCheckbox.disabled = true; // Lock both
+                pagamentosCheckbox.disabled = true;
                 recebimentosCheckbox.disabled = true;
             } else if (tipo === 'despesa' || tipo === 'custo') {
                 pagamentosCheckbox.checked = true;
                 recebimentosCheckbox.checked = false;
-                pagamentosCheckbox.disabled = true; // Lock both
+                pagamentosCheckbox.disabled = true;
                 recebimentosCheckbox.disabled = true;
-            } else { // For 'investimento' or other types, keep them enabled
+            } else {
                 pagamentosCheckbox.checked = false;
                 recebimentosCheckbox.checked = false;
             }
@@ -3227,7 +3247,6 @@
 
         document.getElementById('plano-conta-tipo').addEventListener('change', async (e) => {
             const tipoSelect = e.target;
-            // Do not run if the field is locked
             if (tipoSelect.disabled) {
                 return;
             }
@@ -3235,23 +3254,11 @@
             const tipoSelecionado = tipoSelect.value;
             handleAplicavelEmLogic(tipoSelecionado);
 
-            // This part of the logic is for determining the code for a NEW TOP-LEVEL account
             const isEditing = document.getElementById('plano-conta-id').value;
             const isSubAccount = document.getElementById('plano-conta-codigo-pai').value && !isEditing;
 
-            // Only suggest a new top-level code if we are NOT editing and NOT creating a sub-account.
             if (!isEditing && !isSubAccount) {
-                 const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
-                 const rootCode = rootCodeMap[tipoSelecionado];
-
-                 const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
-                 // Find direct children of the root (e.g., 2.1, 2.2)
-                 const siblings = allContas.filter(c => c.codigo.startsWith(rootCode + '.') && c.nivel === 2);
-                 const nextCode = `${rootCode}.${siblings.length + 1}`;
-
-                 document.getElementById('plano-conta-codigo').value = nextCode;
-                 document.getElementById('plano-conta-codigo-pai').value = rootCode;
-                 document.getElementById('plano-conta-nivel').value = 2;
+                 await suggestTopLevelCode(tipoSelecionado);
             }
         });
 
