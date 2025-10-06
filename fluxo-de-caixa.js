@@ -6,24 +6,17 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     if (!fluxoDeCaixaPage) return;
 
     // --- DOM Elements ---
-    // Filters
     const periodoDeInput = document.getElementById('fluxo-periodo-de');
     const periodoAteInput = document.getElementById('fluxo-periodo-ate');
     const contaBancariaSelect = document.getElementById('fluxo-conta-bancaria');
     const conciliacaoFilterGroup = document.getElementById('fluxo-conciliacao-filter-group');
-
-    // KPIs
     const kpiSaldoAnterior = document.getElementById('kpi-saldo-anterior');
     const kpiTotalEntradas = document.getElementById('kpi-total-entradas');
     const kpiTotalSaidas = document.getElementById('kpi-total-saidas');
     const kpiResultadoLiquido = document.getElementById('kpi-resultado-liquido');
     const kpiSaldoFinal = document.getElementById('kpi-saldo-final');
-
-    // Tables & Content
     const extratoTableBody = document.getElementById('fluxo-extrato-table-body');
     const dreTableBody = document.getElementById('fluxo-dre-table-body');
-
-    // Modals & Buttons
     const lancarTransferenciaBtn = document.getElementById('lancar-transferencia-btn');
     const transferenciaModal = document.getElementById('transferencia-modal');
     const closeTransferenciaModalBtn = document.getElementById('close-transferencia-modal-btn');
@@ -33,6 +26,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     // --- State ---
     let allContasBancarias = [];
     let activeConciliacaoFilter = 'todas';
+    let drilldownCategoryFilter = null;
     const visaoRealizadoCheckbox = document.getElementById('visao-realizado-checkbox');
     const visaoProjetadoCheckbox = document.getElementById('visao-projetado-checkbox');
 
@@ -41,36 +35,17 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
     // --- Main Logic ---
     async function fetchTransactionsEfficiently(parentCollectionName, subcollectionName, startDate, endDate, inclusive = true) {
-        // This approach is more efficient as it pre-filters parent documents by a relevant date field.
-        // This reduces the number of subcollection queries needed.
-        const parentDateFilterField = parentCollectionName === 'despesas' ? 'vencimento' : 'dataVencimento';
-
-        // Create a broader query on the parent collection.
-        // We fetch parents from a wider date range to catch transactions that might have been paid/received
-        // outside their due date but still fall within our cash flow period.
-        let parentQuery = collection(db, `users/${userId}/${parentCollectionName}`);
-
-        // The query for subcollections will be precise, so the parent query can be broader.
-        // This is a balance between performance and correctness.
-        // For simplicity in this fix, we'll still fetch all parents, but the sub-query will be precise.
-        // A more advanced optimization could pre-filter parents by date.
-
-        const parentDocsSnapshot = await getDocs(parentQuery);
-
+        const parentDocsSnapshot = await getDocs(collection(db, `users/${userId}/${parentCollectionName}`));
         const promises = parentDocsSnapshot.docs.map(parentDoc => {
             let subcollectionQuery = collection(parentDoc.ref, subcollectionName);
-
-            // Apply the precise date filtering at the subcollection level.
             if (startDate) {
                  subcollectionQuery = query(subcollectionQuery, where('dataTransacao', inclusive ? '>=' : '<', startDate));
             }
             if (endDate) {
                  subcollectionQuery = query(subcollectionQuery, where('dataTransacao', inclusive ? '<=' : '<', endDate));
             }
-
             return getDocs(subcollectionQuery);
         });
-
         const querySnapshots = await Promise.all(promises);
         return querySnapshots.flatMap(snapshot => snapshot.docs);
     }
@@ -81,65 +56,37 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
         planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
 
-        // Fetch ALL pending expenses and filter in code to avoid composite indexes
         const despesasQuery = collection(db, `users/${userId}/despesas`);
         const despesasSnap = await getDocs(despesasQuery);
         despesasSnap.forEach(doc => {
             const despesaData = doc.data();
             const status = despesaData.status || 'Pendente';
-            // Manual filtering
             if (['Pendente', 'Vencido', 'Pago Parcialmente'].includes(status) && despesaData.vencimento >= startDate && despesaData.vencimento <= endDate) {
                 const categoria = planoContasMap.get(despesaData.categoriaId);
                 unifiedProjected.push({
-                    id: doc.id,
-                    isProjected: true,
-                    data: despesaData.vencimento,
-                    descricao: `(Projetado) ${despesaData.descricao}`,
-                    participante: despesaData.favorecidoNome || 'N/A',
-                    planoDeConta: categoria ? categoria.nome : 'N/A',
-                    dataVencimento: despesaData.vencimento,
-                    entrada: 0,
-                    saida: despesaData.valorSaldo || despesaData.valorOriginal,
-                    juros: 0,
-                    desconto: 0,
-                    conciliado: false,
-                    type: 'despesa_projetada'
+                    id: doc.id, isProjected: true, data: despesaData.vencimento, descricao: `(Projetado) ${despesaData.descricao}`, participante: despesaData.favorecidoNome || 'N/A', planoDeConta: categoria ? categoria.nome : 'N/A', dataVencimento: despesaData.vencimento, entrada: 0, saida: despesaData.valorSaldo || despesaData.valorOriginal, juros: 0, desconto: 0, conciliado: false, type: 'despesa_projetada'
                 });
             }
         });
 
-        // Fetch ALL pending revenues and filter in code
         const receitasQuery = collection(db, `users/${userId}/receitas`);
         const receitasSnap = await getDocs(receitasQuery);
         receitasSnap.forEach(doc => {
             const receitaData = doc.data();
             const status = receitaData.status || 'Pendente';
             const dataVencimento = receitaData.dataVencimento || receitaData.vencimento;
-            // Manual filtering
             if (['Pendente', 'Vencido', 'Recebido Parcialmente'].includes(status) && dataVencimento >= startDate && dataVencimento <= endDate) {
                 const categoria = planoContasMap.get(receitaData.categoriaId);
                 unifiedProjected.push({
-                    id: doc.id,
-                    isProjected: true,
-                    data: dataVencimento,
-                    descricao: `(Projetado) ${receitaData.descricao}`,
-                    participante: receitaData.clienteNome || 'N/A',
-                    planoDeConta: categoria ? categoria.nome : 'N/A',
-                    dataVencimento: dataVencimento,
-                    entrada: receitaData.saldoPendente || receitaData.valorOriginal,
-                    saida: 0,
-                    juros: 0,
-                    desconto: 0,
-                    conciliado: false,
-                    type: 'receita_projetada'
+                    id: doc.id, isProjected: true, data: dataVencimento, descricao: `(Projetado) ${receitaData.descricao}`, participante: receitaData.clienteNome || 'N/A', planoDeConta: categoria ? categoria.nome : 'N/A', dataVencimento: dataVencimento, entrada: receitaData.saldoPendente || receitaData.valorOriginal, saida: 0, juros: 0, desconto: 0, conciliado: false, type: 'receita_projetada'
                 });
             }
         });
-
         return unifiedProjected;
     }
 
     async function calculateAndRenderCashFlow() {
+        extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
         const startDate = periodoDeInput.value;
         const endDate = periodoAteInput.value;
         const contaId = contaBancariaSelect.value;
@@ -153,17 +100,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         if (!showRealizado && !showProjetado) {
             extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
             renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
-            renderCharts([]);
+            renderCharts([], { saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0 }, { previousEntradas: 0, previousSaidas: 0 });
             renderDRE([]);
             return;
         }
 
-        extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
-
         try {
             const saldoAnterior = await calculateSaldoAnterior(startDate, contaId);
             let unifiedTransactions = [];
-
             if (showRealizado) {
                 const [pagamentos, recebimentos, transferencias] = await Promise.all([
                     fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
@@ -173,29 +117,73 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                 const realizedTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
                 unifiedTransactions.push(...realizedTransactions);
             }
-
             if (showProjetado) {
                 const projectedTransactions = await fetchProjectedTransactions(startDate, endDate);
                 unifiedTransactions.push(...projectedTransactions);
             }
-
             unifiedTransactions.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-            // 4. Apply Filters
             unifiedTransactions = applyFilters(unifiedTransactions, contaId, activeConciliacaoFilter);
-
-            // 5. Calculate KPIs
             const kpis = calculateKPIs(saldoAnterior, unifiedTransactions, contaId);
-
-            // 6. Render UI
             renderKPIs(kpis);
             renderExtrato(unifiedTransactions, kpis.saldoAnterior);
             renderDRE(unifiedTransactions);
-            renderCharts(unifiedTransactions);
-
+            const { previousStartDate, previousEndDate } = getPreviousPeriod(startDate, endDate);
+            const previousPeriodTotals = await fetchAndCalculatePreviousPeriodTotals(previousStartDate, previousEndDate, contaId);
+            renderCharts(unifiedTransactions, kpis, previousPeriodTotals);
         } catch (error) {
             console.error("Error calculating cash flow:", error);
             extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
+        }
+    }
+
+    function getPreviousPeriod(currentStart, currentEnd) {
+        const start = new Date(currentStart + 'T00:00:00');
+        const end = new Date(currentEnd + 'T00:00:00');
+
+        const duration = (end.getTime() - start.getTime()) / (1000 * 3600 * 24) + 1;
+
+        const previousEndDate = new Date(start.getTime());
+        previousEndDate.setDate(previousEndDate.getDate() - 1);
+
+        const previousStartDate = new Date(previousEndDate.getTime());
+        previousStartDate.setDate(previousStartDate.getDate() - (duration - 1));
+
+        return {
+            previousStartDate: previousStartDate.toISOString().split('T')[0],
+            previousEndDate: previousEndDate.toISOString().split('T')[0]
+        };
+    }
+
+    async function fetchAndCalculatePreviousPeriodTotals(startDate, endDate, contaId) {
+        try {
+            const [pagamentos, recebimentos, transferencias] = await Promise.all([
+                fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
+                fetchCollection('transferencias', startDate, endDate)
+            ]);
+
+            const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+            const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
+
+            let previousEntradas = 0;
+            let previousSaidas = 0;
+
+            filteredTransactions.forEach(t => {
+                if (t.type === 'transferencia') {
+                    if (contaId !== 'todas') {
+                        if (t.contaDestinoId === contaId) previousEntradas += t.valor;
+                        if (t.contaOrigemId === contaId) previousSaidas += t.valor;
+                    }
+                } else {
+                    previousEntradas += t.entrada || 0;
+                    previousSaidas += t.saida || 0;
+                }
+            });
+
+            return { previousEntradas, previousSaidas };
+        } catch (error) {
+            console.error("Error fetching previous period totals:", error);
+            return { previousEntradas: 0, previousSaidas: 0 };
         }
     }
 
@@ -245,21 +233,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                     const despesaData = despesaSnap.data();
                     const categoria = planoContasMap.get(despesaData.categoriaId);
                     unified.push({
-                        id: doc.id,
-                        parentId: parentDespesaRef.id,
-                        data: data.dataTransacao,
-                        descricao: despesaData.descricao,
-                        participante: despesaData.favorecidoNome || 'N/A',
-                        planoDeConta: categoria ? categoria.nome : 'N/A',
-                        dataVencimento: despesaData.vencimento,
-                        tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
-                        entrada: 0,
-                        saida: data.valorPrincipal || 0,
-                        juros: data.jurosPagos || 0,
-                        desconto: data.descontosAplicados || 0,
-                        contaId: data.contaSaidaId,
-                        conciliado: data.conciliado || false,
-                        type: 'pagamento'
+                        id: doc.id, parentId: parentDespesaRef.id, data: data.dataTransacao, descricao: despesaData.descricao, participante: despesaData.favorecidoNome || 'N/A', planoDeConta: categoria ? categoria.nome : 'N/A', dataVencimento: despesaData.vencimento, tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional', entrada: 0, saida: data.valorPrincipal || 0, juros: data.jurosPagos || 0, desconto: data.descontosAplicados || 0, contaId: data.contaSaidaId, conciliado: data.conciliado || false, type: 'pagamento'
                     });
                 }
             }
@@ -274,21 +248,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                     const receitaData = receitaSnap.data();
                     const categoria = planoContasMap.get(receitaData.categoriaId);
                     unified.push({
-                        id: doc.id,
-                        parentId: parentReceitaRef.id,
-                        data: data.dataTransacao,
-                        descricao: receitaData.descricao,
-                        participante: receitaData.clienteNome || 'N/A',
-                        planoDeConta: categoria ? categoria.nome : 'N/A',
-                        dataVencimento: receitaData.dataVencimento,
-                        tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
-                        entrada: data.valorPrincipal || 0,
-                        saida: 0,
-                        juros: data.jurosRecebidos || 0,
-                        desconto: data.descontosConcedidos || 0,
-                        contaId: data.contaEntradaId,
-                        conciliado: data.conciliado || false,
-                        type: 'recebimento'
+                        id: doc.id, parentId: parentReceitaRef.id, data: data.dataTransacao, descricao: receitaData.descricao, participante: receitaData.clienteNome || 'N/A', planoDeConta: categoria ? categoria.nome : 'N/A', dataVencimento: receitaData.dataVencimento, tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional', entrada: data.valorPrincipal || 0, saida: 0, juros: data.jurosRecebidos || 0, desconto: data.descontosConcedidos || 0, contaId: data.contaEntradaId, conciliado: data.conciliado || false, type: 'recebimento'
                     });
                 }
             }
@@ -297,20 +257,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         for (const doc of transferencias) {
             const data = doc.data();
             unified.push({
-                id: doc.id,
-                data: data.dataTransacao,
-                descricao: `Transferência de ${data.contaOrigemNome} para ${data.contaDestinoNome}`,
-                participante: 'Interno',
-                planoDeConta: 'Transferência',
-                dataVencimento: data.dataTransacao, // Vencimento é a própria data
-                tipoAtividade: 'N/A',
-                valor: data.valor, // Valor único para ser tratado na renderização
-                juros: 0,
-                desconto: 0,
-                contaOrigemId: data.contaOrigemId,
-                contaDestinoId: data.contaDestinoId,
-                conciliado: data.conciliado || false,
-                type: 'transferencia'
+                id: doc.id, data: data.dataTransacao, descricao: `Transferência de ${data.contaOrigemNome} para ${data.contaDestinoNome}`, participante: 'Interno', planoDeConta: 'Transferência', dataVencimento: data.dataTransacao, tipoAtividade: 'N/A', valor: data.valor, juros: 0, desconto: 0, contaOrigemId: data.contaOrigemId, contaDestinoId: data.contaDestinoId, conciliado: data.conciliado || false, type: 'transferencia'
             });
         }
 
@@ -319,7 +266,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
     function applyFilters(transactions, contaId, conciliacaoStatus) {
         return transactions.filter(t => {
-            // Filter by Bank Account
             let contaMatch = true;
             if (contaId !== 'todas') {
                 if (t.type === 'transferencia') {
@@ -330,13 +276,20 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             }
             if (!contaMatch) return false;
 
-            // Filter by Conciliation Status
             let conciliacaoMatch = true;
             if (conciliacaoStatus !== 'todas') {
                 const expectedStatus = conciliacaoStatus === 'conciliadas';
                 conciliacaoMatch = t.conciliado === expectedStatus;
             }
-            return conciliacaoMatch;
+            if (!conciliacaoMatch) return false;
+
+            if (drilldownCategoryFilter) {
+                if (t.planoDeConta !== drilldownCategoryFilter) {
+                    return false;
+                }
+            }
+
+            return true;
         });
     }
 
@@ -346,7 +299,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         transactions.forEach(t => {
             if (t.type === 'transferencia') {
-                // Only count in KPIs if a specific account is selected
                 if (contaId !== 'todas') {
                     if (t.contaDestinoId === contaId) totalEntradas += t.valor;
                     if (t.contaOrigemId === contaId) totalSaidas += t.valor;
@@ -369,7 +321,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         kpiTotalSaidas.textContent = formatCurrency(kpis.totalSaidas);
         kpiResultadoLiquido.textContent = formatCurrency(kpis.resultadoLiquido);
         kpiSaldoFinal.textContent = formatCurrency(kpis.saldoFinal);
-
         kpiResultadoLiquido.classList.toggle('text-red-700', kpis.resultadoLiquido < 0);
         kpiResultadoLiquido.classList.toggle('text-green-700', kpis.resultadoLiquido >= 0);
     }
@@ -392,19 +343,15 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             const tr = document.createElement('tr');
             let entrada = t.entrada || 0;
             let saida = t.saida || 0;
-
             if (t.type === 'transferencia') {
                 if (contaFiltrada === 'todas') return;
                 if (t.contaDestinoId === contaFiltrada) entrada = t.valor;
                 else if (t.contaOrigemId === contaFiltrada) saida = t.valor;
                 else return;
             }
-
             saldoAcumulado += (entrada - saida);
-
             const rowClass = showBoth && t.isProjected ? 'bg-yellow-50' : (t.conciliado ? 'bg-green-50' : 'bg-white');
             tr.className = rowClass;
-
             tr.innerHTML = `
                 <td class="p-4"><input type="checkbox" class="fluxo-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${t.id}" data-parent-id="${t.parentId}" data-type="${t.type}" ${t.conciliado ? 'checked' : ''} ${t.isProjected ? 'disabled' : ''}></td>
                 <td class="px-4 py-2 text-sm text-gray-700">${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -435,26 +382,20 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         };
         let totalEntradasGeral = 0;
         let totalSaidasGeral = 0;
-
         transactions.forEach(t => {
             if (t.type === 'transferencia') return;
-
             const atividade = t.tipoAtividade || 'Operacional';
-            const categoria = t.categoria || 'Sem Categoria';
-
+            const categoria = t.planoDeConta || 'Sem Categoria';
             if (!dreData[atividade]) dreData[atividade] = { entradas: 0, saidas: 0, details: {} };
             if (!dreData[atividade].details[categoria]) dreData[atividade].details[categoria] = 0;
-
             const valorEntrada = t.entrada || 0;
             const valorSaida = t.saida || 0;
-
             dreData[atividade].details[categoria] += (valorEntrada - valorSaida);
             dreData[atividade].entradas += valorEntrada;
             dreData[atividade].saidas += valorSaida;
             totalEntradasGeral += valorEntrada;
             totalSaidasGeral += valorSaida;
         });
-
         function createRow(text, value, isHeader = false, isSubHeader = false, isTotal = false, isSubTotal = false, percentageOf = null) {
             const tr = document.createElement('tr');
             let percentageHTML = '';
@@ -464,7 +405,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             } else {
                 percentageHTML = `<td class="px-6 py-3"></td>`;
             }
-
             tr.innerHTML = `
                 <td class="px-6 py-3 text-sm ${isHeader ? 'font-bold text-gray-800' : (isSubHeader || isSubTotal ? 'font-semibold pl-10' : 'pl-14')}">${text}</td>
                 <td class="px-6 py-3 text-sm text-right font-medium ${value < 0 ? 'text-red-600' : 'text-gray-800'}">${formatCurrency(value)}</td>
@@ -473,12 +413,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             if (isSubTotal) tr.classList.add('bg-gray-50');
             return tr;
         }
-
         Object.keys(dreData).forEach(atividade => {
             const data = dreData[atividade];
             const fluxoCaixaAtividade = data.entradas - data.saidas;
             dreTableBody.appendChild(createRow(`Fluxo de Caixa das Atividades de ${atividade}`, fluxoCaixaAtividade, true));
-
             Object.keys(data.details).sort().forEach(categoria => {
                 const valorCategoria = data.details[categoria];
                  if(valorCategoria > 0) {
@@ -489,60 +427,159 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             });
             dreTableBody.appendChild(createRow(`(=) Saldo das Atividades de ${atividade}`, fluxoCaixaAtividade, false, false, false, true));
         });
-
-         const geracaoLiquida = Object.values(dreData).reduce((acc, curr) => acc + (curr.entradas - curr.saidas), 0);
-         dreTableBody.appendChild(createRow('(=) GERAÇÃO LÍQUIDA DE CAIXA', geracaoLiquida, false, false, true, true));
+        const geracaoLiquida = Object.values(dreData).reduce((acc, curr) => acc + (curr.entradas - curr.saidas), 0);
+        dreTableBody.appendChild(createRow('(=) GERAÇÃO LÍQUIDA DE CAIXA', geracaoLiquida, false, false, true, true));
     }
 
-    function renderCharts(transactions) {
-        renderFluxoDiarioChart(transactions);
-        renderComposicaoReceitasChart(transactions);
-        renderComposicaoDespesasChart(transactions);
+    function renderCharts(transactions, kpis, previousPeriodTotals) {
+        renderEvolucaoCaixaChart(transactions, kpis.saldoAnterior);
+        renderComparativoPeriodosChart(kpis, previousPeriodTotals);
+        renderTopCategoriasCharts(transactions.filter(t => !t.isProjected));
     }
 
-    let fluxoDiarioChartInstance, composicaoReceitasChartInstance, composicaoDespesasChartInstance;
+    let evolucaoCaixaChartInstance, comparativoPeriodosChartInstance, topReceitasChartInstance, topDespesasChartInstance;
 
-    function renderFluxoDiarioChart(transactions) {
-        const ctx = document.getElementById('fluxo-diario-chart').getContext('2d');
-        if (fluxoDiarioChartInstance) {
-            fluxoDiarioChartInstance.destroy();
+    function renderTopCategoriasCharts(realizedTransactions) {
+        const processAndRender = (ctx, transactions, type, label) => {
+            if (!ctx) return null;
+
+            const isReceita = type === 'receita';
+            const valueField = isReceita ? 'entrada' : 'saida';
+            const typeFilter = isReceita ? 'recebimento' : 'pagamento';
+
+            const dataByCategory = realizedTransactions
+                .filter(t => t.type === typeFilter && t[valueField] > 0)
+                .reduce((acc, t) => {
+                    const categoria = t.planoDeConta || 'Sem Categoria';
+                    if (!acc[categoria]) acc[categoria] = 0;
+                    acc[categoria] += t[valueField];
+                    return acc;
+                }, {});
+
+            const sortedData = Object.entries(dataByCategory)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5);
+
+            const chartLabels = sortedData.map(entry => entry[0]);
+            const chartData = sortedData.map(entry => entry[1] / 100);
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: label,
+                        data: chartData,
+                        backgroundColor: isReceita ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+                        borderColor: isReceita ? 'rgba(22, 163, 74, 1)' : 'rgba(220, 38, 38, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const category = chart.data.labels[clickedIndex];
+
+                            drilldownCategoryFilter = category;
+
+                            const extratoTabLink = document.querySelector('.fluxo-tab-link[data-fluxo-tab="extrato"]');
+                            if (extratoTabLink) extratoTabLink.click();
+
+                            calculateAndRenderCashFlow();
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value); }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.x);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return chart;
+        };
+
+        const receitaCtx = document.getElementById('top-receitas-chart')?.getContext('2d');
+        if (topReceitasChartInstance) topReceitasChartInstance.destroy();
+        topReceitasChartInstance = processAndRender(receitaCtx, realizedTransactions, 'receita', 'Top 5 Receitas');
+
+        const despesaCtx = document.getElementById('top-despesas-chart')?.getContext('2d');
+        if (topDespesasChartInstance) topDespesasChartInstance.destroy();
+        topDespesasChartInstance = processAndRender(despesaCtx, realizedTransactions, 'despesa', 'Top 5 Despesas');
+    }
+
+    function renderComparativoPeriodosChart(currentPeriodTotals, previousPeriodTotals) {
+        const ctx = document.getElementById('comparativo-periodos-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        if (comparativoPeriodosChartInstance) {
+            comparativoPeriodosChartInstance.destroy();
         }
 
-        const dailyData = transactions.reduce((acc, t) => {
-            const day = t.data;
-            if (!acc[day]) acc[day] = { entradas: 0, saidas: 0 };
-            acc[day].entradas += t.entrada || 0;
-            acc[day].saidas += t.saida || 0;
-            return acc;
-        }, {});
+        const labels = ['Período Anterior', 'Período Atual'];
 
-        const sortedDays = Object.keys(dailyData).sort();
-
-        fluxoDiarioChartInstance = new Chart(ctx, {
+        comparativoPeriodosChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: sortedDays.map(day => new Date(day + 'T00:00:00').toLocaleDateString('pt-BR')),
-                datasets: [{
-                    label: 'Entradas',
-                    data: sortedDays.map(day => dailyData[day].entradas / 100),
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Saídas',
-                    data: sortedDays.map(day => dailyData[day].saidas / 100),
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Entradas',
+                        data: [
+                            previousPeriodTotals.previousEntradas / 100,
+                            currentPeriodTotals.totalEntradas / 100
+                        ],
+                        backgroundColor: '#16a34a', // green-600
+                    },
+                    {
+                        label: 'Saídas',
+                        data: [
+                            previousPeriodTotals.previousSaidas / 100,
+                            currentPeriodTotals.totalSaidas / 100
+                        ],
+                        backgroundColor: '#dc2626', // red-600
+                    }
+                ]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR');
+                                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                }
+                                return label;
                             }
                         }
                     }
@@ -551,50 +588,94 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         });
     }
 
-    function renderComposicaoReceitasChart(transactions) {
-        const ctx = document.getElementById('composicao-receitas-chart').getContext('2d');
-        if (composicaoReceitasChartInstance) {
-            composicaoReceitasChartInstance.destroy();
+    function renderEvolucaoCaixaChart(transactions, saldoAnterior) {
+        const ctx = document.getElementById('evolucao-caixa-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        if (evolucaoCaixaChartInstance) {
+            evolucaoCaixaChartInstance.destroy();
         }
 
-        const receitaData = transactions
-            .filter(t => t.entrada > 0 && t.type === 'recebimento')
-            .reduce((acc, t) => {
-                const categoria = t.categoria || 'Sem Categoria';
-                if (!acc[categoria]) acc[categoria] = 0;
-                acc[categoria] += t.entrada;
-                return acc;
-            }, {});
+        const startDate = new Date(periodoDeInput.value + 'T00:00:00');
+        const endDate = new Date(periodoAteInput.value + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        composicaoReceitasChartInstance = new Chart(ctx, {
-            type: 'pie',
+        const dailyNetChanges = {};
+        const labels = [];
+
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateString = d.toISOString().split('T')[0];
+            labels.push(dateString);
+            dailyNetChanges[dateString] = 0;
+        }
+
+        transactions.forEach(t => {
+            const dateString = t.data;
+            if (dailyNetChanges.hasOwnProperty(dateString)) {
+                dailyNetChanges[dateString] += (t.entrada || 0) - (t.saida || 0);
+            }
+        });
+
+        const balances = [];
+        let currentBalance = saldoAnterior;
+        labels.forEach(dateString => {
+            currentBalance += dailyNetChanges[dateString];
+            balances.push(currentBalance / 100);
+        });
+
+        const todayString = today.toISOString().split('T')[0];
+        const todayIndex = labels.indexOf(todayString);
+        const realizadoData = balances.map((val, i) => (i <= todayIndex ? val : null));
+        const projetadoData = balances.map((val, i) => {
+            if (i < todayIndex) return null;
+            if (i === todayIndex) return realizadoData[todayIndex];
+            return val;
+        });
+
+        evolucaoCaixaChartInstance = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: Object.keys(receitaData),
+                labels: labels.map(l => new Date(l + 'T00:00:00').toLocaleDateString('pt-BR')),
                 datasets: [{
-                    label: 'Composição de Receitas',
-                    data: Object.values(receitaData).map(v => v / 100),
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
+                    label: 'Saldo Realizado',
+                    data: realizadoData,
+                    borderColor: '#1d4ed8',
+                    backgroundColor: '#1d4ed8',
+                    tension: 0.1,
+                    pointRadius: 2,
+                    spanGaps: true
+                }, {
+                    label: 'Saldo Projetado',
+                    data: projetadoData,
+                    borderColor: '#60a5fa',
+                    backgroundColor: '#60a5fa',
+                    borderDash: [5, 5],
+                    tension: 0.1,
+                    pointRadius: 2,
+                    spanGaps: true
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+                            }
+                        }
+                    }
+                },
                 plugins: {
-                    legend: { position: 'top' },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
                                 }
                                 return label;
                             }
@@ -604,63 +685,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             }
         });
     }
-
-    function renderComposicaoDespesasChart(transactions) {
-        const ctx = document.getElementById('composicao-despesas-chart').getContext('2d');
-        if (composicaoDespesasChartInstance) {
-            composicaoDespesasChartInstance.destroy();
-        }
-
-        const despesaData = transactions
-            .filter(t => t.saida > 0 && t.type === 'pagamento')
-            .reduce((acc, t) => {
-                const categoria = t.categoria || 'Sem Categoria';
-                if (!acc[categoria]) acc[categoria] = 0;
-                acc[categoria] += t.saida;
-                return acc;
-            }, {});
-
-        composicaoDespesasChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: Object.keys(despesaData),
-                datasets: [{
-                    label: 'Composição de Despesas',
-                    data: Object.values(despesaData).map(v => v / 100),
-                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(255, 205, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(201, 203, 207, 0.7)'
-                    ],
-                }]
-            },
-             options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                     tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
 
     async function populateContasBancarias() {
         const q = query(collection(db, `users/${userId}/contasBancarias`));
@@ -675,7 +699,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             contaBancariaSelect.appendChild(option);
         });
 
-        // Also populate transfer modal dropdowns
         const origemSelect = document.getElementById('transferencia-conta-origem');
         const destinoSelect = document.getElementById('transferencia-conta-destino');
         origemSelect.innerHTML = '<option value="">Selecione a conta de origem</option>';
@@ -694,11 +717,16 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
     // --- Event Listeners ---
     [periodoDeInput, periodoAteInput, contaBancariaSelect].forEach(el => {
-        el.addEventListener('change', calculateAndRenderCashFlow);
+        const eventType = el.type === 'date' ? 'input' : 'change';
+        el.addEventListener(eventType, () => {
+            drilldownCategoryFilter = null;
+            calculateAndRenderCashFlow();
+        });
     });
 
     conciliacaoFilterGroup.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
+            drilldownCategoryFilter = null;
             conciliacaoFilterGroup.querySelector('.active').classList.remove('active');
             e.target.classList.add('active');
             activeConciliacaoFilter = e.target.dataset.status;
@@ -707,7 +735,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     });
 
     [visaoRealizadoCheckbox, visaoProjetadoCheckbox].forEach(cb => {
-        cb.addEventListener('change', calculateAndRenderCashFlow);
+        cb.addEventListener('change', () => {
+            drilldownCategoryFilter = null;
+            calculateAndRenderCashFlow();
+        });
     });
 
     extratoTableBody.addEventListener('change', async (e) => {
@@ -735,7 +766,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             } catch (error) {
                 console.error("Erro ao atualizar status de conciliação:", error);
                 alert("Não foi possível atualizar o status da transação.");
-                // Revert checkbox state on error
                 checkbox.checked = !isConciliado;
             }
         }
@@ -769,15 +799,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             const contaDestinoNome = allContasBancarias.find(c => c.id === contaDestinoId).nome;
 
             await addDoc(collection(db, `users/${userId}/transferencias`), {
-                dataTransacao: data,
-                valor: valor,
-                contaOrigemId,
-                contaDestinoId,
-                contaOrigemNome,
-                contaDestinoNome,
-                observacao: document.getElementById('transferencia-obs').value,
-                adminId: userId,
-                createdAt: serverTimestamp()
+                dataTransacao: data, valor: valor, contaOrigemId, contaDestinoId, contaOrigemNome, contaDestinoNome, observacao: document.getElementById('transferencia-obs').value, adminId: userId, createdAt: serverTimestamp()
             });
             showFeedback(feedbackId, "Transferência salva com sucesso!", false);
             transferenciaForm.reset();
@@ -792,19 +814,20 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     // --- Initial Load ---
     function setDefaultDates() {
         const today = new Date();
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        periodoDeInput.value = firstDayOfMonth.toISOString().split('T')[0];
-        periodoAteInput.value = lastDayOfMonth.toISOString().split('T')[0];
+        const firstDayOfYear = new Date(today.getFullYear(), 0, 1); // January 1st of the current year
+        const lastDayOfYear = new Date(today.getFullYear(), 11, 31); // December 31st of the current year
+        periodoDeInput.value = firstDayOfYear.toISOString().split('T')[0];
+        periodoAteInput.value = lastDayOfYear.toISOString().split('T')[0];
     }
 
-    // Initialize the page
     setDefaultDates();
-    populateContasBancarias().then(() => {
+    populateContasBancarias();
+
+    fluxoDeCaixaPage.addEventListener('show-page', () => {
+        console.log("Fluxo de Caixa page shown, fetching data...");
         calculateAndRenderCashFlow();
     });
 
-    // Setup tab functionality
     const tabLinks = fluxoDeCaixaPage.querySelectorAll('.fluxo-tab-link');
     const tabContents = fluxoDeCaixaPage.querySelectorAll('.fluxo-tab-content');
     tabLinks.forEach(link => {
