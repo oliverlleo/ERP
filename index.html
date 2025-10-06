@@ -1006,6 +1006,10 @@
                                 <div class="mt-8 border-t pt-6">
                                     <div class="flex justify-between items-center mb-4">
                                         <h3 class="text-lg font-medium text-gray-900">Estrutura do Plano de Contas</h3>
+                                        <button type="button" id="add-new-account-btn" class="inline-flex items-center justify-center rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-200">
+                                            <span class="material-symbols-outlined text-base mr-1">add</span>
+                                            Nova Conta
+                                        </button>
                                     </div>
                                     <div id="plano-contas-tree" class="border rounded-md p-4 bg-gray-50 min-h-[200px]">
                                         <!-- A árvore de contas será renderizada aqui pelo JavaScript -->
@@ -3149,10 +3153,20 @@
 
                 resetAndHidePlanoContaForm();
                 planoContaForm.style.display = 'block';
+
+                // Default to Analitica for new sub-accounts
+                document.getElementById('plano-conta-tipo-analitica').checked = true;
+                planoContaAnaliticaFields.classList.remove('hidden');
+
                 document.getElementById('plano-conta-codigo').value = nextCode;
                 document.getElementById('plano-conta-codigo-pai').value = parent.codigo;
                 document.getElementById('plano-conta-nivel').value = parent.nivel + 1;
-                document.getElementById('plano-conta-tipo').value = parent.tipo; // Inherit parent type
+
+                const tipoSelect = document.getElementById('plano-conta-tipo');
+                tipoSelect.value = parent.tipo; // Inherit parent type
+                tipoSelect.disabled = true; // LOCK the type for sub-accounts to ensure data integrity.
+                handleAplicavelEmLogic(parent.tipo); // Also trigger the logic for the checkboxes
+
                 planoContaForm.scrollIntoView({ behavior: 'smooth' });
             } else if (button.classList.contains('edit-plano-conta-btn')) {
                 openPlanoContaForEdit(id);
@@ -3182,7 +3196,80 @@
             }
         });
 
-        // The 'add-top-level-account-btn' was removed, so its listener is no longer needed.
+        async function suggestTopLevelCode(tipoSelecionado) {
+            const rootCodeMap = { 'receita': '1', 'despesa': '2', 'custo': '3', 'investimento': '4' };
+            const rootCode = rootCodeMap[tipoSelecionado];
+            if (!rootCode || !effectiveUserId) return;
+
+            const planosContasQuery = query(collection(db, 'users', effectiveUserId, 'planosDeContas'));
+            const allContas = (await getDocs(planosContasQuery)).docs.map(d => d.data());
+            // Find direct children of the root (e.g., 2.1, 2.2)
+            const siblings = allContas.filter(c => c.codigo.startsWith(rootCode + '.') && c.nivel === 2);
+            const nextCode = `${rootCode}.${siblings.length + 1}`;
+
+            document.getElementById('plano-conta-codigo').value = nextCode;
+            document.getElementById('plano-conta-codigo-pai').value = rootCode;
+            document.getElementById('plano-conta-nivel').value = 2;
+        }
+
+        document.getElementById('add-new-account-btn').addEventListener('click', async () => {
+            resetAndHidePlanoContaForm();
+            planoContaForm.style.display = 'block';
+            planoContaForm.scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById('plano-conta-tipo-analitica').disabled = false;
+            document.getElementById('plano-conta-tipo-sintetica').disabled = false;
+
+            // Immediately set and suggest for the default type, which is 'receita'.
+            const tipoSelect = document.getElementById('plano-conta-tipo');
+            tipoSelect.value = 'receita';
+            await suggestTopLevelCode('receita');
+            handleAplicavelEmLogic('receita'); // Also ensure checkboxes are correctly set
+        });
+
+        function handleAplicavelEmLogic(tipo) {
+            const pagamentosCheckbox = document.getElementById('plano-conta-aplicavel-pagamentos');
+            const recebimentosCheckbox = document.getElementById('plano-conta-aplicavel-recebimentos');
+
+            if (tipo === 'receita') {
+                pagamentosCheckbox.checked = false;
+                recebimentosCheckbox.checked = true;
+                pagamentosCheckbox.disabled = true;
+                recebimentosCheckbox.disabled = true;
+            } else if (tipo === 'despesa' || tipo === 'custo') {
+                pagamentosCheckbox.checked = true;
+                recebimentosCheckbox.checked = false;
+                pagamentosCheckbox.disabled = true;
+                recebimentosCheckbox.disabled = true;
+            } else { // For 'investimento', just ensure they are enabled. Checked state is handled by caller.
+                pagamentosCheckbox.disabled = false;
+                recebimentosCheckbox.disabled = false;
+            }
+        }
+
+        document.getElementById('plano-conta-tipo').addEventListener('change', async (e) => {
+            const tipoSelect = e.target;
+            if (tipoSelect.disabled) {
+                return;
+            }
+
+            const tipoSelecionado = tipoSelect.value;
+
+            // When changing type on a new form, if we switch to 'investimento', reset the checkboxes
+            if (tipoSelecionado === 'investimento') {
+                document.getElementById('plano-conta-aplicavel-pagamentos').checked = false;
+                document.getElementById('plano-conta-aplicavel-recebimentos').checked = false;
+            }
+
+            handleAplicavelEmLogic(tipoSelecionado);
+
+            const isEditing = document.getElementById('plano-conta-id').value;
+            const isSubAccount = document.getElementById('plano-conta-codigo-pai').value && !isEditing;
+
+            if (!isEditing && !isSubAccount) {
+                 await suggestTopLevelCode(tipoSelecionado);
+            }
+        });
 
         // Cadastros - Contas Bancárias
         const contasBancariasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
@@ -3457,6 +3544,7 @@
         contas
             .filter(conta =>
                 conta.aceitaLancamento &&
+                conta.inativo !== true && // Correctly handle undefined and false
                 conta.aplicavelEm.includes(aplicavelEmContext) &&
                 allowedTipos.includes(conta.tipo)
             )
@@ -4359,7 +4447,7 @@
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                planoContaForm.reset();
+                    // Do not reset the form. Explicitly set all fields to avoid unexpected defaults.
                 planoContaForm.style.display = 'block';
 
                 document.getElementById('plano-conta-id').value = docSnap.id;
@@ -4368,14 +4456,18 @@
                 document.getElementById('plano-conta-codigo-pai').value = data.codigoPai || '';
                 document.getElementById('plano-conta-nivel').value = data.nivel || 0;
                 document.getElementById('plano-conta-tipo').value = data.tipo || 'despesa';
+                document.getElementById('plano-conta-tipo').disabled = false; // Ensure type is editable
 
                 if (data.aceitaLancamento) {
                     document.getElementById('plano-conta-tipo-analitica').checked = true;
                     planoContaAnaliticaFields.classList.remove('hidden');
-                    (data.aplicavelEm || []).forEach(val => {
-                        const checkbox = document.getElementById(`plano-conta-aplicavel-${val}`);
-                        if (checkbox) checkbox.checked = true;
-                    });
+
+                    // Set the checked state from data BEFORE calling the locking logic
+                    const aplicavelEm = data.aplicavelEm || [];
+                    document.getElementById('plano-conta-aplicavel-pagamentos').checked = aplicavelEm.includes('pagamentos');
+                    document.getElementById('plano-conta-aplicavel-recebimentos').checked = aplicavelEm.includes('recebimentos');
+
+                    handleAplicavelEmLogic(data.tipo);
                 } else {
                     document.getElementById('plano-conta-tipo-sintetica').checked = true;
                     planoContaAnaliticaFields.classList.add('hidden');
@@ -4779,16 +4871,25 @@
         document.getElementById('plano-conta-codigo-pai').value = '';
         document.getElementById('plano-conta-nivel').value = '';
         document.getElementById('plano-conta-tipo-sintetica').checked = true;
+
+            // Re-enable fields that might be disabled
+            document.getElementById('plano-conta-tipo').disabled = false;
+            document.getElementById('plano-conta-tipo-analitica').disabled = false;
+            document.getElementById('plano-conta-tipo-sintetica').disabled = false;
     }
 
     if (planoContaFormContainer) {
-        // Hide form initially
         planoContaFormContainer.style.display = 'none';
 
         document.querySelectorAll('input[name="plano-conta-tipo-lancamento"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const isAnalitica = e.target.value === 'true';
                 planoContaAnaliticaFields.classList.toggle('hidden', !isAnalitica);
+                    // When showing the fields, trigger the locking logic
+                    if (isAnalitica) {
+                        const tipoSelecionado = document.getElementById('plano-conta-tipo').value;
+                        handleAplicavelEmLogic(tipoSelecionado);
+                    }
             });
         });
     }
@@ -4823,6 +4924,7 @@
             aceitaLancamento: aceitaLancamento,
             tipo: document.getElementById('plano-conta-tipo').value,
             aplicavelEm: aceitaLancamento ? aplicavelEm : [],
+            inativo: false, // Ensure all new accounts are created as active
         };
 
         try {
