@@ -560,9 +560,11 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             pagamentosSnap.forEach(doc => {
                 if (doc.ref.path.startsWith(`users/${userId}`)) {
                     const data = doc.data();
-                    const month = data.dataTransacao.substring(0, 7);
-                    if (monthlyData[month]) {
-                        monthlyData[month].despesas += data.valorPrincipal || 0;
+                    if (data.dataTransacao) { // Defensive check
+                        const month = data.dataTransacao.substring(0, 7);
+                        if (monthlyData[month]) {
+                            monthlyData[month].despesas += data.valorPrincipal || 0;
+                        }
                     }
                 }
             });
@@ -571,9 +573,11 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             recebimentosSnap.forEach(doc => {
                 if (doc.ref.path.startsWith(`users/${userId}`)) {
                     const data = doc.data();
-                    const month = data.dataTransacao.substring(0, 7);
-                    if (monthlyData[month]) {
-                        monthlyData[month].receitas += data.valorPrincipal || 0;
+                    if (data.dataTransacao) { // Defensive check
+                        const month = data.dataTransacao.substring(0, 7);
+                        if (monthlyData[month]) {
+                            monthlyData[month].receitas += data.valorPrincipal || 0;
+                        }
                     }
                 }
             });
@@ -585,9 +589,11 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             const despesasSnap = await getDocs(despesasQuery);
             despesasSnap.forEach(doc => {
                 const data = doc.data();
-                const month = data.vencimento.substring(0, 7);
-                if (monthlyData[month]) {
-                    monthlyData[month].despesas += data.valorSaldo || 0;
+                if (data.vencimento) { // Defensive check
+                    const month = data.vencimento.substring(0, 7);
+                    if (monthlyData[month]) {
+                        monthlyData[month].despesas += data.valorSaldo || 0;
+                    }
                 }
             });
 
@@ -595,9 +601,12 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             const receitasSnap = await getDocs(receitasQuery);
             receitasSnap.forEach(doc => {
                 const data = doc.data();
-                const month = (data.dataVencimento || data.vencimento).substring(0, 7);
-                if (monthlyData[month]) {
-                    monthlyData[month].receitas += data.saldoPendente || 0;
+                const vencimento = data.dataVencimento || data.vencimento;
+                if (vencimento) { // Defensive check
+                    const month = vencimento.substring(0, 7);
+                    if (monthlyData[month]) {
+                        monthlyData[month].receitas += data.saldoPendente || 0;
+                    }
                 }
             });
         }
