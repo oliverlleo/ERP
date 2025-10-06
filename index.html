@@ -3544,6 +3544,7 @@
         contas
             .filter(conta =>
                 conta.aceitaLancamento &&
+                !conta.inativo && // Ensure inactive accounts are not listed
                 conta.aplicavelEm.includes(aplicavelEmContext) &&
                 allowedTipos.includes(conta.tipo)
             )
