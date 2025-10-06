@@ -3544,7 +3544,7 @@
         contas
             .filter(conta =>
                 conta.aceitaLancamento &&
-                !conta.inativo && // Ensure inactive accounts are not listed
+                conta.inativo !== true && // Correctly handle undefined and false
                 conta.aplicavelEm.includes(aplicavelEmContext) &&
                 allowedTipos.includes(conta.tipo)
             )
@@ -4924,6 +4924,7 @@
             aceitaLancamento: aceitaLancamento,
             tipo: document.getElementById('plano-conta-tipo').value,
             aplicavelEm: aceitaLancamento ? aplicavelEm : [],
+            inativo: false, // Ensure all new accounts are created as active
         };
 
         try {
