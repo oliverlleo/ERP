@@ -200,7 +200,20 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     }
 
     async function calculateSaldoAnterior(startDate, contaId) {
-        let saldo = 0;
+        // 1. Get initial balance sum
+        let saldoAnterior = 0;
+        if (contaId === 'todas') {
+            allContasBancarias.forEach(conta => {
+                saldoAnterior += conta.saldoInicial || 0;
+            });
+        } else {
+            const contaEspecifica = allContasBancarias.find(c => c.id === contaId);
+            if (contaEspecifica) {
+                saldoAnterior = contaEspecifica.saldoInicial || 0;
+            }
+        }
+
+        // 2. Get past transactions
         const [pagamentos, recebimentos, transferencias] = await Promise.all([
             fetchTransactionsEfficiently('despesas', 'pagamentos', null, startDate, false),
             fetchTransactionsEfficiently('receitas', 'recebimentos', null, startDate, false),
@@ -210,10 +223,20 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
         const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
 
+        // 3. Add effect of past transactions to the initial balance
         filteredTransactions.forEach(t => {
-            saldo += (t.entrada || 0) - (t.saida || 0);
+            if (t.type === 'transferencia') {
+                if (contaId !== 'todas') {
+                    if (t.contaDestinoId === contaId) saldoAnterior += t.valor;
+                    if (t.contaOrigemId === contaId) saldoAnterior -= t.valor;
+                }
+                // If 'todas', transfers are ignored as they are internal.
+            } else {
+                saldoAnterior += (t.entrada || 0) - (t.saida || 0);
+            }
         });
-        return saldo;
+
+        return saldoAnterior;
     }
 
     async function fetchCollection(collName, startDate, endDate, inclusive = true) {
