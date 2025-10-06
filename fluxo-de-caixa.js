@@ -527,22 +527,22 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const showRealizado = visaoRealizadoCheckbox.checked;
         const showProjetado = visaoProjetadoCheckbox.checked;
 
-        // 1. Receita x Despesa Mensal
+        // 1. Receita x Despesa Mensal (Reuses a more generic monthly data fetcher)
         renderReceitaDespesaMensalChart(showRealizado, showProjetado);
 
-        // 2. Acumulado Mensal
+        // 2. Acumulado Mensal (Reuses a more generic monthly data fetcher)
         renderCrescimentoAcumuladoChart(showRealizado, showProjetado);
 
-        // 3. Saldo Acumulado (Realizado vs. Projetado)
+        // 3. Saldo Acumulado (Directly uses filtered transactions)
         renderSaldoAcumuladoChart(saldoAnterior, transactions);
 
-        // 4. Análise de Despesas por Categoria ao Longo do Tempo
+        // 4. Análise de Despesas por Categoria ao Longo do Tempo (Requires its own data fetch)
         renderDespesasCategoriaTempoChart();
 
-        // 5. Comparativo de Períodos
+        // 5. Comparativo de Períodos (Requires its own data fetch)
         renderComparativoPeriodosChart(startDateStr, endDateStr);
 
-        // 6 & 7. Top 5 Receitas e Despesas (no período)
+        // 6 & 7. Top 5 Receitas e Despesas (Directly uses filtered transactions)
         renderTop5Charts(transactions);
     }
 
@@ -551,10 +551,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         months.forEach(m => {
             monthlyData[m] = { receitas: 0, despesas: 0 };
         });
-
-        const planoContasMap = new Map();
-        const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
-        planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
 
         // Process Realizado
         if (showRealizado) {
@@ -606,6 +602,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         return monthlyData;
     }
+
 
     async function renderReceitaDespesaMensalChart(showRealizado, showProjetado) {
         const ctx = document.getElementById('receita-despesa-mensal-chart').getContext('2d');
