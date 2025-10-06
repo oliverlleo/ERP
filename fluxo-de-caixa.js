@@ -81,58 +81,59 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
         planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
 
-        // Fetch pending expenses
-        const despesasQuery = query(collection(db, `users/${userId}/despesas`),
-            where('status', 'in', ['Pendente', 'Vencido', 'Pago Parcialmente']),
-            where('vencimento', '>=', startDate),
-            where('vencimento', '<=', endDate)
-        );
+        // Fetch ALL pending expenses and filter in code to avoid composite indexes
+        const despesasQuery = collection(db, `users/${userId}/despesas`);
         const despesasSnap = await getDocs(despesasQuery);
         despesasSnap.forEach(doc => {
             const despesaData = doc.data();
-            const categoria = planoContasMap.get(despesaData.categoriaId);
-            unifiedProjected.push({
-                id: doc.id,
-                isProjected: true,
-                data: despesaData.vencimento,
-                descricao: `(Projetado) ${despesaData.descricao}`,
-                participante: despesaData.favorecidoNome || 'N/A',
-                planoDeConta: categoria ? categoria.nome : 'N/A',
-                dataVencimento: despesaData.vencimento,
-                entrada: 0,
-                saida: despesaData.valorSaldo,
-                juros: 0,
-                desconto: 0,
-                conciliado: false,
-                type: 'despesa_projetada'
-            });
+            const status = despesaData.status || 'Pendente';
+            // Manual filtering
+            if (['Pendente', 'Vencido', 'Pago Parcialmente'].includes(status) && despesaData.vencimento >= startDate && despesaData.vencimento <= endDate) {
+                const categoria = planoContasMap.get(despesaData.categoriaId);
+                unifiedProjected.push({
+                    id: doc.id,
+                    isProjected: true,
+                    data: despesaData.vencimento,
+                    descricao: `(Projetado) ${despesaData.descricao}`,
+                    participante: despesaData.favorecidoNome || 'N/A',
+                    planoDeConta: categoria ? categoria.nome : 'N/A',
+                    dataVencimento: despesaData.vencimento,
+                    entrada: 0,
+                    saida: despesaData.valorSaldo || despesaData.valorOriginal,
+                    juros: 0,
+                    desconto: 0,
+                    conciliado: false,
+                    type: 'despesa_projetada'
+                });
+            }
         });
 
-        // Fetch pending revenues
-        const receitasQuery = query(collection(db, `users/${userId}/receitas`),
-            where('status', 'in', ['Pendente', 'Vencido', 'Recebido Parcialmente']),
-            where('dataVencimento', '>=', startDate),
-            where('dataVencimento', '<=', endDate)
-        );
+        // Fetch ALL pending revenues and filter in code
+        const receitasQuery = collection(db, `users/${userId}/receitas`);
         const receitasSnap = await getDocs(receitasQuery);
         receitasSnap.forEach(doc => {
             const receitaData = doc.data();
-            const categoria = planoContasMap.get(receitaData.categoriaId);
-            unifiedProjected.push({
-                id: doc.id,
-                isProjected: true,
-                data: receitaData.dataVencimento,
-                descricao: `(Projetado) ${receitaData.descricao}`,
-                participante: receitaData.clienteNome || 'N/A',
-                planoDeConta: categoria ? categoria.nome : 'N/A',
-                dataVencimento: receitaData.dataVencimento,
-                entrada: receitaData.saldoPendente,
-                saida: 0,
-                juros: 0,
-                desconto: 0,
-                conciliado: false,
-                type: 'receita_projetada'
-            });
+            const status = receitaData.status || 'Pendente';
+            const dataVencimento = receitaData.dataVencimento || receitaData.vencimento;
+            // Manual filtering
+            if (['Pendente', 'Vencido', 'Recebido Parcialmente'].includes(status) && dataVencimento >= startDate && dataVencimento <= endDate) {
+                const categoria = planoContasMap.get(receitaData.categoriaId);
+                unifiedProjected.push({
+                    id: doc.id,
+                    isProjected: true,
+                    data: dataVencimento,
+                    descricao: `(Projetado) ${receitaData.descricao}`,
+                    participante: receitaData.clienteNome || 'N/A',
+                    planoDeConta: categoria ? categoria.nome : 'N/A',
+                    dataVencimento: dataVencimento,
+                    entrada: receitaData.saldoPendente || receitaData.valorOriginal,
+                    saida: 0,
+                    juros: 0,
+                    desconto: 0,
+                    conciliado: false,
+                    type: 'receita_projetada'
+                });
+            }
         });
 
         return unifiedProjected;
