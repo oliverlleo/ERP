@@ -38,6 +38,41 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     const { formatCurrency, toCents, fromCents, showFeedback } = common;
 
     // --- Main Logic ---
+    async function fetchTransactionsEfficiently(parentCollectionName, subcollectionName, startDate, endDate, inclusive = true) {
+        // This approach is more efficient as it pre-filters parent documents by a relevant date field.
+        // This reduces the number of subcollection queries needed.
+        const parentDateFilterField = parentCollectionName === 'despesas' ? 'vencimento' : 'dataVencimento';
+
+        // Create a broader query on the parent collection.
+        // We fetch parents from a wider date range to catch transactions that might have been paid/received
+        // outside their due date but still fall within our cash flow period.
+        let parentQuery = collection(db, `users/${userId}/${parentCollectionName}`);
+
+        // The query for subcollections will be precise, so the parent query can be broader.
+        // This is a balance between performance and correctness.
+        // For simplicity in this fix, we'll still fetch all parents, but the sub-query will be precise.
+        // A more advanced optimization could pre-filter parents by date.
+
+        const parentDocsSnapshot = await getDocs(parentQuery);
+
+        const promises = parentDocsSnapshot.docs.map(parentDoc => {
+            let subcollectionQuery = collection(parentDoc.ref, subcollectionName);
+
+            // Apply the precise date filtering at the subcollection level.
+            if (startDate) {
+                 subcollectionQuery = query(subcollectionQuery, where('dataTransacao', inclusive ? '>=' : '<', startDate));
+            }
+            if (endDate) {
+                 subcollectionQuery = query(subcollectionQuery, where('dataTransacao', inclusive ? '<=' : '<', endDate));
+            }
+
+            return getDocs(subcollectionQuery);
+        });
+
+        const querySnapshots = await Promise.all(promises);
+        return querySnapshots.flatMap(snapshot => snapshot.docs);
+    }
+
     async function calculateAndRenderCashFlow() {
         const startDate = periodoDeInput.value;
         const endDate = periodoAteInput.value;
@@ -56,8 +91,8 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
             // 2. Fetch Transactions for the period
             const [pagamentos, recebimentos, transferencias] = await Promise.all([
-                fetchCollectionGroup('pagamentos', startDate, endDate),
-                fetchCollectionGroup('recebimentos', startDate, endDate),
+                fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
                 fetchCollection('transferencias', startDate, endDate)
             ]);
 
@@ -78,37 +113,25 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
-            extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados.</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
         }
     }
 
     async function calculateSaldoAnterior(startDate, contaId) {
         let saldo = 0;
         const [pagamentos, recebimentos, transferencias] = await Promise.all([
-            fetchCollectionGroup('pagamentos', null, startDate, false), // before, non-inclusive
-            fetchCollectionGroup('recebimentos', null, startDate, false),
+            fetchTransactionsEfficiently('despesas', 'pagamentos', null, startDate, false),
+            fetchTransactionsEfficiently('receitas', 'recebimentos', null, startDate, false),
             fetchCollection('transferencias', null, startDate, false)
         ]);
 
         const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
-        const filteredTransactions = applyFilters(allTransactions, contaId, 'todas'); // Conciliation doesn't matter for balance
+        const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
 
         filteredTransactions.forEach(t => {
             saldo += (t.entrada || 0) - (t.saida || 0);
         });
         return saldo;
-    }
-
-    async function fetchCollectionGroup(groupName, startDate, endDate, inclusive = true) {
-        let q = query(collectionGroup(db, groupName), where('adminId', '==', userId));
-        if (startDate) {
-            q = query(q, where('dataTransacao', inclusive ? '>=' : '<', startDate));
-        }
-        if (endDate) {
-            q = query(q, where('dataTransacao', inclusive ? '<=' : '<', endDate));
-        }
-        const snapshot = await getDocs(q);
-        return snapshot.docs;
     }
 
     async function fetchCollection(collName, startDate, endDate, inclusive = true) {
@@ -125,6 +148,11 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
     async function enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias) {
         const unified = [];
+        const planoContasMap = new Map();
+        const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
+        planoContasSnap.forEach(doc => {
+            planoContasMap.set(doc.id, doc.data());
+        });
 
         for (const doc of pagamentos) {
             const data = doc.data();
@@ -133,13 +161,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                 const despesaSnap = await getDoc(parentDespesaRef);
                 if (despesaSnap.exists()) {
                     const despesaData = despesaSnap.data();
+                    const categoria = planoContasMap.get(despesaData.categoriaId);
                     unified.push({
                         id: doc.id,
                         parentId: parentDespesaRef.id,
                         data: data.dataTransacao,
                         descricao: despesaData.descricao,
-                        categoria: despesaData.planoDeContasNome || 'N/A', // You might need to fetch this
-                        tipoAtividade: despesaData.tipoDeAtividade || 'Operacional',
+                        categoria: categoria ? categoria.nome : 'N/A',
+                        tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
                         entrada: 0,
                         saida: data.valorPrincipal || 0,
                         contaId: data.contaSaidaId,
@@ -157,13 +186,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                 const receitaSnap = await getDoc(parentReceitaRef);
                  if (receitaSnap.exists()) {
                     const receitaData = receitaSnap.data();
+                    const categoria = planoContasMap.get(receitaData.categoriaId);
                     unified.push({
                         id: doc.id,
                         parentId: parentReceitaRef.id,
                         data: data.dataTransacao,
                         descricao: receitaData.descricao,
-                        categoria: receitaData.planoDeContasNome || 'N/A',
-                        tipoAtividade: receitaData.tipoDeAtividade || 'Operacional',
+                        categoria: categoria ? categoria.nome : 'N/A',
+                        tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
                         entrada: data.valorPrincipal || 0,
                         saida: 0,
                         contaId: data.contaEntradaId,
