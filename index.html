@@ -1037,8 +1037,8 @@
                                             <input type="text" id="conta-bancaria-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="Ex: Banco Itaú C/C 1234-5">
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700" for="conta-bancaria-saldo-inicial">Saldo Inicial</label>
-                                            <input type="text" id="conta-bancaria-saldo-inicial" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="R$ 0,00">
+                                            <label class="block text-sm font-medium text-gray-700" for="conta-bancaria-saldo-inicial">Saldo Inicial (R$)</label>
+                                            <input type="text" id="conta-bancaria-saldo-inicial" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="0,00">
                                         </div>
                                     </div>
                                     <div id="conta-bancaria-form-feedback" class="text-sm mt-4"></div>
@@ -1053,6 +1053,7 @@
                                             <thead class="bg-gray-50">
                                                 <tr>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Conta</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Inicial</th>
                                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                                 </tr>
                                             </thead>
@@ -3569,7 +3570,7 @@
             contasBancariasTableBody.innerHTML = '';
              if (querySnapshot.empty) {
                 const tr = contasBancariasTableBody.insertRow();
-                tr.innerHTML = `<td colspan="2" class="px-6 py-4 text-center text-gray-500">Nenhuma conta cadastrada.</td>`;
+                tr.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhuma conta cadastrada.</td>`;
             } else {
                 querySnapshot.forEach(doc => {
                     const data = doc.data();
@@ -3577,6 +3578,7 @@
                     tr.setAttribute('data-id', doc.id);
                     tr.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${data.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(data.saldoInicial || 0)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button class="edit-conta-bancaria-btn text-indigo-600 hover:text-indigo-900 mr-4" data-id="${doc.id}">Editar</button>
                             <button class="delete-btn text-red-600 hover:text-red-900" data-collection="contasBancarias" data-id="${doc.id}">Excluir</button>
@@ -3930,16 +3932,29 @@
         // The main call is now updateAllDashboardViews() in the listeners.
     }
 
+    async function getConsolidatedInitialBalance(userId) {
+        // Fetches all bank accounts and sums their initial balances.
+        const contasBancariasQuery = query(collection(db, 'users', userId, 'contasBancarias'));
+        const contasSnap = await getDocs(contasBancariasQuery);
+        let saldoInicialTotal = 0;
+        contasSnap.forEach(doc => {
+            saldoInicialTotal += doc.data().saldoInicial || 0;
+        });
+        return saldoInicialTotal;
+    }
+
     async function updateAllDashboardViews() {
         try {
             if (!effectiveUserId) return;
 
+            // Fetch all necessary data concurrently
             const despesasQuery = query(collection(db, 'users', effectiveUserId, 'despesas'));
             const receitasQuery = query(collection(db, 'users', effectiveUserId, 'receitas'));
 
-            const [despesasSnap, receitasSnap] = await Promise.all([
+            const [despesasSnap, receitasSnap, saldoInicialTotal] = await Promise.all([
                 getDocs(despesasQuery),
-                getDocs(receitasQuery)
+                getDocs(receitasQuery),
+                getConsolidatedInitialBalance(effectiveUserId)
             ]);
 
             const allDespesas = despesasSnap.docs;
@@ -3990,6 +4005,7 @@
                             if (transacaoDate.getMonth() === currentMonth && transacaoDate.getFullYear() === currentYear) {
                                 pagarPagoMes += pagoData.valorPrincipal || 0;
                             }
+                            // This is "valor pago de fato"
                             movSaidas += pagoData.valorPrincipal || 0;
                         }
                     }
@@ -4030,22 +4046,17 @@
                             if (transacaoDate.getMonth() === currentMonth && transacaoDate.getFullYear() === currentYear) {
                                receberRecebidoMes += recebidoData.valorPrincipal || 0;
                             }
+                            // This is "valor recebido de fato"
                             movEntradas += recebidoData.valorPrincipal || 0;
                         }
                     }
                 });
             });
 
-            // --- Fetch Bank Accounts for Initial Balance ---
-            const contasBancariasQuery = query(collection(db, 'users', effectiveUserId, 'contasBancarias'));
-            const contasSnap = await getDocs(contasBancariasQuery);
-            let saldoInicialTotal = 0;
-            contasSnap.forEach(doc => {
-                saldoInicialTotal += doc.data().saldoInicial || 0;
-            });
-
-            // Calculate final balances
+            // --- Calculate final balances using the initial balance ---
+            // As per user request: Saldo em Conta = Saldo Inicial + Valor Recebido (real) - Valor Pago (real)
             const saldoFinalMovimentacoes = saldoInicialTotal + movEntradas - movSaidas;
+            // The provisions balance also needs to consider the initial balance.
             const saldoFinalProvisoes = saldoInicialTotal + provisaoAReceber - provisaoAPagar;
 
             // --- Update UI ---
