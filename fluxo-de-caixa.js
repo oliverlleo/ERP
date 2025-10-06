@@ -154,7 +154,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         if (!showRealizado && !showProjetado) {
             extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
             renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
-            renderCharts([]);
+            renderCharts([], { saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0 }, { previousEntradas: 0, previousSaidas: 0 });
             renderDRE([]);
             return;
         }
