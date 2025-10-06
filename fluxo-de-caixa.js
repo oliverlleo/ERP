@@ -167,10 +167,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                         parentId: parentDespesaRef.id,
                         data: data.dataTransacao,
                         descricao: despesaData.descricao,
-                        categoria: categoria ? categoria.nome : 'N/A',
+                        participante: despesaData.favorecidoNome || 'N/A',
+                        planoDeConta: categoria ? categoria.nome : 'N/A',
+                        dataVencimento: despesaData.vencimento,
                         tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
                         entrada: 0,
                         saida: data.valorPrincipal || 0,
+                        juros: data.jurosPagos || 0,
+                        desconto: data.descontosAplicados || 0,
                         contaId: data.contaSaidaId,
                         conciliado: data.conciliado || false,
                         type: 'pagamento'
@@ -192,10 +196,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                         parentId: parentReceitaRef.id,
                         data: data.dataTransacao,
                         descricao: receitaData.descricao,
-                        categoria: categoria ? categoria.nome : 'N/A',
+                        participante: receitaData.clienteNome || 'N/A',
+                        planoDeConta: categoria ? categoria.nome : 'N/A',
+                        dataVencimento: receitaData.dataVencimento,
                         tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
                         entrada: data.valorPrincipal || 0,
                         saida: 0,
+                        juros: data.jurosRecebidos || 0,
+                        desconto: data.descontosConcedidos || 0,
                         contaId: data.contaEntradaId,
                         conciliado: data.conciliado || false,
                         type: 'recebimento'
@@ -210,12 +218,16 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                 id: doc.id,
                 data: data.dataTransacao,
                 descricao: `Transferência de ${data.contaOrigemNome} para ${data.contaDestinoNome}`,
-                categoria: 'Transferência',
+                participante: 'Interno',
+                planoDeConta: 'Transferência',
+                dataVencimento: data.dataTransacao, // Vencimento é a própria data
                 tipoAtividade: 'N/A',
-                valor: data.valor,
+                valor: data.valor, // Valor único para ser tratado na renderização
+                juros: 0,
+                desconto: 0,
                 contaOrigemId: data.contaOrigemId,
                 contaDestinoId: data.contaDestinoId,
-                conciliado: data.conciliado || false, // Assuming transfers can be reconciled
+                conciliado: data.conciliado || false,
                 type: 'transferencia'
             });
         }
@@ -283,7 +295,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     function renderExtrato(transactions, saldoInicial) {
         extratoTableBody.innerHTML = '';
         if (transactions.length === 0) {
-            extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Nenhuma transação encontrada para os filtros selecionados.</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Nenhuma transação encontrada para os filtros selecionados.</td></tr>`;
             return;
         }
 
@@ -299,50 +311,37 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         Object.keys(groupedByDay).sort().forEach(day => {
             const dayTransactions = groupedByDay[day];
-            let saldoDia = 0;
 
             dayTransactions.forEach(t => {
                 const tr = document.createElement('tr');
-                let entrada = 0;
-                let saida = 0;
+                let entrada = t.entrada || 0;
+                let saida = t.saida || 0;
 
                 if (t.type === 'transferencia') {
-                    if (contaFiltrada === 'todas') {
-                        // Don't show transfers in the main list for 'All Accounts'
-                        return;
-                    } else if (t.contaDestinoId === contaFiltrada) {
-                        entrada = t.valor;
-                    } else if (t.contaOrigemId === contaFiltrada) {
-                        saida = t.valor;
-                    } else {
-                        return; // Not related to the filtered account
-                    }
-                } else {
-                    entrada = t.entrada;
-                    saida = t.saida;
+                    if (contaFiltrada === 'todas') return; // Do not show on "All Accounts"
+                    if (t.contaDestinoId === contaFiltrada) entrada = t.valor;
+                    else if (t.contaOrigemId === contaFiltrada) saida = t.valor;
+                    else return; // Not related to this account
                 }
 
-                saldoAcumulado += entrada - saida;
-                saldoDia += entrada - saida;
+                saldoAcumulado += (entrada - saida);
 
                 tr.innerHTML = `
                     <td class="p-4"><input type="checkbox" class="fluxo-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${t.id}" data-parent-id="${t.parentId}" data-type="${t.type}" ${t.conciliado ? 'checked' : ''}></td>
-                    <td class="px-6 py-3 text-sm text-gray-700">${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                    <td class="px-6 py-3 text-sm text-gray-700">${t.descricao}</td>
-                    <td class="px-6 py-3 text-sm text-gray-500">${t.categoria}</td>
-                    <td class="px-6 py-3 text-sm text-right text-green-600">${entrada > 0 ? formatCurrency(entrada) : ''}</td>
-                    <td class="px-6 py-3 text-sm text-right text-red-600">${saida > 0 ? formatCurrency(saida) : ''}</td>
-                    <td class="px-6 py-3 text-sm text-right font-medium"></td>
+                    <td class="px-4 py-2 text-sm text-gray-700">${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                    <td class="px-4 py-2 text-sm text-gray-800">${t.descricao}</td>
+                    <td class="px-4 py-2 text-sm text-gray-600">${t.participante}</td>
+                    <td class="px-4 py-2 text-sm text-gray-600">${t.planoDeConta}</td>
+                    <td class="px-4 py-2 text-sm text-gray-600">${new Date(t.dataVencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                    <td class="px-4 py-2 text-sm text-right text-green-600">${entrada > 0 ? formatCurrency(entrada) : ''}</td>
+                    <td class="px-4 py-2 text-sm text-right text-red-600">${saida > 0 ? formatCurrency(saida) : ''}</td>
+                    <td class="px-4 py-2 text-sm text-right text-orange-600">${t.juros > 0 ? formatCurrency(t.juros) : ''}</td>
+                    <td class="px-4 py-2 text-sm text-right text-yellow-600">${t.desconto > 0 ? formatCurrency(t.desconto) : ''}</td>
+                    <td class="px-4 py-2 text-sm text-right font-medium">${formatCurrency(saldoAcumulado)}</td>
                 `;
                 if(t.conciliado) tr.classList.add('bg-green-50');
                 extratoTableBody.appendChild(tr);
             });
-
-            // Add daily balance row
-            const lastRow = extratoTableBody.querySelector('tr:last-child');
-            if(lastRow) {
-                lastRow.querySelector('td:last-child').textContent = formatCurrency(saldoAcumulado);
-            }
         });
     }
 
