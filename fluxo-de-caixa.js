@@ -521,28 +521,38 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         chartInstances = {};
     }
 
+    // --- Chart Rendering ---
+    let chartInstances = {};
+
+    function destroyAllCharts() {
+        Object.values(chartInstances).forEach(chart => {
+            if (chart) chart.destroy();
+        });
+        chartInstances = {};
+    }
+
     function renderCharts(transactions, saldoAnterior, startDateStr, endDateStr) {
         destroyAllCharts();
 
         const showRealizado = visaoRealizadoCheckbox.checked;
         const showProjetado = visaoProjetadoCheckbox.checked;
 
-        // 1. Receita x Despesa Mensal (Reuses a more generic monthly data fetcher)
+        // 1. Receita x Despesa Mensal
         renderReceitaDespesaMensalChart(showRealizado, showProjetado);
 
-        // 2. Acumulado Mensal (Reuses a more generic monthly data fetcher)
+        // 2. Acumulado Mensal
         renderCrescimentoAcumuladoChart(showRealizado, showProjetado);
 
-        // 3. Saldo Acumulado (Directly uses filtered transactions)
+        // 3. Saldo Acumulado (Realizado vs. Projetado)
         renderSaldoAcumuladoChart(saldoAnterior, transactions);
 
-        // 4. Análise de Despesas por Categoria ao Longo do Tempo (Requires its own data fetch)
+        // 4. Análise de Despesas por Categoria ao Longo do Tempo
         renderDespesasCategoriaTempoChart();
 
-        // 5. Comparativo de Períodos (Requires its own data fetch)
+        // 5. Comparativo de Períodos
         renderComparativoPeriodosChart(startDateStr, endDateStr);
 
-        // 6 & 7. Top 5 Receitas e Despesas (Directly uses filtered transactions)
+        // 6 & 7. Top 5 Receitas e Despesas (no período)
         renderTop5Charts(transactions);
     }
 
@@ -601,6 +611,308 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         }
 
         return monthlyData;
+    }
+
+    async function renderReceitaDespesaMensalChart(showRealizado, showProjetado) {
+        const ctx = document.getElementById('receita-despesa-mensal-chart')?.getContext('2d');
+        if (!ctx) return;
+        const today = new Date();
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            months.push(d.toISOString().substring(0, 7));
+        }
+
+        const monthlyData = await getMonthlyData(months, showRealizado, showProjetado);
+
+        chartInstances.receitaDespesa = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months.map(m => new Date(m + '-02').toLocaleString('pt-BR', { month: 'short', year: '2-digit' })),
+                datasets: [{
+                    label: 'Receitas',
+                    data: months.map(m => (monthlyData[m]?.receitas || 0) / 100),
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                }, {
+                    label: 'Despesas',
+                    data: months.map(m => (monthlyData[m]?.despesas || 0) / 100),
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value * 100) } } }
+            }
+        });
+    }
+
+    async function renderCrescimentoAcumuladoChart(showRealizado, showProjetado) {
+        const ctx = document.getElementById('crescimento-acumulado-chart')?.getContext('2d');
+        if (!ctx) return;
+        const today = new Date();
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            months.push(d.toISOString().substring(0, 7));
+        }
+
+        const monthlyData = await getMonthlyData(months, showRealizado, showProjetado);
+
+        let accReceitas = 0;
+        let accDespesas = 0;
+        const receitasAcumuladas = months.map(m => accReceitas += (monthlyData[m]?.receitas || 0));
+        const despesasAcumuladas = months.map(m => accDespesas += (monthlyData[m]?.despesas || 0));
+
+        chartInstances.crescimentoAcumulado = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months.map(m => new Date(m + '-02').toLocaleString('pt-BR', { month: 'short', year: '2-digit' })),
+                datasets: [{
+                    label: 'Receita Acumulada',
+                    data: receitasAcumuladas.map(v => v / 100),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1,
+                    fill: false
+                }, {
+                    label: 'Despesa Acumulada',
+                    data: despesasAcumuladas.map(v => v / 100),
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { ticks: { callback: value => formatCurrency(value * 100) } } }
+            }
+        });
+    }
+
+    function renderSaldoAcumuladoChart(saldoAnterior, transactions) {
+        const ctx = document.getElementById('saldo-acumulado-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        const dailySummary = transactions.reduce((acc, t) => {
+            const day = t.data;
+            if (!acc[day]) {
+                acc[day] = { realizado: 0, projetado: 0 };
+            }
+            const valor = (t.entrada || 0) - (t.saida || 0);
+            if (t.isProjected) {
+                acc[day].projetado += valor;
+            } else {
+                acc[day].realizado += valor;
+            }
+            return acc;
+        }, {});
+
+        const sortedDays = Object.keys(dailySummary).sort();
+        let saldoRealizado = saldoAnterior;
+        let saldoProjetado = saldoAnterior;
+        const labels = [];
+        const dataRealizadoPoints = [];
+        const dataProjetadoPoints = [];
+
+        sortedDays.forEach(day => {
+            labels.push(new Date(day + 'T00:00:00').toLocaleDateString('pt-BR'));
+            saldoRealizado += dailySummary[day].realizado;
+            dataRealizadoPoints.push(saldoRealizado / 100);
+
+            saldoProjetado += dailySummary[day].realizado + dailySummary[day].projetado;
+            dataProjetadoPoints.push(saldoProjetado / 100);
+        });
+
+        chartInstances.saldoAcumulado = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Saldo Realizado',
+                    data: dataRealizadoPoints,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    fill: false,
+                }, {
+                    label: 'Saldo Projetado',
+                    data: dataProjetadoPoints,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderDash: [5, 5],
+                    fill: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { ticks: { callback: value => formatCurrency(value * 100) } } }
+            }
+        });
+    }
+
+    async function renderDespesasCategoriaTempoChart() {
+        const ctx = document.getElementById('despesas-por-categoria-tempo-chart')?.getContext('2d');
+        if (!ctx) return;
+        const today = new Date();
+        const months = [];
+        for (let i = 5; i >= 0; i--) { // Last 6 months
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            months.push(d.toISOString().substring(0, 7));
+        }
+
+        const pagamentosSnap = await getDocs(collectionGroup(db, 'pagamentos'));
+        const despesasMap = new Map();
+        const despesasSnap = await getDocs(collection(db, `users/${userId}/despesas`));
+        despesasSnap.forEach(doc => despesasMap.set(doc.id, doc.data()));
+
+        const planoContasMap = new Map();
+        const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
+        planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
+
+        const monthlyCategoryData = {};
+        const allCategories = new Set();
+
+        pagamentosSnap.forEach(doc => {
+            if (doc.ref.path.startsWith(`users/${userId}`)) {
+                const data = doc.data();
+                const month = data.dataTransacao.substring(0, 7);
+                if (months.includes(month)) {
+                    const despesa = despesasMap.get(doc.ref.parent.parent.id);
+                    if (despesa) {
+                        const categoriaDoc = planoContasMap.get(despesa.categoriaId);
+                        const categoriaNome = categoriaDoc ? categoriaDoc.nome : 'Sem Categoria';
+                        allCategories.add(categoriaNome);
+                        if (!monthlyCategoryData[month]) monthlyCategoryData[month] = {};
+                        if (!monthlyCategoryData[month][categoriaNome]) monthlyCategoryData[month][categoriaNome] = 0;
+                        monthlyCategoryData[month][categoriaNome] += data.valorPrincipal || 0;
+                    }
+                }
+            }
+        });
+
+        const datasets = Array.from(allCategories).map((cat, index) => {
+            const colors = ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)'];
+            return {
+                label: cat,
+                data: months.map(m => (monthlyCategoryData[m]?.[cat] || 0) / 100),
+                backgroundColor: colors[index % colors.length],
+            };
+        });
+
+        chartInstances.despesasCategoriaTempo = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months.map(m => new Date(m + '-02').toLocaleString('pt-BR', { month: 'short', year: '2-digit' })),
+                datasets: datasets,
+            },
+            options: {
+                responsive: true,
+                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: value => formatCurrency(value * 100) } } }
+            }
+        });
+    }
+
+    async function renderComparativoPeriodosChart(startDateStr, endDateStr) {
+        const ctx = document.getElementById('comparativo-periodos-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        const start = new Date(startDateStr + 'T00:00:00');
+        const end = new Date(endDateStr + 'T00:00:00');
+        const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+        const prevStart = new Date(start.getTime());
+        prevStart.setDate(prevStart.getDate() - diffDays);
+        const prevEnd = new Date(start.getTime());
+        prevEnd.setDate(prevEnd.getDate() - 1);
+
+        const prevStartStr = prevStart.toISOString().split('T')[0];
+        const prevEndStr = prevEnd.toISOString().split('T')[0];
+
+        const [currentPagamentos, currentRecebimentos] = await Promise.all([
+             getDocs(query(collectionGroup(db, 'pagamentos'), where('dataTransacao', '>=', startDateStr), where('dataTransacao', '<=', endDateStr))),
+             getDocs(query(collectionGroup(db, 'recebimentos'), where('dataTransacao', '>=', startDateStr), where('dataTransacao', '<=', endDateStr)))
+        ]);
+        const [prevPagamentos, prevRecebimentos] = await Promise.all([
+             getDocs(query(collectionGroup(db, 'pagamentos'), where('dataTransacao', '>=', prevStartStr), where('dataTransacao', '<=', prevEndStr))),
+             getDocs(query(collectionGroup(db, 'recebimentos'), where('dataTransacao', '>=', prevStartStr), where('dataTransacao', '<=', prevEndStr)))
+        ]);
+
+        const sum = (snap) => snap.docs.reduce((acc, doc) => doc.ref.path.startsWith(`users/${userId}`) ? acc + (doc.data().valorPrincipal || 0) : acc, 0);
+
+        const currentEntradas = sum(currentRecebimentos);
+        const currentSaidas = sum(currentPagamentos);
+        const prevEntradas = sum(prevRecebimentos);
+        const prevSaidas = sum(prevPagamentos);
+
+        chartInstances.comparativoPeriodos = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Entradas', 'Saídas'],
+                datasets: [{
+                    label: 'Período Atual',
+                    data: [currentEntradas / 100, currentSaidas / 100],
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                }, {
+                    label: 'Período Anterior',
+                    data: [prevEntradas / 100, prevSaidas / 100],
+                    backgroundColor: 'rgba(201, 203, 207, 0.7)',
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value * 100) } } }
+            }
+        });
+    }
+
+    function renderTop5Charts(transactions) {
+        const topDespesasCtx = document.getElementById('top-despesas-chart')?.getContext('2d');
+        const topReceitasCtx = document.getElementById('top-receitas-chart')?.getContext('2d');
+        if (!topDespesasCtx || !topReceitasCtx) return;
+
+        const despesaData = transactions.filter(t => t.saida > 0 && !t.isProjected).reduce((acc, t) => {
+            const categoria = t.planoDeConta || 'Sem Categoria';
+            if (!acc[categoria]) acc[categoria] = 0;
+            acc[categoria] += t.saida;
+            return acc;
+        }, {});
+
+        const receitaData = transactions.filter(t => t.entrada > 0 && !t.isProjected).reduce((acc, t) => {
+            const categoria = t.planoDeConta || 'Sem Categoria';
+            if (!acc[categoria]) acc[categoria] = 0;
+            acc[categoria] += t.entrada;
+            return acc;
+        }, {});
+
+        const sortAndSlice = (data) => Object.entries(data).sort(([, a], [, b]) => b - a).slice(0, 5);
+
+        const top5Despesas = sortAndSlice(despesaData);
+        const top5Receitas = sortAndSlice(receitaData);
+
+        const colorsDespesa = ['#FF6384', '#FF9F40', '#FFCD56', '#C9CBCF', '#4BC0C0'];
+        const colorsReceita = ['#36A2EB', '#4BC0C0', '#9966FF', '#FFCD56', '#FF9F40'];
+
+        chartInstances.topDespesas = new Chart(topDespesasCtx, {
+            type: 'bar',
+            data: {
+                labels: top5Despesas.map(item => item[0]),
+                datasets: [{
+                    label: 'Valor',
+                    data: top5Despesas.map(item => item[1] / 100),
+                    backgroundColor: colorsDespesa,
+                }]
+            },
+            options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: value => formatCurrency(value * 100) } } } }
+        });
+
+        chartInstances.topReceitas = new Chart(topReceitasCtx, {
+            type: 'bar',
+            data: {
+                labels: top5Receitas.map(item => item[0]),
+                datasets: [{
+                    label: 'Valor',
+                    data: top5Receitas.map(item => item[1] / 100),
+                    backgroundColor: colorsReceita,
+                }]
+            },
+            options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: value => formatCurrency(value * 100) } } } }
+        });
     }
 
 
