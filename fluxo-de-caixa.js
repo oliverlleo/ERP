@@ -147,7 +147,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const showProjetado = visaoProjetadoCheckbox.checked;
 
         if (!startDate || !endDate) {
-            extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Por favor, selecione um período para começar.</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Por favor, selecione um período para começar.</td></tr>`;
             return;
         }
         if (!showRealizado && !showProjetado) {
@@ -158,7 +158,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             return;
         }
 
-        extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
+        extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
 
         try {
             const saldoAnterior = await calculateSaldoAnterior(startDate, contaId);
@@ -195,7 +195,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
-            extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
         }
     }
 
@@ -344,7 +344,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         let totalEntradas = 0;
         let totalSaidas = 0;
 
-        transactions.forEach(t => {
+        // KPIs should only reflect REALIZED transactions
+        const realizedTransactions = transactions.filter(t => !t.isProjected);
+
+        realizedTransactions.forEach(t => {
             if (t.type === 'transferencia') {
                 // Only count in KPIs if a specific account is selected
                 if (contaId !== 'todas') {
@@ -381,49 +384,44 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             return;
         }
 
-        const groupedByDay = transactions.reduce((acc, t) => {
-            const day = t.data;
-            if (!acc[day]) acc[day] = [];
-            acc[day].push(t);
-            return acc;
-        }, {});
+        const showRealizado = visaoRealizadoCheckbox.checked;
+        const showProjetado = visaoProjetadoCheckbox.checked;
+        const showBoth = showRealizado && showProjetado;
 
         let saldoAcumulado = saldoInicial;
         const contaFiltrada = contaBancariaSelect.value;
 
-        Object.keys(groupedByDay).sort().forEach(day => {
-            const dayTransactions = groupedByDay[day];
+        transactions.forEach(t => {
+            const tr = document.createElement('tr');
+            let entrada = t.entrada || 0;
+            let saida = t.saida || 0;
 
-            dayTransactions.forEach(t => {
-                const tr = document.createElement('tr');
-                let entrada = t.entrada || 0;
-                let saida = t.saida || 0;
+            if (t.type === 'transferencia') {
+                if (contaFiltrada === 'todas') return;
+                if (t.contaDestinoId === contaFiltrada) entrada = t.valor;
+                else if (t.contaOrigemId === contaFiltrada) saida = t.valor;
+                else return;
+            }
 
-                if (t.type === 'transferencia') {
-                    if (contaFiltrada === 'todas') return; // Do not show on "All Accounts"
-                    if (t.contaDestinoId === contaFiltrada) entrada = t.valor;
-                    else if (t.contaOrigemId === contaFiltrada) saida = t.valor;
-                    else return; // Not related to this account
-                }
+            saldoAcumulado += (entrada - saida);
 
-                saldoAcumulado += (entrada - saida);
+            const rowClass = showBoth && t.isProjected ? 'bg-yellow-50' : (t.conciliado ? 'bg-green-50' : 'bg-white');
+            tr.className = rowClass;
 
-                tr.innerHTML = `
-                    <td class="p-4"><input type="checkbox" class="fluxo-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${t.id}" data-parent-id="${t.parentId}" data-type="${t.type}" ${t.conciliado ? 'checked' : ''}></td>
-                    <td class="px-4 py-2 text-sm text-gray-700">${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">${t.descricao}</td>
-                    <td class="px-4 py-2 text-sm text-gray-600">${t.participante}</td>
-                    <td class="px-4 py-2 text-sm text-gray-600">${t.planoDeConta}</td>
-                    <td class="px-4 py-2 text-sm text-gray-600">${new Date(t.dataVencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                    <td class="px-4 py-2 text-sm text-right text-green-600">${entrada > 0 ? formatCurrency(entrada) : ''}</td>
-                    <td class="px-4 py-2 text-sm text-right text-red-600">${saida > 0 ? formatCurrency(saida) : ''}</td>
-                    <td class="px-4 py-2 text-sm text-right text-orange-600">${t.juros > 0 ? formatCurrency(t.juros) : ''}</td>
-                    <td class="px-4 py-2 text-sm text-right text-yellow-600">${t.desconto > 0 ? formatCurrency(t.desconto) : ''}</td>
-                    <td class="px-4 py-2 text-sm text-right font-medium">${formatCurrency(saldoAcumulado)}</td>
-                `;
-                if(t.conciliado) tr.classList.add('bg-green-50');
-                extratoTableBody.appendChild(tr);
-            });
+            tr.innerHTML = `
+                <td class="p-4"><input type="checkbox" class="fluxo-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${t.id}" data-parent-id="${t.parentId}" data-type="${t.type}" ${t.conciliado ? 'checked' : ''} ${t.isProjected ? 'disabled' : ''}></td>
+                <td class="px-4 py-2 text-sm text-gray-700">${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-4 py-2 text-sm text-gray-800">${t.descricao}</td>
+                <td class="px-4 py-2 text-sm text-gray-600">${t.participante}</td>
+                <td class="px-4 py-2 text-sm text-gray-600">${t.planoDeConta}</td>
+                <td class="px-4 py-2 text-sm text-gray-600">${new Date(t.dataVencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-4 py-2 text-sm text-right ${t.isProjected ? 'text-blue-500' : 'text-green-600'}">${entrada > 0 ? formatCurrency(entrada) : ''}</td>
+                <td class="px-4 py-2 text-sm text-right ${t.isProjected ? 'text-blue-500' : 'text-red-600'}">${saida > 0 ? formatCurrency(saida) : ''}</td>
+                <td class="px-4 py-2 text-sm text-right text-orange-600">${t.juros > 0 ? formatCurrency(t.juros) : ''}</td>
+                <td class="px-4 py-2 text-sm text-right text-yellow-600">${t.desconto > 0 ? formatCurrency(t.desconto) : ''}</td>
+                <td class="px-4 py-2 text-sm text-right font-medium">${formatCurrency(saldoAcumulado)}</td>
+            `;
+            extratoTableBody.appendChild(tr);
         });
     }
 
@@ -709,6 +707,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             activeConciliacaoFilter = e.target.dataset.status;
             calculateAndRenderCashFlow();
         }
+    });
+
+    [visaoRealizadoCheckbox, visaoProjetadoCheckbox].forEach(cb => {
+        cb.addEventListener('change', calculateAndRenderCashFlow);
     });
 
     extratoTableBody.addEventListener('change', async (e) => {
