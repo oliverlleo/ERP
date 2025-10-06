@@ -3226,9 +3226,6 @@
             const pagamentosCheckbox = document.getElementById('plano-conta-aplicavel-pagamentos');
             const recebimentosCheckbox = document.getElementById('plano-conta-aplicavel-recebimentos');
 
-            pagamentosCheckbox.disabled = false;
-            recebimentosCheckbox.disabled = false;
-
             if (tipo === 'receita') {
                 pagamentosCheckbox.checked = false;
                 recebimentosCheckbox.checked = true;
@@ -3239,9 +3236,9 @@
                 recebimentosCheckbox.checked = false;
                 pagamentosCheckbox.disabled = true;
                 recebimentosCheckbox.disabled = true;
-            } else {
-                pagamentosCheckbox.checked = false;
-                recebimentosCheckbox.checked = false;
+            } else { // For 'investimento', just ensure they are enabled. Checked state is handled by caller.
+                pagamentosCheckbox.disabled = false;
+                recebimentosCheckbox.disabled = false;
             }
         }
 
@@ -3252,6 +3249,13 @@
             }
 
             const tipoSelecionado = tipoSelect.value;
+
+            // When changing type on a new form, if we switch to 'investimento', reset the checkboxes
+            if (tipoSelecionado === 'investimento') {
+                document.getElementById('plano-conta-aplicavel-pagamentos').checked = false;
+                document.getElementById('plano-conta-aplicavel-recebimentos').checked = false;
+            }
+
             handleAplicavelEmLogic(tipoSelecionado);
 
             const isEditing = document.getElementById('plano-conta-id').value;
@@ -4451,6 +4455,12 @@
                 if (data.aceitaLancamento) {
                     document.getElementById('plano-conta-tipo-analitica').checked = true;
                     planoContaAnaliticaFields.classList.remove('hidden');
+
+                    // Set the checked state from data BEFORE calling the locking logic
+                    const aplicavelEm = data.aplicavelEm || [];
+                    document.getElementById('plano-conta-aplicavel-pagamentos').checked = aplicavelEm.includes('pagamentos');
+                    document.getElementById('plano-conta-aplicavel-recebimentos').checked = aplicavelEm.includes('recebimentos');
+
                     handleAplicavelEmLogic(data.tipo);
                 } else {
                     document.getElementById('plano-conta-tipo-sintetica').checked = true;
