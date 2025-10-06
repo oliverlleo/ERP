@@ -344,10 +344,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         let totalEntradas = 0;
         let totalSaidas = 0;
 
-        // KPIs should only reflect REALIZED transactions
-        const realizedTransactions = transactions.filter(t => !t.isProjected);
-
-        realizedTransactions.forEach(t => {
+        transactions.forEach(t => {
             if (t.type === 'transferencia') {
                 // Only count in KPIs if a specific account is selected
                 if (contaId !== 'todas') {
