@@ -33,6 +33,8 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     // --- State ---
     let allContasBancarias = [];
     let activeConciliacaoFilter = 'todas';
+    const visaoRealizadoCheckbox = document.getElementById('visao-realizado-checkbox');
+    const visaoProjetadoCheckbox = document.getElementById('visao-projetado-checkbox');
 
     // --- Utility Functions (from common) ---
     const { formatCurrency, toCents, fromCents, showFeedback } = common;
@@ -73,31 +75,110 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         return querySnapshots.flatMap(snapshot => snapshot.docs);
     }
 
+    async function fetchProjectedTransactions(startDate, endDate) {
+        const unifiedProjected = [];
+        const planoContasMap = new Map();
+        const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
+        planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
+
+        // Fetch pending expenses
+        const despesasQuery = query(collection(db, `users/${userId}/despesas`),
+            where('status', 'in', ['Pendente', 'Vencido', 'Pago Parcialmente']),
+            where('vencimento', '>=', startDate),
+            where('vencimento', '<=', endDate)
+        );
+        const despesasSnap = await getDocs(despesasQuery);
+        despesasSnap.forEach(doc => {
+            const despesaData = doc.data();
+            const categoria = planoContasMap.get(despesaData.categoriaId);
+            unifiedProjected.push({
+                id: doc.id,
+                isProjected: true,
+                data: despesaData.vencimento,
+                descricao: `(Projetado) ${despesaData.descricao}`,
+                participante: despesaData.favorecidoNome || 'N/A',
+                planoDeConta: categoria ? categoria.nome : 'N/A',
+                dataVencimento: despesaData.vencimento,
+                entrada: 0,
+                saida: despesaData.valorSaldo,
+                juros: 0,
+                desconto: 0,
+                conciliado: false,
+                type: 'despesa_projetada'
+            });
+        });
+
+        // Fetch pending revenues
+        const receitasQuery = query(collection(db, `users/${userId}/receitas`),
+            where('status', 'in', ['Pendente', 'Vencido', 'Recebido Parcialmente']),
+            where('dataVencimento', '>=', startDate),
+            where('dataVencimento', '<=', endDate)
+        );
+        const receitasSnap = await getDocs(receitasQuery);
+        receitasSnap.forEach(doc => {
+            const receitaData = doc.data();
+            const categoria = planoContasMap.get(receitaData.categoriaId);
+            unifiedProjected.push({
+                id: doc.id,
+                isProjected: true,
+                data: receitaData.dataVencimento,
+                descricao: `(Projetado) ${receitaData.descricao}`,
+                participante: receitaData.clienteNome || 'N/A',
+                planoDeConta: categoria ? categoria.nome : 'N/A',
+                dataVencimento: receitaData.dataVencimento,
+                entrada: receitaData.saldoPendente,
+                saida: 0,
+                juros: 0,
+                desconto: 0,
+                conciliado: false,
+                type: 'receita_projetada'
+            });
+        });
+
+        return unifiedProjected;
+    }
+
     async function calculateAndRenderCashFlow() {
         const startDate = periodoDeInput.value;
         const endDate = periodoAteInput.value;
         const contaId = contaBancariaSelect.value;
+        const showRealizado = visaoRealizadoCheckbox.checked;
+        const showProjetado = visaoProjetadoCheckbox.checked;
 
         if (!startDate || !endDate) {
             extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Por favor, selecione um período para começar.</td></tr>`;
+            return;
+        }
+        if (!showRealizado && !showProjetado) {
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
+            renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
+            renderCharts([]);
+            renderDRE([]);
             return;
         }
 
         extratoTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
 
         try {
-            // 1. Calculate Previous Balance
             const saldoAnterior = await calculateSaldoAnterior(startDate, contaId);
+            let unifiedTransactions = [];
 
-            // 2. Fetch Transactions for the period
-            const [pagamentos, recebimentos, transferencias] = await Promise.all([
-                fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
-                fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
-                fetchCollection('transferencias', startDate, endDate)
-            ]);
+            if (showRealizado) {
+                const [pagamentos, recebimentos, transferencias] = await Promise.all([
+                    fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
+                    fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
+                    fetchCollection('transferencias', startDate, endDate)
+                ]);
+                const realizedTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+                unifiedTransactions.push(...realizedTransactions);
+            }
 
-            // 3. Unify and Enrich Data
-            let unifiedTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+            if (showProjetado) {
+                const projectedTransactions = await fetchProjectedTransactions(startDate, endDate);
+                unifiedTransactions.push(...projectedTransactions);
+            }
+
+            unifiedTransactions.sort((a, b) => new Date(a.data) - new Date(b.data));
 
             // 4. Apply Filters
             unifiedTransactions = applyFilters(unifiedTransactions, contaId, activeConciliacaoFilter);
