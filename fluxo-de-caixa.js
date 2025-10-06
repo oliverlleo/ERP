@@ -814,10 +814,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     // --- Initial Load ---
     function setDefaultDates() {
         const today = new Date();
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        periodoDeInput.value = firstDayOfMonth.toISOString().split('T')[0];
-        periodoAteInput.value = lastDayOfMonth.toISOString().split('T')[0];
+        const firstDayOfYear = new Date(today.getFullYear(), 0, 1); // January 1st of the current year
+        const lastDayOfYear = new Date(today.getFullYear(), 11, 31); // December 31st of the current year
+        periodoDeInput.value = firstDayOfYear.toISOString().split('T')[0];
+        periodoAteInput.value = lastDayOfYear.toISOString().split('T')[0];
     }
 
     setDefaultDates();
