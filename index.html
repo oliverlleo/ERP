@@ -1846,6 +1846,8 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Original</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descontos</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Juros</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Recebido</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Pendente</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -2116,6 +2118,8 @@
                                   <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                                   <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
                                   <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Juros</th>
+                                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descontos</th>
                                   <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ação</th>
                               </tr>
                           </thead>
@@ -2130,6 +2134,14 @@
                   <div>
                       <p class="text-sm text-gray-500">Valor Original</p>
                       <p id="view-receita-valor-original" class="text-2xl font-bold text-blue-600"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Descontos Concedidos</p>
+                      <p id="view-receita-descontos" class="text-2xl font-bold text-yellow-600"></p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-gray-500">Juros Recebidos</p>
+                      <p id="view-receita-juros" class="text-2xl font-bold text-orange-600"></p>
                   </div>
                    <div>
                       <p class="text-sm text-gray-500">Total Recebido</p>
@@ -6413,11 +6425,17 @@
 
             const valorOriginal = data.valorOriginal || 0;
             const totalRecebido = data.totalRecebido || 0;
-            const saldoPendente = data.saldoPendente ?? (valorOriginal - totalRecebido);
+            const totalDescontos = data.totalDescontos || 0;
+            const totalJuros = data.totalJuros || 0;
+            const saldoPendente = data.saldoPendente ?? (valorOriginal + totalJuros - totalRecebido - totalDescontos);
+
 
             document.getElementById('view-receita-valor-original').textContent = formatCurrency(valorOriginal);
+            document.getElementById('view-receita-descontos').textContent = formatCurrency(totalDescontos);
+            document.getElementById('view-receita-juros').textContent = formatCurrency(totalJuros);
             document.getElementById('view-receita-total-recebido').textContent = formatCurrency(totalRecebido);
             document.getElementById('view-receita-saldo-pendente').textContent = formatCurrency(saldoPendente);
+
 
             const statusEl = document.getElementById('view-receita-status');
             statusEl.textContent = data.status || 'Pendente';
@@ -6427,17 +6445,20 @@
             const historyBody = document.getElementById('recebimentos-history-table-body');
             historyBody.innerHTML = '';
             if (recebimentosSnap.empty) {
-                historyBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Nenhuma transação registrada.</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Nenhuma transação registrada.</td></tr>';
             } else {
                 recebimentosSnap.docs.forEach(recebimentoDoc => {
                     const pData = recebimentoDoc.data();
                     const tr = historyBody.insertRow();
+                    const isEstorno = pData.tipoTransacao === 'Estorno';
                     tr.innerHTML = `
-                        <td class="px-4 py-2 text-sm">${pData.tipoTransacao}</td>
+                        <td class="px-4 py-2 text-sm ${isEstorno ? 'text-red-500' : 'text-green-600'}">${pData.tipoTransacao}</td>
                         <td class="px-4 py-2 text-sm">${new Date(pData.dataTransacao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                         <td class="px-4 py-2 text-sm">${formatCurrency(pData.valorPrincipal || 0)}</td>
+                        <td class="px-4 py-2 text-sm">${formatCurrency(pData.jurosRecebidos || 0)}</td>
+                        <td class="px-4 py-2 text-sm">${formatCurrency(pData.descontosConcedidos || 0)}</td>
                         <td class="px-4 py-2 text-sm">
-                            ${pData.tipoTransacao === 'Recebimento' ? `<button class="estornar-recebimento-btn text-red-500 hover:underline" data-recebimento-id="${recebimentoDoc.id}" data-receita-id="${receitaId}">Estornar</button>` : ''}
+                            ${!isEstorno && pData.tipoTransacao !== 'Estorno' ? `<button class="estornar-recebimento-btn text-red-500 hover:underline" data-recebimento-id="${recebimentoDoc.id}" data-receita-id="${receitaId}">Estornar</button>` : ''}
                         </td>
                     `;
                 });
@@ -6445,6 +6466,105 @@
             visualizarReceitaModal.classList.remove('hidden');
         } catch (error) {
             console.error("Erro ao abrir modal de visualização de receita:", error);
+        }
+    }
+
+    if(visualizarReceitaModal) {
+        visualizarReceitaModal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('estornar-recebimento-btn')) {
+                const recebimentoId = e.target.dataset.recebimentoId;
+                const receitaId = e.target.dataset.receitaId;
+                handleEstornoRecebimento(receitaId, recebimentoId);
+            }
+        });
+    }
+
+    async function handleEstornoRecebimento(receitaId, recebimentoId) {
+        const userId = effectiveUserId;
+        if (!userId) {
+            alert("Erro: Usuário não autenticado.");
+            return;
+        }
+
+        const motivo = prompt("Por favor, insira o motivo para o estorno do recebimento:");
+        if (motivo === null || motivo.trim() === "") {
+            alert("O estorno foi cancelado. É necessário fornecer um motivo.");
+            return;
+        }
+
+        const receitaRef = doc(db, 'users', userId, 'receitas', receitaId);
+        const recebimentoRef = doc(receitaRef, 'recebimentos', recebimentoId);
+        const novoEstornoRef = doc(collection(receitaRef, 'recebimentos'));
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const receitaDoc = await transaction.get(receitaRef);
+                const recebimentoDoc = await transaction.get(recebimentoRef);
+
+                if (!receitaDoc.exists() || !recebimentoDoc.exists()) {
+                    throw "Receita ou recebimento original não encontrado.";
+                }
+
+                const receitaData = receitaDoc.data();
+                const recebimentoData = recebimentoDoc.data();
+
+                if (recebimentoData.estornado) {
+                    throw "Esta transação já foi estornada.";
+                }
+
+                const valorPrincipalEstornado = recebimentoData.valorPrincipal || 0;
+                const jurosEstornados = recebimentoData.jurosRecebidos || 0;
+                const descontosEstornados = recebimentoData.descontosConcedidos || 0;
+
+                const novoTotalRecebido = receitaData.totalRecebido - valorPrincipalEstornado;
+                const novoTotalJuros = receitaData.totalJuros - jurosEstornados;
+                const novoTotalDescontos = receitaData.totalDescontos - descontosEstornados;
+                const novoSaldoPendente = (receitaData.valorOriginal + novoTotalJuros) - novoTotalRecebido - novoTotalDescontos;
+
+
+                let novoStatus;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const vencimento = new Date((receitaData.dataVencimento || receitaData.vencimento) + 'T00:00:00');
+
+                if (novoSaldoPendente <= 0) {
+                    novoStatus = 'Recebido';
+                } else if (novoTotalRecebido > 0) {
+                    novoStatus = 'Recebido Parcialmente';
+                } else {
+                     novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                }
+
+                transaction.set(novoEstornoRef, {
+                    tipoTransacao: "Estorno",
+                    dataTransacao: new Date().toISOString().split('T')[0],
+                    valorPrincipal: valorPrincipalEstornado,
+                    jurosRecebidos: jurosEstornados,
+                    descontosConcedidos: descontosEstornados,
+                    usuarioResponsavel: currentUserName || "N/A",
+                    motivoEstorno: motivo,
+                    recebimentoOriginalId: recebimentoId,
+                    createdAt: serverTimestamp()
+                });
+
+                transaction.update(recebimentoRef, { estornado: true });
+
+                transaction.update(receitaRef, {
+                    totalRecebido: novoTotalRecebido,
+                    totalJuros: novoTotalJuros,
+                    totalDescontos: novoTotalDescontos,
+                    saldoPendente: novoSaldoPendente,
+                    status: novoStatus
+                });
+            });
+
+            console.log("Estorno de recebimento concluído com sucesso!");
+            visualizarReceitaModal.classList.add('hidden');
+            openVisualizarReceitaModal(receitaId);
+
+        } catch (error) {
+            console.error("Erro na transação de estorno de recebimento: ", error);
+            alert("Falha ao processar o estorno: " + error);
         }
     }
 
@@ -6517,47 +6637,135 @@
 
         receberForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const userId = effectiveUserId;
+            if (!userId) return;
+
             const receitaId = document.getElementById('receber-receita-id').value.split(',')[0];
             if (!receitaId) return;
 
-            const receitaRef = doc(db, 'users', effectiveUserId, 'receitas', receitaId);
+            const valorFinalRecebidoCents = toCents(document.getElementById('receber-valor-final').value);
+            const descontosCents = toCents(document.getElementById('receber-descontos').value);
+
+            try {
+                const receitaRef = doc(db, 'users', userId, 'receitas', receitaId);
+                const receitaSnap = await getDoc(receitaRef);
+                if (!receitaSnap.exists()) return;
+
+                const data = receitaSnap.data();
+                const saldoPendenteAtualCents = data.saldoPendente ?? (data.valorOriginal - (data.totalRecebido || 0));
+
+                // If cash received + discount is less than the balance, it's a partial payment.
+                if ((valorFinalRecebidoCents + descontosCents) < saldoPendenteAtualCents) {
+                    abrirModalConfirmacaoRecebimentoParcial();
+                } else {
+                    prosseguirComRecebimento();
+                }
+            } catch (error) {
+                console.error("Erro ao verificar saldo da receita:", error);
+                alert("Erro ao verificar saldo: " + error.message);
+            }
+        });
+
+        function abrirModalConfirmacaoRecebimentoParcial() {
+            document.getElementById('confirmar-recebimento-parcial-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmarRecebimentoParcialModal() {
+            document.getElementById('confirmar-recebimento-parcial-modal').classList.add('hidden');
+        }
+
+        if (document.getElementById('confirmar-recebimento-parcial-modal')) {
+            document.getElementById('close-confirmar-recebimento-parcial-btn').addEventListener('click', closeConfirmarRecebimentoParcialModal);
+            document.getElementById('cancelar-recebimento-parcial-btn').addEventListener('click', closeConfirmarRecebimentoParcialModal);
+            document.getElementById('confirmar-recebimento-parcial-btn').addEventListener('click', prosseguirComRecebimento);
+        }
+
+
+        async function prosseguirComRecebimento() {
+            const userId = effectiveUserId;
+            if (!userId) {
+                alert("Erro: Usuário não autenticado.");
+                return;
+            }
+            const receitaId = document.getElementById('receber-receita-id').value.split(',')[0];
+            if (!receitaId) {
+                alert("Erro: ID da receita não encontrado.");
+                return;
+            }
+
+            const valorPrincipalCents = toCents(document.getElementById('receber-valor-final').value);
+            const descontosCents = toCents(document.getElementById('receber-descontos').value);
+            const jurosCents = toCents(document.getElementById('receber-juros-multa').value);
+            const dataTransacao = document.getElementById('receber-data').value;
+            const contaEntradaId = document.getElementById('receber-conta-entrada').value;
+            const novaDataVencimento = document.getElementById('parcial-recebimento-nova-data-vencimento').value;
+
+
+            const receitaRef = doc(db, 'users', userId, 'receitas', receitaId);
+            const recebimentosRef = collection(receitaRef, 'recebimentos');
+            const novoRecebimentoRef = doc(recebimentosRef);
 
             try {
                 await runTransaction(db, async (transaction) => {
                     const receitaDoc = await transaction.get(receitaRef);
-                    if (!receitaDoc.exists()) throw "Receita não encontrada.";
+                    if (!receitaDoc.exists()) {
+                        throw "Receita não encontrada.";
+                    }
 
                     const data = receitaDoc.data();
-                    const valorRecebidoCents = toCents(document.getElementById('receber-valor-final').value);
 
-                    const novoTotalRecebido = (data.totalRecebido || 0) + valorRecebidoCents;
-                    const novoSaldoPendente = data.valorOriginal - novoTotalRecebido;
-                    const novoStatus = novoSaldoPendente <= 0 ? 'Recebido' : 'Recebido Parcialmente';
+                    const novoTotalRecebido = (data.totalRecebido || 0) + valorPrincipalCents;
+                    const novoTotalDescontos = (data.totalDescontos || 0) + descontosCents;
+                    const novoTotalJuros = (data.totalJuros || 0) + jurosCents;
+                    const novoSaldoPendente = (data.valorOriginal + novoTotalJuros) - novoTotalRecebido - novoTotalDescontos;
 
-                    transaction.update(receitaRef, {
-                        totalRecebido: novoTotalRecebido,
-                        saldoPendente: novoSaldoPendente,
-                        status: novoStatus
-                    });
+                    let novoStatus;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const vencimento = new Date((data.dataVencimento || data.vencimento) + 'T00:00:00');
 
-                    const recebimentoRef = doc(collection(receitaRef, 'recebimentos'));
-                    transaction.set(recebimentoRef, {
+
+                    if (novoSaldoPendente <= 0) {
+                        novoStatus = 'Recebido';
+                    } else if (novoTotalRecebido > 0) {
+                        novoStatus = 'Recebido Parcialmente';
+                    } else {
+                        novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                    }
+
+                    transaction.set(novoRecebimentoRef, {
                         tipoTransacao: "Recebimento",
-                        dataTransacao: document.getElementById('receber-data').value,
-                        valorPrincipal: valorRecebidoCents,
-                        jurosRecebidos: toCents(document.getElementById('receber-juros-multa').value),
-                        descontosConcedidos: toCents(document.getElementById('receber-descontos').value),
-                        contaEntradaId: document.getElementById('receber-conta-entrada').value,
-                        usuarioResponsavel: currentUserName,
+                        dataTransacao: dataTransacao,
+                        valorPrincipal: valorPrincipalCents,
+                        jurosRecebidos: jurosCents,
+                        descontosConcedidos: descontosCents,
+                        contaEntradaId: contaEntradaId,
+                        usuarioResponsavel: currentUserName || "N/A",
                         createdAt: serverTimestamp()
                     });
+
+                    const updateData = {
+                        totalRecebido: novoTotalRecebido,
+                        saldoPendente: novoSaldoPendente,
+                        totalDescontos: novoTotalDescontos,
+                        totalJuros: novoTotalJuros,
+                        status: novoStatus,
+                    };
+
+                    if (novaDataVencimento) {
+                        updateData.dataVencimento = novaDataVencimento;
+                    }
+
+                    transaction.update(receitaRef, updateData);
                 });
+
                 receberModal.classList.add('hidden');
+                closeConfirmarRecebimentoParcialModal();
             } catch (error) {
                 console.error("Erro ao registrar recebimento: ", error);
                 alert("Falha ao registrar recebimento: " + error);
             }
-        });
+        }
     }
 
     if(lancarReceitaBtn) {
@@ -6623,7 +6831,7 @@
         receitasTableBody.innerHTML = '';
         if (docs.length === 0) {
             const tr = receitasTableBody.insertRow();
-            tr.innerHTML = `<td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhuma receita encontrada.</td>`;
+            tr.innerHTML = `<td colspan="11" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhuma receita encontrada.</td>`; // Adjusted colspan
             return;
         }
 
@@ -6643,7 +6851,10 @@
 
             const valorOriginal = data.valorOriginal || 0;
             const totalRecebido = data.totalRecebido || 0;
-            const saldoPendente = data.saldoPendente ?? (valorOriginal - totalRecebido);
+            const totalDescontos = data.totalDescontos || 0;
+            const totalJuros = data.totalJuros || 0;
+            const saldoPendente = data.saldoPendente ?? (valorOriginal + totalJuros - totalRecebido - totalDescontos);
+
 
             tr.innerHTML = `
                 <td class="p-4"><input type="checkbox" class="receita-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${doc.id}"></td>
@@ -6652,6 +6863,8 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${data.clienteNome || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date((data.dataVencimento || data.vencimento) + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${formatCurrency(valorOriginal)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600 font-bold">${formatCurrency(totalDescontos)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-bold">${formatCurrency(totalJuros)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">${formatCurrency(totalRecebido)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold">${formatCurrency(saldoPendente)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${statusText}</span></td>
