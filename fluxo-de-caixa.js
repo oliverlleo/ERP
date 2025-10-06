@@ -191,7 +191,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             renderKPIs(kpis);
             renderExtrato(unifiedTransactions, kpis.saldoAnterior);
             renderDRE(unifiedTransactions);
-            renderCharts(unifiedTransactions);
+            renderCharts(unifiedTransactions, kpis.saldoAnterior, startDate, endDate);
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
@@ -772,16 +772,18 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         pagamentosSnap.forEach(doc => {
             if (doc.ref.path.startsWith(`users/${userId}`)) {
                 const data = doc.data();
-                const month = data.dataTransacao.substring(0, 7);
-                if (months.includes(month)) {
-                    const despesa = despesasMap.get(doc.ref.parent.parent.id);
-                    if (despesa) {
-                        const categoriaDoc = planoContasMap.get(despesa.categoriaId);
-                        const categoriaNome = categoriaDoc ? categoriaDoc.nome : 'Sem Categoria';
-                        allCategories.add(categoriaNome);
-                        if (!monthlyCategoryData[month]) monthlyCategoryData[month] = {};
-                        if (!monthlyCategoryData[month][categoriaNome]) monthlyCategoryData[month][categoriaNome] = 0;
-                        monthlyCategoryData[month][categoriaNome] += data.valorPrincipal || 0;
+                if (data.dataTransacao) {
+                    const month = data.dataTransacao.substring(0, 7);
+                    if (months.includes(month)) {
+                        const despesa = despesasMap.get(doc.ref.parent.parent.id);
+                        if (despesa) {
+                            const categoriaDoc = planoContasMap.get(despesa.categoriaId);
+                            const categoriaNome = categoriaDoc ? categoriaDoc.nome : 'Sem Categoria';
+                            allCategories.add(categoriaNome);
+                            if (!monthlyCategoryData[month]) monthlyCategoryData[month] = {};
+                            if (!monthlyCategoryData[month][categoriaNome]) monthlyCategoryData[month][categoriaNome] = 0;
+                            monthlyCategoryData[month][categoriaNome] += data.valorPrincipal || 0;
+                        }
                     }
                 }
             }
