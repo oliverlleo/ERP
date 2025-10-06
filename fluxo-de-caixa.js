@@ -517,11 +517,6 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     let chartInstances = {};
 
     function destroyAllCharts() {
-        Object.values(chartInstances).forEach(chart => chart.destroy());
-        chartInstances = {};
-    }
-
-    function destroyAllCharts() {
         Object.values(chartInstances).forEach(chart => {
             if (chart) chart.destroy();
         });
