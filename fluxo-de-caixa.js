@@ -200,7 +200,24 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     }
 
     async function calculateSaldoAnterior(startDate, contaId) {
-        let saldo = 0;
+        // 1. Fetch and sum initial balances based on the selected account
+        let saldoInicial = 0;
+        const contasBancariasQuery = query(collection(db, `users/${userId}/contasBancarias`));
+        const contasBancariasSnap = await getDocs(contasBancariasQuery);
+
+        if (contaId === 'todas') {
+            contasBancariasSnap.forEach(doc => {
+                saldoInicial += doc.data().saldoInicial || 0;
+            });
+        } else {
+            const contaDocSnap = contasBancariasSnap.docs.find(doc => doc.id === contaId);
+            if (contaDocSnap && contaDocSnap.exists()) {
+                saldoInicial = contaDocSnap.data().saldoInicial || 0;
+            }
+        }
+
+        // 2. Calculate the sum of transactions before the start date
+        let saldoTransacoes = 0;
         const [pagamentos, recebimentos, transferencias] = await Promise.all([
             fetchTransactionsEfficiently('despesas', 'pagamentos', null, startDate, false),
             fetchTransactionsEfficiently('receitas', 'recebimentos', null, startDate, false),
@@ -208,12 +225,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         ]);
 
         const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
-        const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
+        const filteredTransactions = applyFilters(allTransactions, contaId, 'todas'); // Conciliation status doesn't matter for historical balance
 
         filteredTransactions.forEach(t => {
-            saldo += (t.entrada || 0) - (t.saida || 0);
+            saldoTransacoes += (t.entrada || 0) - (t.saida || 0);
         });
-        return saldo;
+
+        // 3. Return the total previous balance
+        return saldoInicial + saldoTransacoes;
     }
 
     async function fetchCollection(collName, startDate, endDate, inclusive = true) {

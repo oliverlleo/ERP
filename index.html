@@ -1036,6 +1036,10 @@
                                             <label class="block text-sm font-medium text-gray-700" for="conta-bancaria-nome">Nome da Conta</label>
                                             <input type="text" id="conta-bancaria-nome" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="Ex: Banco Itaú C/C 1234-5">
                                         </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700" for="conta-bancaria-saldo-inicial">Saldo Inicial</label>
+                                            <input type="text" id="conta-bancaria-saldo-inicial" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="R$ 0,00">
+                                        </div>
                                     </div>
                                     <div id="conta-bancaria-form-feedback" class="text-sm mt-4"></div>
                                     <div class="flex justify-end pt-4">
@@ -4032,10 +4036,22 @@
                 });
             });
 
+            // --- Fetch Bank Accounts for Initial Balance ---
+            const contasBancariasQuery = query(collection(db, 'users', effectiveUserId, 'contasBancarias'));
+            const contasSnap = await getDocs(contasBancariasQuery);
+            let saldoInicialTotal = 0;
+            contasSnap.forEach(doc => {
+                saldoInicialTotal += doc.data().saldoInicial || 0;
+            });
+
+            // Calculate final balances
+            const saldoFinalMovimentacoes = saldoInicialTotal + movEntradas - movSaidas;
+            const saldoFinalProvisoes = saldoInicialTotal + provisaoAReceber - provisaoAPagar;
+
             // --- Update UI ---
             document.getElementById('dashboard-provisao-a-pagar').textContent = formatCurrency(provisaoAPagar);
             document.getElementById('dashboard-provisao-a-receber').textContent = formatCurrency(provisaoAReceber);
-            document.getElementById('dashboard-provisao-saldo').textContent = formatCurrency(0);
+            document.getElementById('dashboard-provisao-saldo').textContent = formatCurrency(saldoFinalProvisoes);
             document.getElementById('dashboard-pagar-total-mes').textContent = formatCurrency(pagarTotalMes);
             document.getElementById('dashboard-pagar-pago-mes').textContent = formatCurrency(pagarPagoMes);
             document.getElementById('dashboard-pagar-vencidas').textContent = formatCurrency(pagarVencidas);
@@ -4052,7 +4068,7 @@
             document.getElementById('titulos-vencidos-card').textContent = formatCurrency(receberVencidos);
             document.getElementById('dashboard-mov-saidas').textContent = formatCurrency(movSaidas);
             document.getElementById('dashboard-mov-entradas').textContent = formatCurrency(movEntradas);
-            document.getElementById('dashboard-mov-saldo').textContent = formatCurrency(0);
+            document.getElementById('dashboard-mov-saldo').textContent = formatCurrency(saldoFinalMovimentacoes);
         } catch (error) {
             console.error("Error updating all dashboard views:", error);
         }
@@ -4791,6 +4807,7 @@
                 const data = docSnap.data();
                 document.getElementById('conta-bancaria-id').value = docSnap.id;
                 document.getElementById('conta-bancaria-nome').value = data.nome || '';
+                document.getElementById('conta-bancaria-saldo-inicial').value = fromCents(data.saldoInicial || 0);
 
                 financeirosCadastroSection.classList.remove('hidden');
                 document.querySelector('.tab-link-financeiro[data-tab-financeiro="contas-bancarias"]').click();
@@ -5256,7 +5273,10 @@
         }
 
         const contaId = document.getElementById('conta-bancaria-id').value;
-        const data = { nome: document.getElementById('conta-bancaria-nome').value };
+        const data = {
+            nome: document.getElementById('conta-bancaria-nome').value,
+            saldoInicial: toCents(document.getElementById('conta-bancaria-saldo-inicial').value)
+        };
 
         try {
             if (contaId) {
