@@ -33,6 +33,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     // --- State ---
     let allContasBancarias = [];
     let activeConciliacaoFilter = 'todas';
+    let drilldownCategoryFilter = null;
     const visaoRealizadoCheckbox = document.getElementById('visao-realizado-checkbox');
     const visaoProjetadoCheckbox = document.getElementById('visao-projetado-checkbox');
 
@@ -191,13 +192,70 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             renderKPIs(kpis);
             renderExtrato(unifiedTransactions, kpis.saldoAnterior);
             renderDRE(unifiedTransactions);
-            renderCharts(unifiedTransactions);
+
+            // 6.1. Fetch previous period data for comparison chart
+            const { previousStartDate, previousEndDate } = getPreviousPeriod(startDate, endDate);
+            const previousPeriodTotals = await fetchAndCalculatePreviousPeriodTotals(previousStartDate, previousEndDate, contaId);
+
+            renderCharts(unifiedTransactions, kpis, previousPeriodTotals);
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
             extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
         }
     }
+
+    function getPreviousPeriod(currentStart, currentEnd) {
+        const start = new Date(currentStart + 'T00:00:00');
+        const end = new Date(currentEnd + 'T00:00:00');
+
+        const duration = (end.getTime() - start.getTime()) / (1000 * 3600 * 24) + 1;
+
+        const previousEndDate = new Date(start.getTime());
+        previousEndDate.setDate(previousEndDate.getDate() - 1);
+
+        const previousStartDate = new Date(previousEndDate.getTime());
+        previousStartDate.setDate(previousStartDate.getDate() - (duration - 1));
+
+        return {
+            previousStartDate: previousStartDate.toISOString().split('T')[0],
+            previousEndDate: previousEndDate.toISOString().split('T')[0]
+        };
+    }
+
+    async function fetchAndCalculatePreviousPeriodTotals(startDate, endDate, contaId) {
+        try {
+            const [pagamentos, recebimentos, transferencias] = await Promise.all([
+                fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
+                fetchCollection('transferencias', startDate, endDate)
+            ]);
+
+            const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+            const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
+
+            let previousEntradas = 0;
+            let previousSaidas = 0;
+
+            filteredTransactions.forEach(t => {
+                if (t.type === 'transferencia') {
+                    if (contaId !== 'todas') {
+                        if (t.contaDestinoId === contaId) previousEntradas += t.valor;
+                        if (t.contaOrigemId === contaId) previousSaidas += t.valor;
+                    }
+                } else {
+                    previousEntradas += t.entrada || 0;
+                    previousSaidas += t.saida || 0;
+                }
+            });
+
+            return { previousEntradas, previousSaidas };
+        } catch (error) {
+            console.error("Error fetching previous period totals:", error);
+            return { previousEntradas: 0, previousSaidas: 0 };
+        }
+    }
+
 
     async function calculateSaldoAnterior(startDate, contaId) {
         let saldo = 0;
@@ -336,7 +394,16 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                 const expectedStatus = conciliacaoStatus === 'conciliadas';
                 conciliacaoMatch = t.conciliado === expectedStatus;
             }
-            return conciliacaoMatch;
+            if (!conciliacaoMatch) return false;
+
+            // Filter by Drill-down Category
+            if (drilldownCategoryFilter) {
+                if (t.planoDeConta !== drilldownCategoryFilter) {
+                    return false;
+                }
+            }
+
+            return true;
         });
     }
 
@@ -494,107 +561,155 @@ export function initializeFluxoDeCaixa(db, userId, common) {
          dreTableBody.appendChild(createRow('(=) GERAÇÃO LÍQUIDA DE CAIXA', geracaoLiquida, false, false, true, true));
     }
 
-    function renderCharts(transactions) {
-        renderFluxoDiarioChart(transactions);
-        renderComposicaoReceitasChart(transactions);
-        renderComposicaoDespesasChart(transactions);
+    function renderCharts(transactions, kpis, previousPeriodTotals) {
+        renderEvolucaoCaixaChart(transactions, kpis.saldoAnterior);
+        renderComparativoPeriodosChart(kpis, previousPeriodTotals);
+        renderTopCategoriasCharts(transactions.filter(t => !t.isProjected));
     }
 
-    let fluxoDiarioChartInstance, composicaoReceitasChartInstance, composicaoDespesasChartInstance;
+    let evolucaoCaixaChartInstance, comparativoPeriodosChartInstance, topReceitasChartInstance, topDespesasChartInstance;
 
-    function renderFluxoDiarioChart(transactions) {
-        const ctx = document.getElementById('fluxo-diario-chart').getContext('2d');
-        if (fluxoDiarioChartInstance) {
-            fluxoDiarioChartInstance.destroy();
+    function renderTopCategoriasCharts(realizedTransactions) {
+        const processAndRender = (ctx, transactions, type, label) => {
+            if (!ctx) return null;
+
+            const isReceita = type === 'receita';
+            const valueField = isReceita ? 'entrada' : 'saida';
+            const typeFilter = isReceita ? 'recebimento' : 'pagamento';
+
+            const dataByCategory = realizedTransactions
+                .filter(t => t.type === typeFilter && t[valueField] > 0)
+                .reduce((acc, t) => {
+                    const categoria = t.planoDeConta || 'Sem Categoria';
+                    if (!acc[categoria]) acc[categoria] = 0;
+                    acc[categoria] += t[valueField];
+                    return acc;
+                }, {});
+
+            const sortedData = Object.entries(dataByCategory)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5);
+
+            const chartLabels = sortedData.map(entry => entry[0]);
+            const chartData = sortedData.map(entry => entry[1] / 100);
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: label,
+                        data: chartData,
+                        backgroundColor: isReceita ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+                        borderColor: isReceita ? 'rgba(22, 163, 74, 1)' : 'rgba(220, 38, 38, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const category = chart.data.labels[clickedIndex];
+
+                            drilldownCategoryFilter = category;
+
+                            // Switch to the 'Extrato' tab
+                            const extratoTabLink = document.querySelector('.fluxo-tab-link[data-fluxo-tab="extrato"]');
+                            if (extratoTabLink) extratoTabLink.click();
+
+                            // Re-render the cash flow data with the new filter
+                            calculateAndRenderCashFlow();
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value); }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.x);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return chart;
+        };
+
+        const receitaCtx = document.getElementById('top-receitas-chart')?.getContext('2d');
+        if (topReceitasChartInstance) topReceitasChartInstance.destroy();
+        topReceitasChartInstance = processAndRender(receitaCtx, realizedTransactions, 'receita', 'Top 5 Receitas');
+
+        const despesaCtx = document.getElementById('top-despesas-chart')?.getContext('2d');
+        if (topDespesasChartInstance) topDespesasChartInstance.destroy();
+        topDespesasChartInstance = processAndRender(despesaCtx, realizedTransactions, 'despesa', 'Top 5 Despesas');
+    }
+
+    function renderComparativoPeriodosChart(currentPeriodTotals, previousPeriodTotals) {
+        const ctx = document.getElementById('comparativo-periodos-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        if (comparativoPeriodosChartInstance) {
+            comparativoPeriodosChartInstance.destroy();
         }
 
-        const dailyData = transactions.reduce((acc, t) => {
-            const day = t.data;
-            if (!acc[day]) acc[day] = { entradas: 0, saidas: 0 };
-            acc[day].entradas += t.entrada || 0;
-            acc[day].saidas += t.saida || 0;
-            return acc;
-        }, {});
+        const labels = ['Período Anterior', 'Período Atual'];
 
-        const sortedDays = Object.keys(dailyData).sort();
-
-        fluxoDiarioChartInstance = new Chart(ctx, {
+        comparativoPeriodosChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: sortedDays.map(day => new Date(day + 'T00:00:00').toLocaleDateString('pt-BR')),
-                datasets: [{
-                    label: 'Entradas',
-                    data: sortedDays.map(day => dailyData[day].entradas / 100),
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Saídas',
-                    data: sortedDays.map(day => dailyData[day].saidas / 100),
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Entradas',
+                        data: [
+                            previousPeriodTotals.previousEntradas / 100,
+                            currentPeriodTotals.totalEntradas / 100
+                        ],
+                        backgroundColor: '#16a34a', // green-600
+                    },
+                    {
+                        label: 'Saídas',
+                        data: [
+                            previousPeriodTotals.previousSaidas / 100,
+                            currentPeriodTotals.totalSaidas / 100
+                        ],
+                        backgroundColor: '#dc2626', // red-600
+                    }
+                ]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR');
+                                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
                             }
                         }
                     }
-                }
-            }
-        });
-    }
-
-    function renderComposicaoReceitasChart(transactions) {
-        const ctx = document.getElementById('composicao-receitas-chart').getContext('2d');
-        if (composicaoReceitasChartInstance) {
-            composicaoReceitasChartInstance.destroy();
-        }
-
-        const receitaData = transactions
-            .filter(t => t.entrada > 0 && t.type === 'recebimento')
-            .reduce((acc, t) => {
-                const categoria = t.categoria || 'Sem Categoria';
-                if (!acc[categoria]) acc[categoria] = 0;
-                acc[categoria] += t.entrada;
-                return acc;
-            }, {});
-
-        composicaoReceitasChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: Object.keys(receitaData),
-                datasets: [{
-                    label: 'Composição de Receitas',
-                    data: Object.values(receitaData).map(v => v / 100),
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
-                }]
-            },
-            options: {
-                responsive: true,
+                },
                 plugins: {
-                    legend: { position: 'top' },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
                                 }
                                 return label;
                             }
@@ -605,52 +720,100 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         });
     }
 
-    function renderComposicaoDespesasChart(transactions) {
-        const ctx = document.getElementById('composicao-despesas-chart').getContext('2d');
-        if (composicaoDespesasChartInstance) {
-            composicaoDespesasChartInstance.destroy();
+    function renderEvolucaoCaixaChart(transactions, saldoAnterior) {
+        const ctx = document.getElementById('evolucao-caixa-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        if (evolucaoCaixaChartInstance) {
+            evolucaoCaixaChartInstance.destroy();
         }
 
-        const despesaData = transactions
-            .filter(t => t.saida > 0 && t.type === 'pagamento')
-            .reduce((acc, t) => {
-                const categoria = t.categoria || 'Sem Categoria';
-                if (!acc[categoria]) acc[categoria] = 0;
-                acc[categoria] += t.saida;
-                return acc;
-            }, {});
+        const startDate = new Date(periodoDeInput.value + 'T00:00:00');
+        const endDate = new Date(periodoAteInput.value + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        composicaoDespesasChartInstance = new Chart(ctx, {
-            type: 'pie',
+        const dailyNetChanges = {};
+        const labels = [];
+
+        // 1. Initialize all days in the range
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateString = d.toISOString().split('T')[0];
+            labels.push(dateString);
+            dailyNetChanges[dateString] = 0;
+        }
+
+        // 2. Populate net changes from transactions
+        transactions.forEach(t => {
+            const dateString = t.data;
+            if (dailyNetChanges.hasOwnProperty(dateString)) {
+                dailyNetChanges[dateString] += (t.entrada || 0) - (t.saida || 0);
+            }
+        });
+
+        // 3. Calculate cumulative balances
+        const balances = [];
+        let currentBalance = saldoAnterior;
+        labels.forEach(dateString => {
+            currentBalance += dailyNetChanges[dateString];
+            balances.push(currentBalance / 100); // Convert to BRL for the chart
+        });
+
+        // 4. Split data into "Realizado" and "Projetado"
+        const todayString = today.toISOString().split('T')[0];
+        const todayIndex = labels.indexOf(todayString);
+
+        const realizadoData = balances.map((val, i) => (i <= todayIndex ? val : null));
+        const projetadoData = balances.map((val, i) => {
+            if (i < todayIndex) return null;
+            // To connect the lines, the first point of 'projetado' must be the last point of 'realizado'
+            if (i === todayIndex) return realizadoData[todayIndex];
+            return val;
+        });
+
+        evolucaoCaixaChartInstance = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: Object.keys(despesaData),
+                labels: labels.map(l => new Date(l + 'T00:00:00').toLocaleDateString('pt-BR')),
                 datasets: [{
-                    label: 'Composição de Despesas',
-                    data: Object.values(despesaData).map(v => v / 100),
-                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(255, 205, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(201, 203, 207, 0.7)'
-                    ],
+                    label: 'Saldo Realizado',
+                    data: realizadoData,
+                    borderColor: '#1d4ed8', // blue-700
+                    backgroundColor: '#1d4ed8',
+                    tension: 0.1,
+                    pointRadius: 2,
+                    spanGaps: true
+                }, {
+                    label: 'Saldo Projetado',
+                    data: projetadoData,
+                    borderColor: '#60a5fa', // blue-400
+                    backgroundColor: '#60a5fa',
+                    borderDash: [5, 5],
+                    tension: 0.1,
+                    pointRadius: 2,
+                    spanGaps: true
                 }]
             },
-             options: {
+            options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+                            }
+                        }
+                    }
+                },
                 plugins: {
-                    legend: { position: 'top' },
-                     tooltip: {
+                    tooltip: {
                         callbacks: {
                             label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
                                 }
                                 return label;
                             }
@@ -694,11 +857,15 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
     // --- Event Listeners ---
     [periodoDeInput, periodoAteInput, contaBancariaSelect].forEach(el => {
-        el.addEventListener('change', calculateAndRenderCashFlow);
+        el.addEventListener('change', () => {
+            drilldownCategoryFilter = null; // Reset drilldown on main filter change
+            calculateAndRenderCashFlow();
+        });
     });
 
     conciliacaoFilterGroup.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
+            drilldownCategoryFilter = null; // Reset drilldown on main filter change
             conciliacaoFilterGroup.querySelector('.active').classList.remove('active');
             e.target.classList.add('active');
             activeConciliacaoFilter = e.target.dataset.status;
@@ -707,7 +874,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     });
 
     [visaoRealizadoCheckbox, visaoProjetadoCheckbox].forEach(cb => {
-        cb.addEventListener('change', calculateAndRenderCashFlow);
+        cb.addEventListener('change', () => {
+            drilldownCategoryFilter = null; // Reset drilldown on main filter change
+            calculateAndRenderCashFlow();
+        });
     });
 
     extratoTableBody.addEventListener('change', async (e) => {
