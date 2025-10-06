@@ -1,4 +1,4 @@
-import { getFirestore, collection, query, where, getDocs, doc, addDoc, serverTimestamp, runTransaction, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc, addDoc, serverTimestamp, runTransaction, updateDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // This function will be called from the main script when the user is authenticated.
 export function initializeFluxoDeCaixa(db, userId, common) {
@@ -74,6 +74,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             renderKPIs(kpis);
             renderExtrato(unifiedTransactions, kpis.saldoAnterior);
             renderDRE(unifiedTransactions);
+            renderCharts(unifiedTransactions);
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
@@ -134,6 +135,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                     const despesaData = despesaSnap.data();
                     unified.push({
                         id: doc.id,
+                        parentId: parentDespesaRef.id,
                         data: data.dataTransacao,
                         descricao: despesaData.descricao,
                         categoria: despesaData.planoDeContasNome || 'N/A', // You might need to fetch this
@@ -157,6 +159,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                     const receitaData = receitaSnap.data();
                     unified.push({
                         id: doc.id,
+                        parentId: parentReceitaRef.id,
                         data: data.dataTransacao,
                         descricao: receitaData.descricao,
                         categoria: receitaData.planoDeContasNome || 'N/A',
@@ -293,7 +296,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
                 saldoDia += entrada - saida;
 
                 tr.innerHTML = `
-                    <td class="p-4"><input type="checkbox" class="fluxo-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${t.id}" data-type="${t.type}" ${t.conciliado ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" class="fluxo-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${t.id}" data-parent-id="${t.parentId}" data-type="${t.type}" ${t.conciliado ? 'checked' : ''}></td>
                     <td class="px-6 py-3 text-sm text-gray-700">${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                     <td class="px-6 py-3 text-sm text-gray-700">${t.descricao}</td>
                     <td class="px-6 py-3 text-sm text-gray-500">${t.categoria}</td>
@@ -315,15 +318,20 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
     function renderDRE(transactions) {
         dreTableBody.innerHTML = '';
+        if (transactions.length === 0) {
+            dreTableBody.innerHTML = `<tr><td colspan="3" class="text-center p-8 text-gray-500">Nenhuma transação encontrada para gerar o DRE.</td></tr>`;
+            return;
+        }
         const dreData = {
             Operacional: { entradas: 0, saidas: 0, details: {} },
             Investimento: { entradas: 0, saidas: 0, details: {} },
             Financiamento: { entradas: 0, saidas: 0, details: {} },
         };
-        let totalGeral = 0;
+        let totalEntradasGeral = 0;
+        let totalSaidasGeral = 0;
 
         transactions.forEach(t => {
-            if (t.type === 'transferencia') return; // Transfers are not part of DRE
+            if (t.type === 'transferencia') return;
 
             const atividade = t.tipoAtividade || 'Operacional';
             const categoria = t.categoria || 'Sem Categoria';
@@ -331,39 +339,220 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             if (!dreData[atividade]) dreData[atividade] = { entradas: 0, saidas: 0, details: {} };
             if (!dreData[atividade].details[categoria]) dreData[atividade].details[categoria] = 0;
 
-            const valor = t.entrada - t.saida;
-            dreData[atividade].details[categoria] += valor;
-            if(valor > 0) dreData[atividade].entradas += valor;
-            else dreData[atividade].saidas += valor; // saidas are negative
+            const valorEntrada = t.entrada || 0;
+            const valorSaida = t.saida || 0;
 
-            totalGeral += valor;
+            dreData[atividade].details[categoria] += (valorEntrada - valorSaida);
+            dreData[atividade].entradas += valorEntrada;
+            dreData[atividade].saidas += valorSaida;
+            totalEntradasGeral += valorEntrada;
+            totalSaidasGeral += valorSaida;
         });
 
-        if (totalGeral === 0) totalGeral = 1; // Avoid division by zero
-
-        function createRow(text, value, isHeader = false, isSubHeader = false, isTotal = false) {
+        function createRow(text, value, isHeader = false, isSubHeader = false, isTotal = false, isSubTotal = false, percentageOf = null) {
             const tr = document.createElement('tr');
-            const perc = (value / totalGeral) * 100;
+            let percentageHTML = '';
+            if (percentageOf !== null && percentageOf !== 0) {
+                const perc = (Math.abs(value) / Math.abs(percentageOf)) * 100;
+                percentageHTML = `<td class="px-6 py-3 text-sm text-right text-gray-500">${perc.toFixed(2)}%</td>`;
+            } else {
+                percentageHTML = `<td class="px-6 py-3"></td>`;
+            }
+
             tr.innerHTML = `
-                <td class="px-6 py-3 text-sm ${isHeader ? 'font-bold text-gray-800' : (isSubHeader ? 'font-semibold pl-10' : 'pl-14')}">${text}</td>
+                <td class="px-6 py-3 text-sm ${isHeader ? 'font-bold text-gray-800' : (isSubHeader || isSubTotal ? 'font-semibold pl-10' : 'pl-14')}">${text}</td>
                 <td class="px-6 py-3 text-sm text-right font-medium ${value < 0 ? 'text-red-600' : 'text-gray-800'}">${formatCurrency(value)}</td>
-                <td class="px-6 py-3 text-sm text-right ${isTotal ? 'font-bold' : ''}">${isHeader || isTotal ? '' : perc.toFixed(2) + '%'}</td>
+                ${percentageHTML}
             `;
+            if (isSubTotal) tr.classList.add('bg-gray-50');
             return tr;
         }
 
         Object.keys(dreData).forEach(atividade => {
             const data = dreData[atividade];
-            const fluxoCaixaAtividade = data.entradas + data.saidas;
-            dreTableBody.appendChild(createRow(`(+) Fluxo de Caixa das Atividades de ${atividade}`, fluxoCaixaAtividade, true));
+            const fluxoCaixaAtividade = data.entradas - data.saidas;
+            dreTableBody.appendChild(createRow(`Fluxo de Caixa das Atividades de ${atividade}`, fluxoCaixaAtividade, true));
 
             Object.keys(data.details).sort().forEach(categoria => {
-                 dreTableBody.appendChild(createRow(categoria, data.details[categoria]));
+                const valorCategoria = data.details[categoria];
+                 if(valorCategoria > 0) {
+                    dreTableBody.appendChild(createRow(categoria, valorCategoria, false, false, false, false, totalEntradasGeral));
+                 } else {
+                    dreTableBody.appendChild(createRow(categoria, valorCategoria, false, false, false, false, totalSaidasGeral));
+                 }
             });
+            dreTableBody.appendChild(createRow(`(=) Saldo das Atividades de ${atividade}`, fluxoCaixaAtividade, false, false, false, true));
         });
 
-         const geracaoLiquida = Object.values(dreData).reduce((acc, curr) => acc + curr.entradas + curr.saidas, 0);
-         dreTableBody.appendChild(createRow('(=) GERAÇÃO LÍQUIDA DE CAIXA', geracaoLiquida, false, false, true));
+         const geracaoLiquida = Object.values(dreData).reduce((acc, curr) => acc + (curr.entradas - curr.saidas), 0);
+         dreTableBody.appendChild(createRow('(=) GERAÇÃO LÍQUIDA DE CAIXA', geracaoLiquida, false, false, true, true));
+    }
+
+    function renderCharts(transactions) {
+        renderFluxoDiarioChart(transactions);
+        renderComposicaoReceitasChart(transactions);
+        renderComposicaoDespesasChart(transactions);
+    }
+
+    let fluxoDiarioChartInstance, composicaoReceitasChartInstance, composicaoDespesasChartInstance;
+
+    function renderFluxoDiarioChart(transactions) {
+        const ctx = document.getElementById('fluxo-diario-chart').getContext('2d');
+        if (fluxoDiarioChartInstance) {
+            fluxoDiarioChartInstance.destroy();
+        }
+
+        const dailyData = transactions.reduce((acc, t) => {
+            const day = t.data;
+            if (!acc[day]) acc[day] = { entradas: 0, saidas: 0 };
+            acc[day].entradas += t.entrada || 0;
+            acc[day].saidas += t.saida || 0;
+            return acc;
+        }, {});
+
+        const sortedDays = Object.keys(dailyData).sort();
+
+        fluxoDiarioChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedDays.map(day => new Date(day + 'T00:00:00').toLocaleDateString('pt-BR')),
+                datasets: [{
+                    label: 'Entradas',
+                    data: sortedDays.map(day => dailyData[day].entradas / 100),
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Saídas',
+                    data: sortedDays.map(day => dailyData[day].saidas / 100),
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderComposicaoReceitasChart(transactions) {
+        const ctx = document.getElementById('composicao-receitas-chart').getContext('2d');
+        if (composicaoReceitasChartInstance) {
+            composicaoReceitasChartInstance.destroy();
+        }
+
+        const receitaData = transactions
+            .filter(t => t.entrada > 0 && t.type === 'recebimento')
+            .reduce((acc, t) => {
+                const categoria = t.categoria || 'Sem Categoria';
+                if (!acc[categoria]) acc[categoria] = 0;
+                acc[categoria] += t.entrada;
+                return acc;
+            }, {});
+
+        composicaoReceitasChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(receitaData),
+                datasets: [{
+                    label: 'Composição de Receitas',
+                    data: Object.values(receitaData).map(v => v / 100),
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderComposicaoDespesasChart(transactions) {
+        const ctx = document.getElementById('composicao-despesas-chart').getContext('2d');
+        if (composicaoDespesasChartInstance) {
+            composicaoDespesasChartInstance.destroy();
+        }
+
+        const despesaData = transactions
+            .filter(t => t.saida > 0 && t.type === 'pagamento')
+            .reduce((acc, t) => {
+                const categoria = t.categoria || 'Sem Categoria';
+                if (!acc[categoria]) acc[categoria] = 0;
+                acc[categoria] += t.saida;
+                return acc;
+            }, {});
+
+        composicaoDespesasChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(despesaData),
+                datasets: [{
+                    label: 'Composição de Despesas',
+                    data: Object.values(despesaData).map(v => v / 100),
+                     backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(255, 205, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(201, 203, 207, 0.7)'
+                    ],
+                }]
+            },
+             options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                     tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
 
@@ -408,6 +597,37 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             e.target.classList.add('active');
             activeConciliacaoFilter = e.target.dataset.status;
             calculateAndRenderCashFlow();
+        }
+    });
+
+    extratoTableBody.addEventListener('change', async (e) => {
+        if (e.target.classList.contains('fluxo-checkbox')) {
+            const checkbox = e.target;
+            const transacaoId = checkbox.dataset.id;
+            const parentId = checkbox.dataset.parentId;
+            const type = checkbox.dataset.type;
+            const isConciliado = checkbox.checked;
+
+            if (!transacaoId || !parentId || !type) {
+                console.error("Dados da transação ausentes no checkbox.");
+                return;
+            }
+
+            const collectionName = type === 'pagamento' ? 'pagamentos' : 'recebimentos';
+            const parentCollectionName = type === 'pagamento' ? 'despesas' : 'receitas';
+
+            const docRef = doc(db, `users/${userId}/${parentCollectionName}/${parentId}/${collectionName}/${transacaoId}`);
+
+            try {
+                await updateDoc(docRef, { conciliado: isConciliado });
+                const row = checkbox.closest('tr');
+                row.classList.toggle('bg-green-50', isConciliado);
+            } catch (error) {
+                console.error("Erro ao atualizar status de conciliação:", error);
+                alert("Não foi possível atualizar o status da transação.");
+                // Revert checkbox state on error
+                checkbox.checked = !isConciliado;
+            }
         }
     });
 

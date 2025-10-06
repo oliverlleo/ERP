@@ -12,6 +12,7 @@
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css' rel='stylesheet' />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style type="text/tailwindcss">
     :root {
       --brand-primary: #3B82F6;
@@ -2569,6 +2570,10 @@
     const logoutButtonReceber = document.getElementById('logout-button-receber');
     const profileButtonReceber = document.getElementById('profile-button-receber');
     const profileDropdownReceber = document.getElementById('profile-dropdown-receber');
+    const userEmailFluxoSpan = document.getElementById('user-email-fluxo');
+    const logoutButtonFluxo = document.getElementById('logout-button-fluxo');
+    const profileButtonFluxo = document.getElementById('profile-button-fluxo');
+    const profileDropdownFluxo = document.getElementById('profile-dropdown-fluxo');
 
     // Elementos do Dashboard
     const navLinks = document.querySelectorAll('.nav-link');
@@ -2635,6 +2640,8 @@
     const financeiroDropdownContas = document.getElementById('financeiro-dropdown-contas');
     const financeiroNavLinkReceber = document.getElementById('financeiro-nav-link-receber');
     const financeiroDropdownReceber = document.getElementById('financeiro-dropdown-receber');
+    const financeiroNavLinkFluxo = document.getElementById('financeiro-nav-link-fluxo');
+    const financeiroDropdownFluxo = document.getElementById('financeiro-dropdown-fluxo');
 
     // --- Elementos da Tela Financeiro - Contas a Pagar ---
     const despesaModal = document.getElementById('despesa-modal');
@@ -4107,7 +4114,7 @@
 
     // --- Lógica de Autenticação e Navegação ---
     function updateUiForUser(name) {
-        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan, userEmailReceberSpan];
+        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan, userEmailReceberSpan, userEmailFluxoSpan];
         elements.forEach(el => {
             if (el) el.textContent = name || '';
         });
@@ -4119,6 +4126,8 @@
 
     onAuthStateChanged(auth, (user) => {
         detachListeners();
+
+        const commonUtils = { formatCurrency, toCents, fromCents, showFeedback };
 
         // Caso 1: Usuário do Firebase (admin) está logado.
         if (user) {
@@ -4135,6 +4144,7 @@
 
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
+            initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
             showView('main-page');
             updateStatusFilterUI();
             updateReceitaStatusFilterUI();
@@ -4152,8 +4162,10 @@
 
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
+                initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
                 showView('main-page');
                 updateStatusFilterUI();
+                updateReceitaStatusFilterUI();
                 return;
             }
         }
@@ -4361,8 +4373,9 @@
     logoutButtonCadastros.addEventListener('click', performLogout);
     logoutButtonContas.addEventListener('click', performLogout);
     logoutButtonReceber.addEventListener('click', performLogout);
+    logoutButtonFluxo.addEventListener('click', performLogout);
 
-    [profileButton, profileButtonCadastros, profileButtonContas, profileButtonReceber].forEach(btn => {
+    [profileButton, profileButtonCadastros, profileButtonContas, profileButtonReceber, profileButtonFluxo].forEach(btn => {
         if (btn) btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const dropdown = btn.nextElementSibling;
@@ -4383,6 +4396,9 @@
         if(!profileDropdownReceber.classList.contains('hidden')) {
             profileDropdownReceber.classList.add('hidden');
         }
+        if(profileDropdownFluxo && !profileDropdownFluxo.classList.contains('hidden')) {
+            profileDropdownFluxo.classList.add('hidden');
+        }
         if(!financeiroDropdown.classList.contains('hidden')) {
             financeiroDropdown.classList.add('hidden');
         }
@@ -4391,6 +4407,9 @@
         }
         if(!financeiroDropdownContas.classList.contains('hidden')) {
             financeiroDropdownContas.classList.add('hidden');
+        }
+        if(financeiroDropdownFluxo && !financeiroDropdownFluxo.classList.contains('hidden')) {
+            financeiroDropdownFluxo.classList.add('hidden');
         }
     });
 
@@ -4720,6 +4739,7 @@
                 document.getElementById('plano-conta-codigo-pai').value = data.codigoPai || '';
                 document.getElementById('plano-conta-nivel').value = data.nivel || 0;
                 document.getElementById('plano-conta-tipo').value = data.tipo || 'despesa';
+                document.getElementById('plano-conta-atividade').value = data.tipoDeAtividade || 'Operacional';
                 document.getElementById('plano-conta-tipo').disabled = false; // Ensure type is editable
 
                 if (data.aceitaLancamento) {
@@ -5187,6 +5207,7 @@
             nivel: parseInt(document.getElementById('plano-conta-nivel').value, 10),
             aceitaLancamento: aceitaLancamento,
             tipo: document.getElementById('plano-conta-tipo').value,
+            tipoDeAtividade: document.getElementById('plano-conta-atividade').value,
             aplicavelEm: aceitaLancamento ? aplicavelEm : [],
             inativo: false, // Ensure all new accounts are created as active
         };
@@ -5733,6 +5754,7 @@
     setupDropdown(financeiroNavLinkCadastros, financeiroDropdownCadastros);
     setupDropdown(financeiroNavLinkContas, financeiroDropdownContas);
     setupDropdown(financeiroNavLinkReceber, financeiroDropdownReceber);
+    setupDropdown(financeiroNavLinkFluxo, financeiroDropdownFluxo);
 
     async function openModal(isEdit = false) {
         if(despesaModal) {
