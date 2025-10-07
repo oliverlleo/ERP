@@ -506,7 +506,8 @@
         function attachTestDataListener() {
             if (testDataUnsubscribe) testDataUnsubscribe(); // Garante que não haja listeners duplicados
 
-            const testCollectionRef = collection(db, 'users', effectiveUserId, 'crm_data', 'testes');
+            // CORREÇÃO: Estrutura de coleção aninhada para organização
+            const testCollectionRef = collection(db, 'users', effectiveUserId, 'crm', 'data', 'testes');
             testDataUnsubscribe = onSnapshot(testCollectionRef, (snapshot) => {
                 if (snapshot.empty) {
                     testDataDisplay.innerHTML = '<p class="text-subtext-light dark:text-subtext-dark">Nenhum dado salvo ainda.</p>';
@@ -538,7 +539,8 @@
             }
 
             try {
-                const testCollectionRef = collection(db, 'users', effectiveUserId, 'crm_data', 'testes');
+                // CORREÇÃO: Estrutura de coleção aninhada para organização
+                const testCollectionRef = collection(db, 'users', effectiveUserId, 'crm', 'data', 'testes');
                 await addDoc(testCollectionRef, {
                     info: info,
                     createdAt: serverTimestamp()
@@ -574,3 +576,4 @@
 </body>
 
 </html>
+
