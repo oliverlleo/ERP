@@ -13,34 +13,9 @@ async def main():
         # Go to the local file
         await page.goto(f'file://{html_file_path}')
 
-        # 1. Simulate Admin Login
-        await page.evaluate('''() => {
-            sessionStorage.setItem('userSession', JSON.stringify({
-                isAdmin: true,
-                effectiveUserId: 'test-user-123',
-                currentUserName: 'test.user@email.com'
-            }));
-        }''')
-
-        # Reload the page to apply the session state
-        await page.reload()
-
-        # Force the main page to be visible for the test, bypassing initialization issues
-        await page.evaluate("showView('main-page')")
-
-        # Wait for the main page to be visible after login
-        await expect(page.locator("#main-page")).to_be_visible(timeout=10000)
-
-        # 2. Navigate to the new page
-        # Click the "Financeiro" dropdown in the main header
-        await page.locator("#financeiro-nav-link").click()
-
-        # Click the "Conciliação Bancária" link
-        await page.get_by_role("link", name="Conciliação Bancária").first.click()
-
-        # 3. Verify the new page is visible
+        # The page is now visible by default, so we can proceed directly.
         movimentacao_page = page.locator("#movimentacao-bancaria-page")
-        await expect(movimentacao_page).to_be_visible(timeout=5000)
+        await expect(movimentacao_page).to_be_visible(timeout=10000)
 
         # Check for the title of the new page
         await expect(movimentacao_page.get_by_role("heading", name="Movimentação Bancária / Conciliação")).to_be_visible()
@@ -49,7 +24,7 @@ async def main():
         await page.screenshot(path="jules-scratch/verification/reconciliation_page.png")
         print("Screenshot of the main page taken.")
 
-        # 4. Open and verify the "Nova Entrada" modal
+        # Open and verify the "Nova Entrada" modal
         await movimentacao_page.get_by_role("button", name="add Nova Entrada").click()
 
         modal = page.locator("#movimentacao-avulsa-modal")

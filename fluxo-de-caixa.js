@@ -97,18 +97,21 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
         planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
 
+        // Fetch all non-reversed transactions, then filter by date in the client to avoid composite indexes.
         let q = query(collection(db, `users/${userId}/movimentacoesBancarias`), where("estornado", "!=", true));
-
-        if (startDate) {
-            q = query(q, where('dataTransacao', inclusive ? '>=' : '<', startDate));
-        }
-        if (endDate) {
-            q = query(q, where('dataTransacao', inclusive ? '<=' : '<', endDate));
-        }
 
         const movsSnap = await getDocs(q);
 
-        for (const doc of movsSnap.docs) {
+        const filteredDocs = movsSnap.docs.filter(doc => {
+            const data = doc.data();
+            if (startDate && inclusive && data.dataTransacao < startDate) return false;
+            if (startDate && !inclusive && data.dataTransacao >= startDate) return false;
+            if (endDate && inclusive && data.dataTransacao > endDate) return false;
+            if (endDate && !inclusive && data.dataTransacao >= endDate) return false;
+            return true;
+        });
+
+        for (const doc of filteredDocs) {
             const data = doc.data();
             const valor = data.valor || 0;
             const categoria = planoContasMap.get(data.planoDeContasId);

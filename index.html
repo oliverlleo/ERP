@@ -3120,7 +3120,7 @@
 
 
     // --- Funções Auxiliares ---
-    window.showView = function(viewId) {
+    function showView(viewId) {
         document.querySelectorAll('.view-container').forEach(view => view.classList.remove('visible'));
         const viewToShow = document.getElementById(viewId);
         if (viewToShow) viewToShow.classList.add('visible');
@@ -4470,17 +4470,15 @@
         const sessionDataString = sessionStorage.getItem('userSession');
         if (sessionDataString) {
             const sessionData = JSON.parse(sessionDataString);
-            if (sessionData.isCompanyUser || sessionData.isAdmin) {
-                console.log("Restaurando sessão de usuário.");
+            if (sessionData.isCompanyUser) {
+                console.log("Restaurando sessão de usuário da empresa.");
                 effectiveUserId = sessionData.effectiveUserId;
                 currentUserName = sessionData.currentUserName;
 
                 updateUiForUser(currentUserName);
-                if (effectiveUserId !== 'test-user-123') {
-                    setupListeners(effectiveUserId);
-                    initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
-                    initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
-                }
+                setupListeners(effectiveUserId);
+                initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+                initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
                 showView('main-page');
                 updateStatusFilterUI();
                 updateReceitaStatusFilterUI();
@@ -6308,28 +6306,43 @@
 
         const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
         const pagamentoRef = doc(despesaRef, 'pagamentos', pagamentoId);
-        const novoEstornoRef = doc(collection(despesaRef, 'pagamentos'));
+        const movimentacoesBancariasRef = collection(db, 'users', userId, 'movimentacoesBancarias');
 
         try {
+            // Passo 1: Encontrar a movimentação bancária original FORA da transação.
+            const qMovimentacaoOriginal = query(movimentacoesBancariasRef, where("origemId", "==", pagamentoId));
+            const movimentacaoOriginalSnap = await getDocs(qMovimentacaoOriginal);
+
+            if (movimentacaoOriginalSnap.empty) {
+                alert("ERRO CRÍTICO: Movimentação bancária original correspondente ao pagamento não encontrada. O estorno não pode prosseguir. Contate o suporte.");
+                console.error("Não foi possível encontrar a movimentação bancária para estornar com origemId:", pagamentoId);
+                return;
+            }
+            const movimentacaoOriginalDoc = movimentacaoOriginalSnap.docs[0];
+            const movimentacaoOriginalRef = movimentacaoOriginalDoc.ref;
+
+            // Passo 2: Executar a transação atômica.
             await runTransaction(db, async (transaction) => {
                 const despesaDoc = await transaction.get(despesaRef);
                 const pagamentoDoc = await transaction.get(pagamentoRef);
 
                 if (!despesaDoc.exists() || !pagamentoDoc.exists()) {
-                    throw "Despesa ou pagamento original não encontrado.";
+                    throw new Error("Despesa ou pagamento original não encontrado.");
                 }
 
                 const despesaData = despesaDoc.data();
                 const pagamentoData = pagamentoDoc.data();
 
                 if (pagamentoData.estornado) {
-                    throw "Esta transação já foi estornada.";
+                    throw new Error("Esta transação já foi estornada.");
                 }
 
-                const valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
+                // ---- Lógica de Reversão ----
 
-                const novoTotalPago = despesaData.totalPago - valorPrincipalEstornado;
-                const novoSaldo = despesaData.valorSaldo + valorPrincipalEstornado;
+                // 1. Reverter os valores na despesa principal
+                const valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
+                const novoTotalPago = (despesaData.totalPago || 0) - valorPrincipalEstornado;
+                const novoSaldo = (despesaData.valorSaldo || 0) + valorPrincipalEstornado;
 
                 let novoStatus;
                 const today = new Date();
@@ -6341,10 +6354,21 @@
                 } else if (novoSaldo > 0) {
                     novoStatus = 'Pago Parcialmente';
                 } else {
-                    novoStatus = 'Pago';
+                    novoStatus = 'Pago'; // Should not happen if saldo is positive, but for safety
                 }
 
-                transaction.set(novoEstornoRef, {
+                transaction.update(despesaRef, {
+                    totalPago: novoTotalPago,
+                    valorSaldo: novoSaldo,
+                    status: novoStatus
+                });
+
+                // 2. Marcar o pagamento original como estornado
+                transaction.update(pagamentoRef, { estornado: true });
+
+                // 3. Criar o registro de estorno na subcoleção de pagamentos
+                const novoEstornoPagamentoRef = doc(collection(despesaRef, 'pagamentos'));
+                transaction.set(novoEstornoPagamentoRef, {
                     tipoTransacao: "Estorno",
                     dataTransacao: new Date().toISOString().split('T')[0],
                     valorPrincipal: valorPrincipalEstornado,
@@ -6354,12 +6378,26 @@
                     createdAt: serverTimestamp()
                 });
 
-                transaction.update(pagamentoRef, { estornado: true });
+                // --- Lógica da Movimentação Bancária ---
 
-                transaction.update(despesaRef, {
-                    totalPago: novoTotalPago,
-                    valorSaldo: novoSaldo,
-                    status: novoStatus
+                // 4. Marcar a movimentação bancária original como estornada e conciliada
+                transaction.update(movimentacaoOriginalRef, { estornado: true, conciliado: true });
+
+                // 5. Criar a movimentação bancária de contrapartida (o estorno)
+                const movimentacaoOriginalData = movimentacaoOriginalDoc.data();
+                const novaMovimentacaoEstornoRef = doc(movimentacoesBancariasRef);
+                transaction.set(novaMovimentacaoEstornoRef, {
+                    ...movimentacaoOriginalData,
+                    valor: -movimentacaoOriginalData.valor, // Inverte o valor
+                    descricao: `Estorno do lançamento: ${movimentacaoOriginalData.descricao}`,
+                    origemTipo: "ESTORNO",
+                    origemId: novoEstornoPagamentoRef.id, // ID do NOVO registro de estorno do pagamento
+                    estornado: false,
+                    estornoDeId: movimentacaoOriginalDoc.id,
+                    conciliado: true, // Nasce conciliado
+                    dataConciliacao: new Date().toISOString().split('T')[0],
+                    usuarioConciliacao: "Sistema (Estorno)",
+                    createdAt: serverTimestamp(),
                 });
             });
 
@@ -6369,7 +6407,7 @@
 
         } catch (error) {
             console.error("Erro na transação de estorno: ", error);
-            alert("Falha ao processar o estorno: " + error);
+            alert("Falha ao processar o estorno: " + error.message);
         }
     }
 
@@ -7355,67 +7393,97 @@ function validateParcelasSum() {
 
         const receitaRef = doc(db, 'users', userId, 'receitas', receitaId);
         const recebimentoRef = doc(receitaRef, 'recebimentos', recebimentoId);
-        const novoEstornoRef = doc(collection(receitaRef, 'recebimentos'));
+        const movimentacoesBancariasRef = collection(db, 'users', userId, 'movimentacoesBancarias');
 
         try {
+            // Encontrar a movimentação bancária original
+            const qMovimentacaoOriginal = query(movimentacoesBancariasRef, where("origemId", "==", recebimentoId));
+            const movimentacaoOriginalSnap = await getDocs(qMovimentacaoOriginal);
+
+            if (movimentacaoOriginalSnap.empty) {
+                alert("ERRO CRÍTICO: Movimentação bancária original correspondente ao recebimento não encontrada. O estorno não pode prosseguir.");
+                console.error("Não foi possível encontrar a movimentação bancária para estornar com origemId:", recebimentoId);
+                return;
+            }
+            const movimentacaoOriginalDoc = movimentacaoOriginalSnap.docs[0];
+            const movimentacaoOriginalRef = movimentacaoOriginalDoc.ref;
+
+            // Executar a transação atômica
             await runTransaction(db, async (transaction) => {
                 const receitaDoc = await transaction.get(receitaRef);
                 const recebimentoDoc = await transaction.get(recebimentoRef);
 
                 if (!receitaDoc.exists() || !recebimentoDoc.exists()) {
-                    throw "Receita ou recebimento original não encontrado.";
+                    throw new Error("Receita ou recebimento original não encontrado.");
                 }
 
                 const receitaData = receitaDoc.data();
                 const recebimentoData = recebimentoDoc.data();
 
                 if (recebimentoData.estornado) {
-                    throw "Esta transação já foi estornada.";
+                    throw new Error("Esta transação já foi estornada.");
                 }
 
+                // 1. Reverter valores na receita
                 const valorPrincipalEstornado = recebimentoData.valorPrincipal || 0;
-                const jurosEstornados = recebimentoData.jurosRecebidos || 0;
-                const descontosEstornados = recebimentoData.descontosConcedidos || 0;
-
-                const novoTotalRecebido = receitaData.totalRecebido - valorPrincipalEstornado;
-                const novoTotalJuros = receitaData.totalJuros - jurosEstornados;
-                const novoTotalDescontos = receitaData.totalDescontos - descontosEstornados;
-                const novoSaldoPendente = (receitaData.valorOriginal + novoTotalJuros) - novoTotalRecebido - novoTotalDescontos;
-
+                const novoTotalRecebido = (receitaData.totalRecebido || 0) - valorPrincipalEstornado;
+                const novoSaldoPendente = (receitaData.saldoPendente || 0) + valorPrincipalEstornado;
 
                 let novoStatus;
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const vencimento = new Date((receitaData.dataVencimento || receitaData.vencimento) + 'T00:00:00');
 
-                if (novoSaldoPendente <= 0) {
-                    novoStatus = 'Recebido';
-                } else if (novoTotalRecebido > 0) {
-                    novoStatus = 'Recebido Parcialmente';
-                } else {
+                if (novoTotalRecebido <= 0 && novoSaldoPendente > 0) {
                      novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                } else if (novoSaldoPendente > 0 && novoTotalRecebido > 0) {
+                    novoStatus = 'Recebido Parcialmente';
+                } else if (novoSaldoPendente <= 0) {
+                    novoStatus = 'Recebido';
+                } else {
+                    novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
                 }
 
-                transaction.set(novoEstornoRef, {
+
+                transaction.update(receitaRef, {
+                    totalRecebido: novoTotalRecebido,
+                    saldoPendente: novoSaldoPendente,
+                    status: novoStatus
+                });
+
+                // 2. Marcar o recebimento original como estornado
+                transaction.update(recebimentoRef, { estornado: true });
+
+                // 3. Criar registro de estorno na subcoleção
+                const novoEstornoRecebimentoRef = doc(collection(receitaRef, 'recebimentos'));
+                transaction.set(novoEstornoRecebimentoRef, {
                     tipoTransacao: "Estorno",
                     dataTransacao: new Date().toISOString().split('T')[0],
                     valorPrincipal: valorPrincipalEstornado,
-                    jurosRecebidos: jurosEstornados,
-                    descontosConcedidos: descontosEstornados,
                     usuarioResponsavel: currentUserName || "N/A",
                     motivoEstorno: motivo,
                     recebimentoOriginalId: recebimentoId,
                     createdAt: serverTimestamp()
                 });
 
-                transaction.update(recebimentoRef, { estornado: true });
+                // 4. Marcar a movimentação bancária original como estornada e conciliada
+                transaction.update(movimentacaoOriginalRef, { estornado: true, conciliado: true });
 
-                transaction.update(receitaRef, {
-                    totalRecebido: novoTotalRecebido,
-                    totalJuros: novoTotalJuros,
-                    totalDescontos: novoTotalDescontos,
-                    saldoPendente: novoSaldoPendente,
-                    status: novoStatus
+                // 5. Criar a movimentação bancária de contrapartida
+                const movimentacaoOriginalData = movimentacaoOriginalDoc.data();
+                const novaMovimentacaoEstornoRef = doc(movimentacoesBancariasRef);
+                transaction.set(novaMovimentacaoEstornoRef, {
+                    ...movimentacaoOriginalData,
+                    valor: -movimentacaoOriginalData.valor, // Inverte o valor
+                    descricao: `Estorno do lançamento: ${movimentacaoOriginalData.descricao}`,
+                    origemTipo: "ESTORNO",
+                    origemId: novoEstornoRecebimentoRef.id,
+                    estornado: false,
+                    estornoDeId: movimentacaoOriginalDoc.id,
+                    conciliado: true,
+                    dataConciliacao: new Date().toISOString().split('T')[0],
+                    usuarioConciliacao: "Sistema (Estorno)",
+                    createdAt: serverTimestamp(),
                 });
             });
 
@@ -7425,7 +7493,7 @@ function validateParcelasSum() {
 
         } catch (error) {
             console.error("Erro na transação de estorno de recebimento: ", error);
-            alert("Falha ao processar o estorno: " + error);
+            alert("Falha ao processar o estorno: " + error.message);
         }
     }
 

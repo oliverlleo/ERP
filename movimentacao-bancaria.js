@@ -40,6 +40,14 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
     const closeMovAvulsaModalBtn = document.getElementById('close-mov-avulsa-modal-btn');
     const cancelMovAvulsaModalBtn = document.getElementById('cancel-mov-avulsa-modal-btn');
 
+    // Modal de Transferência
+    const transferenciaModal = document.getElementById('transferencia-modal');
+    const closeTransferenciaModalBtn = document.getElementById('close-transferencia-modal-btn');
+    const cancelTransferenciaModalBtn = document.getElementById('cancel-transferencia-modal-btn');
+    const transferenciaForm = document.getElementById('transferencia-form');
+    const transferenciaContaOrigemSelect = document.getElementById('transferencia-conta-origem');
+    const transferenciaContaDestinoSelect = document.getElementById('transferencia-conta-destino');
+
 
     let allMovimentacoes = [];
     let contasBancariasData = [];
@@ -93,8 +101,14 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
         });
 
         conciliarBtn.addEventListener('click', () => handleConciliacao(true));
-        desfacerConciliacaoBtn.addEventListener('click', () => handleConciliacao(false));
+        desfazerConciliacaoBtn.addEventListener('click', () => handleConciliacao(false));
         estornarBtn.addEventListener('click', handleEstorno);
+
+        // Listeners para o Modal de Transferência
+        transferenciaBtn.addEventListener('click', openTransferenciaModal);
+        closeTransferenciaModalBtn.addEventListener('click', () => transferenciaModal.classList.add('hidden'));
+        cancelTransferenciaModalBtn.addEventListener('click', () => transferenciaModal.classList.add('hidden'));
+        transferenciaForm.addEventListener('submit', handleTransferenciaSubmit);
     }
 
     async function fetchDataAndRender() {
@@ -107,38 +121,57 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
             return;
         }
 
+        // Query only by the mandatory field to avoid composite indexes
         const q = query(collection(db, 'users', userId, 'movimentacoesBancarias'),
-            where("contaBancariaId", "==", contaId),
-            where("dataTransacao", ">=", de),
-            where("dataTransacao", "<=", ate)
+            where("contaBancariaId", "==", contaId)
         );
 
         try {
             const querySnapshot = await getDocs(q);
-            allMovimentacoes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            allMovimentacoes.sort((a, b) => new Date(a.dataTransacao) - new Date(b.dataTransacao));
+            // Perform date filtering on the client side
+            allMovimentacoes = querySnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(mov => {
+                    if (!de || !ate) return true;
+                    return mov.dataTransacao >= de && mov.dataTransacao <= ate;
+                });
 
-            renderTable();
-            calculateAndRenderKPIs();
+            allMovimentacoes.sort((a, b) => {
+                const dateA = new Date(a.dataTransacao);
+                const dateB = new Date(b.dataTransacao);
+                if (dateA < dateB) return -1;
+                if (dateA > dateB) return 1;
+                // If dates are the same, check for creation timestamp to maintain order
+                const timeA = a.createdAt?.toMillis() || 0;
+                const timeB = b.createdAt?.toMillis() || 0;
+                return timeA - timeB;
+            });
+
+            const saldoInicialPeriodo = await calculateAndRenderKPIs();
+            renderTable(saldoInicialPeriodo);
+
         } catch (error) {
             console.error("Error fetching bank transactions: ", error);
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-red-500">Erro ao carregar os dados.</td></tr>`;
         }
     }
 
-    function renderTable() {
+    function renderTable(saldoInicialPeriodo = 0) {
         tableBody.innerHTML = '';
         if (allMovimentacoes.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-gray-500">Nenhuma movimentação encontrada para o período e conta selecionados.</td></tr>`;
             return;
         }
 
-        let saldoCorrente = 0; // This needs to be calculated based on the start balance of the period.
+        let saldoCorrente = saldoInicialPeriodo;
 
         allMovimentacoes.forEach(mov => {
             const tr = document.createElement('tr');
             const valor = mov.valor || 0;
-            saldoCorrente += valor;
+
+            if (!mov.estornado) {
+                saldoCorrente += valor;
+            }
 
             const isEstornado = mov.estornado === true;
             tr.className = isEstornado ? 'bg-gray-200 text-gray-500 line-through' : 'hover:bg-gray-50';
@@ -164,14 +197,74 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
         });
     }
 
-    function calculateAndRenderKPIs() {
-        // Placeholder for KPI calculation logic
-        kpiSaldoInicial.textContent = formatCurrency(0);
-        kpiTotalEntradas.textContent = formatCurrency(0);
-        kpiTotalSaidas.textContent = formatCurrency(0);
-        kpiSaldoPeriodo.textContent = formatCurrency(0);
-        kpiSaldoFinal.textContent = formatCurrency(0);
-        kpiSaldoAConciliar.textContent = formatCurrency(0);
+    async function calculateAndRenderKPIs() {
+        const contaId = contaBancariaSelect.value;
+        const de = periodoDeInput.value;
+        const ate = periodoAteInput.value;
+
+        if (!contaId || !de) {
+            // Clear KPIs
+            kpiSaldoInicial.textContent = formatCurrency(0);
+            kpiTotalEntradas.textContent = formatCurrency(0);
+            kpiTotalSaidas.textContent = formatCurrency(0);
+            kpiSaldoPeriodo.textContent = formatCurrency(0);
+            kpiSaldoFinal.textContent = formatCurrency(0);
+            kpiSaldoAConciliar.textContent = formatCurrency(0);
+            return 0;
+        }
+
+        const conta = contasBancariasData.find(c => c.id === contaId);
+        const saldoInicialConta = conta ? (conta.saldoInicial || 0) : 0;
+
+        // Query for movements before the start date to adjust the initial balance
+        const qBefore = query(collection(db, 'users', userId, 'movimentacoesBancarias'),
+            where("contaBancariaId", "==", contaId),
+            where("dataTransacao", "<", de)
+        );
+        const snapshotBefore = await getDocs(qBefore);
+        let ajusteSaldoInicial = 0;
+        snapshotBefore.forEach(doc => {
+            const data = doc.data();
+            // Only count non-voided transactions for balance calculation
+            if (!data.estornado) {
+                ajusteSaldoInicial += data.valor || 0;
+            }
+        });
+
+        const saldoInicialPeriodo = saldoInicialConta + ajusteSaldoInicial;
+
+        // Calculate metrics for the period using the already-fetched 'allMovimentacoes'
+        let totalEntradas = 0;
+        let totalSaidas = 0;
+        let saldoAConciliar = 0;
+
+        allMovimentacoes.forEach(mov => {
+            // Ignore voided transactions for period totals
+            if (mov.estornado) return;
+
+            const valor = mov.valor || 0;
+            if (valor > 0) {
+                totalEntradas += valor;
+            } else {
+                totalSaidas += valor;
+            }
+            if (!mov.conciliado) {
+                saldoAConciliar += valor;
+            }
+        });
+
+        const saldoPeriodo = totalEntradas + totalSaidas;
+        const saldoFinal = saldoInicialPeriodo + saldoPeriodo;
+
+        // Render KPIs
+        kpiSaldoInicial.textContent = formatCurrency(saldoInicialPeriodo);
+        kpiTotalEntradas.textContent = formatCurrency(totalEntradas);
+        kpiTotalSaidas.textContent = formatCurrency(Math.abs(totalSaidas));
+        kpiSaldoPeriodo.textContent = formatCurrency(saldoPeriodo);
+        kpiSaldoFinal.textContent = formatCurrency(saldoFinal);
+        kpiSaldoAConciliar.textContent = formatCurrency(saldoAConciliar);
+
+        return saldoInicialPeriodo;
     }
 
     function updateActionButtonsState() {
@@ -292,6 +385,23 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
             return;
         }
         const movimentacaoId = selectedIds[0];
+        const movimentacaoParaEstornar = allMovimentacoes.find(m => m.id === movimentacaoId);
+
+        if (!movimentacaoParaEstornar) {
+            alert("Erro: Movimentação não encontrada nos dados carregados.");
+            return;
+        }
+
+        const { origemTipo, origemId, origemParentId } = movimentacaoParaEstornar;
+
+        if (!['PAGAMENTO_DESPESA', 'RECEBIMENTO_RECEITA'].includes(origemTipo)) {
+            alert("Apenas movimentações originadas de Contas a Pagar ou Receber podem ser estornadas a partir desta tela.");
+            return;
+        }
+         if (!origemParentId || !origemId) {
+            alert("Erro: A movimentação selecionada não tem informações de origem completas para o estorno.");
+            return;
+        }
 
         const motivo = prompt("Por favor, insira o motivo do estorno:");
         if (!motivo) {
@@ -300,31 +410,56 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
         }
 
         const movimentacaoRef = doc(db, 'users', userId, 'movimentacoesBancarias', movimentacaoId);
+        const isDespesa = origemTipo === 'PAGAMENTO_DESPESA';
+        const parentCollectionName = isDespesa ? 'despesas' : 'receitas';
+        const subCollectionName = isDespesa ? 'pagamentos' : 'recebimentos';
+
+        const parentRef = doc(db, 'users', userId, parentCollectionName, origemParentId);
+        const pagamentoOuRecebimentoRef = doc(parentRef, subCollectionName, origemId);
 
         try {
             await runTransaction(db, async (transaction) => {
                 const movDoc = await transaction.get(movimentacaoRef);
-                if (!movDoc.exists()) throw new Error("Movimentação não encontrada.");
+                const parentDoc = await transaction.get(parentRef);
+                const pagamentoOuRecebimentoDoc = await transaction.get(pagamentoOuRecebimentoRef);
+
+                if (!movDoc.exists() || !parentDoc.exists() || !pagamentoOuRecebimentoDoc.exists()) {
+                    throw new Error("Um dos documentos necessários para o estorno não foi encontrado (movimentação, documento pai, ou pagamento/recebimento).");
+                }
 
                 const movData = movDoc.data();
                 if (movData.estornado) throw new Error("Esta movimentação já foi estornada.");
-                if (!['PAGAMENTO_DESPESA', 'RECEBIMENTO_RECEITA'].includes(movData.origemTipo)) {
-                    throw new Error("Apenas movimentações originadas de Contas a Pagar ou Receber podem ser estornadas a partir daqui.");
-                }
 
-                // 1. Marcar a movimentação original como estornada
-                transaction.update(movimentacaoRef, {
-                    estornado: true,
-                    conciliado: true // An estorno and its source should be considered reconciled to not affect the balance to reconcile.
+                const pagamentoOuRecebimentoData = pagamentoOuRecebimentoDoc.data();
+                if (pagamentoOuRecebimentoData.estornado) throw new Error("O pagamento/recebimento de origem já foi estornado.");
+
+                // 1. Marcar movimentação original como estornada
+                transaction.update(movimentacaoRef, { estornado: true, conciliado: true });
+
+                // 2. Marcar pagamento/recebimento original como estornado
+                transaction.update(pagamentoOuRecebimentoRef, { estornado: true });
+
+                // 3. Criar registro de estorno na subcoleção (pagamentos ou recebimentos)
+                const novoEstornoSubcolecaoRef = doc(collection(parentRef, subCollectionName));
+                transaction.set(novoEstornoSubcolecaoRef, {
+                    tipoTransacao: "Estorno",
+                    dataTransacao: new Date().toISOString().split('T')[0],
+                    valorPrincipal: pagamentoOuRecebimentoData.valorPrincipal || 0,
+                    usuarioResponsavel: currentUserName || "N/A",
+                    motivoEstorno: motivo,
+                    pagamentoOriginalId: isDespesa ? origemId : null,
+                    recebimentoOriginalId: !isDespesa ? origemId : null,
+                    createdAt: serverTimestamp()
                 });
 
-                // 2. Criar a movimentação de contrapartida (o estorno em si)
-                const estornoRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
-                transaction.set(estornoRef, {
+                // 4. Criar movimentação de contrapartida
+                const estornoMovimentacaoRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
+                transaction.set(estornoMovimentacaoRef, {
                     ...movData,
-                    valor: -movData.valor, // Inverte o valor
+                    valor: -movData.valor,
                     descricao: `Estorno: ${movData.descricao}`,
                     origemTipo: 'ESTORNO',
+                    origemId: novoEstornoSubcolecaoRef.id,
                     origemDescricao: `Estorno de ${movData.origemDescricao}`,
                     estornado: false,
                     estornoDeId: movimentacaoId,
@@ -332,50 +467,42 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                     createdAt: serverTimestamp()
                 });
 
-                // 3. Reverter o efeito no documento de origem (despesa ou receita)
-                const isDespesa = movData.origemTipo === 'PAGAMENTO_DESPESA';
-                const parentCollection = isDespesa ? 'despesas' : 'receitas';
-                const parentId = movData.origemParentId;
-                if (!parentId) throw new Error("ID do documento pai não encontrado na movimentação.");
-
-                const parentRef = doc(db, 'users', userId, parentCollection, parentId);
-                const parentDoc = await transaction.get(parentRef);
-                if (!parentDoc.exists()) throw new Error("Documento de origem (despesa/receita) não encontrado.");
-
+                // 5. Reverter valores e status no documento pai
                 const parentData = parentDoc.data();
-                const pagamentoRef = doc(parentRef, isDespesa ? 'pagamentos' : 'recebimentos', movData.origemId);
-                const pagamentoDoc = await transaction.get(pagamentoRef);
-                if (!pagamentoDoc.exists()) throw new Error("Documento de pagamento/recebimento original não encontrado.");
+                const valorPrincipalEstornado = pagamentoOuRecebimentoData.valorPrincipal || 0;
+                const today = new Date(); today.setHours(0, 0, 0, 0);
 
-                const pagamentoData = pagamentoDoc.data();
-
-                // Marcar o pagamento/recebimento original como estornado também
-                transaction.update(pagamentoRef, { estornado: true });
-
-                // Reverter os valores no documento pai
                 if (isDespesa) {
-                    const novoTotalPago = (parentData.totalPago || 0) - (pagamentoData.valorPrincipal || 0);
-                    const novoSaldo = (parentData.valorSaldo || 0) + (pagamentoData.valorPrincipal || 0);
-                    const novoStatus = novoSaldo > 0 ? 'Pago Parcialmente' : 'Pendente'; // Simplified status logic
-                    transaction.update(parentRef, {
-                        totalPago: novoTotalPago,
-                        valorSaldo: novoSaldo,
-                        status: novoStatus
-                    });
+                    const novoTotalPago = (parentData.totalPago || 0) - valorPrincipalEstornado;
+                    const novoSaldo = (parentData.valorSaldo || 0) + valorPrincipalEstornado;
+                    let novoStatus;
+                    const vencimento = new Date(parentData.vencimento + 'T00:00:00');
+                    if (novoSaldo >= parentData.valorOriginal) {
+                        novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                    } else if (novoSaldo > 0) {
+                        novoStatus = 'Pago Parcialmente';
+                    } else {
+                        novoStatus = 'Pago';
+                    }
+                    transaction.update(parentRef, { totalPago: novoTotalPago, valorSaldo: novoSaldo, status: novoStatus });
                 } else { // É Receita
-                    const novoTotalRecebido = (parentData.totalRecebido || 0) - (pagamentoData.valorPrincipal || 0);
-                    const novoSaldoPendente = (parentData.saldoPendente || 0) + (pagamentoData.valorPrincipal || 0);
-                    const novoStatus = novoSaldoPendente > 0 ? 'Pendente' : 'Recebido'; // Simplified
-                    transaction.update(parentRef, {
-                        totalRecebido: novoTotalRecebido,
-                        saldoPendente: novoSaldoPendente,
-                        status: novoStatus
-                    });
+                    const novoTotalRecebido = (parentData.totalRecebido || 0) - valorPrincipalEstornado;
+                    const novoSaldoPendente = (parentData.saldoPendente || 0) + valorPrincipalEstornado;
+                    let novoStatus;
+                    const vencimento = new Date((parentData.dataVencimento || parentData.vencimento) + 'T00:00:00');
+                    if (novoSaldoPendente <= 0) {
+                        novoStatus = 'Recebido';
+                    } else if (novoTotalRecebido > 0) {
+                        novoStatus = 'Recebido Parcialmente';
+                    } else {
+                        novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                    }
+                    transaction.update(parentRef, { totalRecebido: novoTotalRecebido, saldoPendente: novoSaldoPendente, status: novoStatus });
                 }
             });
 
             alert("Estorno realizado com sucesso!");
-            fetchDataAndRender();
+            fetchDataAndRender(); // Refresh data after successful transaction
 
         } catch (error) {
             console.error("Erro na transação de estorno:", error);
@@ -384,4 +511,103 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
     }
 
     init();
+
+    function openTransferenciaModal() {
+        transferenciaForm.reset();
+
+        // Populate dropdowns
+        transferenciaContaOrigemSelect.innerHTML = '<option value="">Selecione a conta de origem</option>';
+        transferenciaContaDestinoSelect.innerHTML = '<option value="">Selecione a conta de destino</option>';
+        contasBancariasData.forEach(conta => {
+            const optionOrigem = document.createElement('option');
+            optionOrigem.value = conta.id;
+            optionOrigem.textContent = conta.nome;
+            transferenciaContaOrigemSelect.appendChild(optionOrigem);
+
+            const optionDestino = document.createElement('option');
+            optionDestino.value = conta.id;
+            optionDestino.textContent = conta.nome;
+            transferenciaContaDestinoSelect.appendChild(optionDestino);
+        });
+
+        document.getElementById('transferencia-data').value = new Date().toISOString().split('T')[0];
+        transferenciaModal.classList.remove('hidden');
+    }
+
+    async function handleTransferenciaSubmit(e) {
+        e.preventDefault();
+
+        const contaOrigemId = transferenciaContaOrigemSelect.value;
+        const contaDestinoId = transferenciaContaDestinoSelect.value;
+        const valorCents = toCents(document.getElementById('transferencia-valor').value);
+        const dataTransacao = document.getElementById('transferencia-data').value;
+        const obs = document.getElementById('transferencia-obs').value;
+
+        if (!contaOrigemId || !contaDestinoId || !valorCents || !dataTransacao) {
+            alert("Todos os campos são obrigatórios.");
+            return;
+        }
+
+        if (contaOrigemId === contaDestinoId) {
+            alert("A conta de origem e destino não podem ser a mesma.");
+            return;
+        }
+
+        if (valorCents <= 0) {
+            alert("O valor da transferência deve ser positivo.");
+            return;
+        }
+
+        const contaOrigemNome = transferenciaContaOrigemSelect.options[transferenciaContaOrigemSelect.selectedIndex].text;
+        const contaDestinoNome = transferenciaContaDestinoSelect.options[transferenciaContaDestinoSelect.selectedIndex].text;
+
+        const transferenciaId = doc(collection(db, 'users')).id;
+
+        const batch = writeBatch(db);
+        const movimentacoesRef = collection(db, 'users', userId, 'movimentacoesBancarias');
+
+        const saidaRef = doc(movimentacoesRef);
+        batch.set(saidaRef, {
+            contaBancariaId: contaOrigemId,
+            contaBancariaNome: contaOrigemNome,
+            dataTransacao: dataTransacao,
+            valor: -valorCents,
+            descricao: `Transferência para ${contaDestinoNome}. ${obs}`,
+            origemTipo: 'TRANSFERENCIA_SAIDA',
+            origemId: transferenciaId,
+            origemDescricao: "Transferência entre contas",
+            conciliado: false,
+            adminId: userId,
+            createdAt: serverTimestamp(),
+            estornado: false,
+            estornoDeId: null
+        });
+
+        const entradaRef = doc(movimentacoesRef);
+        batch.set(entradaRef, {
+            contaBancariaId: contaDestinoId,
+            contaBancariaNome: contaDestinoNome,
+            dataTransacao: dataTransacao,
+            valor: valorCents,
+            descricao: `Transferência de ${contaOrigemNome}. ${obs}`,
+            origemTipo: 'TRANSFERENCIA_ENTRADA',
+            origemId: transferenciaId,
+            origemDescricao: "Transferência entre contas",
+            conciliado: false,
+            adminId: userId,
+            createdAt: serverTimestamp(),
+            estornado: false,
+            estornoDeId: null
+        });
+
+        try {
+            await batch.commit();
+            alert("Transferência registrada com sucesso!");
+            transferenciaModal.classList.add('hidden');
+            fetchDataAndRender();
+        } catch (error) {
+            console.error("Erro ao registrar transferência:", error);
+            alert("Falha ao registrar a transferência.");
+        }
+    }
 }
