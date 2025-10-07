@@ -155,6 +155,7 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -373,6 +374,7 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -1220,6 +1222,7 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -2280,6 +2283,161 @@
     </div>
   </div>
 
+  <!-- Container da Tela de Movimentação Bancária -->
+  <div id="movimentacao-bancaria-page" class="view-container min-h-screen w-full">
+    <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <div class="relative">
+                        <button id="financeiro-nav-link-movimentacao" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
+                            <span>Financeiro</span>
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        <div id="financeiro-dropdown-movimentacao" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
+                        </div>
+                    </div>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-button-movimentacao" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-movimentacao" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-movimentacao" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-movimentacao" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8 bg-gray-50">
+                <div class="layout-content-container mx-auto flex w-full flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Movimentação Bancária / Conciliação</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Espelho do seu extrato bancário para conferência e lançamentos manuais.</p>
+                    </div>
+
+                    <!-- Painel de Controle e Filtros -->
+                    <div class="p-4 bg-white rounded-lg border shadow-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div class="md:col-span-1">
+                                <label for="mov-conta-bancaria-select" class="block text-sm font-medium text-gray-700">Conta Bancária <span class="text-red-500">*</span></label>
+                                <select id="mov-conta-bancaria-select" class="form-select mt-1 block w-full" required></select>
+                            </div>
+                            <div>
+                                <label for="mov-periodo-de" class="block text-sm font-medium text-gray-700">Período de:</label>
+                                <input type="date" id="mov-periodo-de" class="form-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="mov-periodo-ate" class="block text-sm font-medium text-gray-700">Até:</label>
+                                <input type="date" id="mov-periodo-ate" class="form-input mt-1 block w-full">
+                            </div>
+                            <div class="flex justify-end">
+                                <button id="mov-filtrar-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Filtrar</button>
+                            </div>
+                        </div>
+                        <!-- KPIs -->
+                        <div class="mt-6 grid grid-cols-2 lg:grid-cols-6 gap-4 text-center">
+                            <div><p class="text-sm text-gray-500">Saldo Inicial</p><p id="kpi-mov-saldo-inicial" class="text-lg font-bold">R$ 0,00</p></div>
+                            <div><p class="text-sm text-gray-500">Total Entradas</p><p id="kpi-mov-total-entradas" class="text-lg font-bold text-green-600">R$ 0,00</p></div>
+                            <div><p class="text-sm text-gray-500">Total Saídas</p><p id="kpi-mov-total-saidas" class="text-lg font-bold text-red-600">R$ 0,00</p></div>
+                            <div><p class="text-sm text-gray-500">Saldo Período</p><p id="kpi-mov-saldo-periodo" class="text-lg font-bold">R$ 0,00</p></div>
+                            <div><p class="text-sm text-gray-500">Saldo Final</p><p id="kpi-mov-saldo-final" class="text-lg font-bold text-blue-700">R$ 0,00</p></div>
+                            <div><p class="text-sm text-orange-600">A Conciliar</p><p id="kpi-mov-saldo-a-conciliar" class="text-lg font-bold text-orange-700">R$ 0,00</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Movimentações -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <!-- Barra de Ações -->
+                        <div class="flex flex-wrap items-center gap-2 mb-4">
+                            <button id="mov-nova-entrada-btn" class="inline-flex items-center gap-2 rounded-md bg-green-500 px-3 py-2 text-sm font-medium text-white shadow-sm"><span class="material-symbols-outlined text-base">add</span>Nova Entrada</button>
+                            <button id="mov-nova-saida-btn" class="inline-flex items-center gap-2 rounded-md bg-red-500 px-3 py-2 text-sm font-medium text-white shadow-sm"><span class="material-symbols-outlined text-base">remove</span>Nova Saída</button>
+                            <button id="mov-transferencia-btn" class="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-3 py-2 text-sm font-medium text-white shadow-sm"><span class="material-symbols-outlined text-base">swap_horiz</span>Transferência</button>
+                            <button id="mov-conciliar-btn" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">check_circle</span>Conciliar</button>
+                            <button id="mov-desfazer-conciliacao-btn" class="inline-flex items-center gap-2 rounded-md bg-yellow-500 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">cancel</span>Desfazer</button>
+                            <button id="mov-estornar-btn" class="inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">undo</span>Estornar</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-4"><input id="mov-select-all-checkbox" type="checkbox"></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entrada (R$)</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saída (R$)</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saldo (R$)</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="movimentacoes-bancarias-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Rows will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal para Nova Entrada/Saída Avulsa -->
+  <div id="movimentacao-avulsa-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 id="mov-avulsa-modal-title" class="text-2xl font-bold text-gray-900">Nova Movimentação</h3>
+            <button id="close-mov-avulsa-modal-btn" class="p-2 rounded-full hover:bg-gray-200"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="mt-5">
+            <form id="movimentacao-avulsa-form" class="space-y-4">
+                <input type="hidden" id="mov-avulsa-tipo" value=""> <!-- 'ENTRADA' ou 'SAIDA' -->
+                <div>
+                    <label for="mov-avulsa-data" class="block text-sm font-medium">Data</label>
+                    <input type="date" id="mov-avulsa-data" class="form-input mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="mov-avulsa-valor" class="block text-sm font-medium">Valor (R$)</label>
+                    <input type="text" id="mov-avulsa-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
+                </div>
+                <div>
+                    <label for="mov-avulsa-descricao" class="block text-sm font-medium">Descrição</label>
+                    <input type="text" id="mov-avulsa-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Taxa bancária, Aporte de capital">
+                </div>
+                <div>
+                    <label for="mov-avulsa-plano-contas" class="block text-sm font-medium">Plano de Contas</label>
+                    <select id="mov-avulsa-plano-contas" class="form-select mt-1 block w-full" required></select>
+                </div>
+                <div class="flex justify-end pt-4 border-t space-x-2">
+                    <button type="button" id="cancel-mov-avulsa-modal-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+  </div>
+
+
   <!-- Container da Tela Financeiro - Fluxo de Caixa -->
   <div id="fluxo-de-caixa-page" class="view-container min-h-screen w-full">
      <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
@@ -2640,6 +2798,7 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction, writeBatch, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
     import { initializeFluxoDeCaixa } from './fluxo-de-caixa.js';
+    import { initializeMovimentacaoBancaria } from './movimentacao-bancaria.js';
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -2961,7 +3120,7 @@
 
 
     // --- Funções Auxiliares ---
-    function showView(viewId) {
+    window.showView = function(viewId) {
         document.querySelectorAll('.view-container').forEach(view => view.classList.remove('visible'));
         const viewToShow = document.getElementById(viewId);
         if (viewToShow) viewToShow.classList.add('visible');
@@ -4300,6 +4459,7 @@
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
             initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+            initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
             showView('main-page');
             updateStatusFilterUI();
             updateReceitaStatusFilterUI();
@@ -4310,14 +4470,17 @@
         const sessionDataString = sessionStorage.getItem('userSession');
         if (sessionDataString) {
             const sessionData = JSON.parse(sessionDataString);
-            if (sessionData.isCompanyUser) {
-                console.log("Restaurando sessão de usuário da empresa.");
+            if (sessionData.isCompanyUser || sessionData.isAdmin) {
+                console.log("Restaurando sessão de usuário.");
                 effectiveUserId = sessionData.effectiveUserId;
                 currentUserName = sessionData.currentUserName;
 
                 updateUiForUser(currentUserName);
-                setupListeners(effectiveUserId);
-                initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+                if (effectiveUserId !== 'test-user-123') {
+                    setupListeners(effectiveUserId);
+                    initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+                    initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
+                }
                 showView('main-page');
                 updateStatusFilterUI();
                 updateReceitaStatusFilterUI();
@@ -6342,9 +6505,34 @@
                 }
 
                 transaction.update(despesaRef, updateData);
+
+                // 3. Create a corresponding bank transaction
+                const contaSaidaSelect = document.getElementById('pagar-conta-saida');
+                const contaSaidaNome = contaSaidaSelect.options[contaSaidaSelect.selectedIndex].text;
+                const movBancariaRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
+                transaction.set(movBancariaRef, {
+                    contaBancariaId: contaSaidaId,
+                    contaBancariaNome: contaSaidaNome,
+                    dataTransacao: dataTransacao,
+                    valor: -valorPrincipalCents, // Negative for an expense payment
+                    descricao: `Pagto: ${data.descricao}`,
+                    origemTipo: 'PAGAMENTO_DESPESA',
+                    origemId: novoPagamentoRef.id, // ID of the payment document
+                    origemParentId: despesaRef.id, // ID of the parent despesa document
+                    planoDeContasId: data.categoriaId, // For DRE reporting
+                    origemDescricao: `Pagamento Despesa #${data.numeroDocumento || data.id.substring(0,4)}`,
+                    conciliado: false,
+                    dataConciliacao: null,
+                    usuarioConciliacao: null,
+                    estornado: false,
+                    estornoDeId: null,
+                    adminId: userId,
+                    createdAt: serverTimestamp()
+                });
+
             });
 
-            console.log("Transação de pagamento concluída com sucesso!");
+            console.log("Transação de pagamento e movimentação bancária concluídas com sucesso!");
             closePagarModal();
             closeConfirmarParcialModal();
 
@@ -7430,6 +7618,30 @@ function validateParcelasSum() {
                     }
 
                     transaction.update(receitaRef, updateData);
+
+                    // 3. Create a corresponding bank transaction
+                    const contaEntradaSelect = document.getElementById('receber-conta-entrada');
+                    const contaEntradaNome = contaEntradaSelect.options[contaEntradaSelect.selectedIndex].text;
+                    const movBancariaRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
+                    transaction.set(movBancariaRef, {
+                        contaBancariaId: contaEntradaId,
+                        contaBancariaNome: contaEntradaNome,
+                        dataTransacao: dataTransacao,
+                        valor: valorPrincipalCents, // Positive for a receipt
+                        descricao: `Recbto: ${data.descricao}`,
+                        origemTipo: 'RECEBIMENTO_RECEITA',
+                        origemId: novoRecebimentoRef.id, // ID of the receipt document
+                        origemParentId: receitaRef.id, // ID of the parent receita document
+                        planoDeContasId: data.categoriaId, // For DRE reporting
+                        origemDescricao: `Recebimento Receita #${data.numeroDocumento || data.id.substring(0,4)}`,
+                        conciliado: false,
+                        dataConciliacao: null,
+                        usuarioConciliacao: null,
+                        estornado: false,
+                        estornoDeId: null,
+                        adminId: userId,
+                        createdAt: serverTimestamp()
+                    });
                 });
 
                 receberModal.classList.add('hidden');
