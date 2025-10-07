@@ -2392,17 +2392,51 @@
                             <!-- Aba 3: Gráficos -->
                             <div id="fluxo-graficos-tab" class="fluxo-tab-content hidden">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    <div class="p-4 border rounded-lg shadow-sm">
-                                        <h4 class="text-lg font-semibold text-gray-700 mb-4">Fluxo Diário</h4>
-                                        <canvas id="fluxo-diario-chart"></canvas>
+                                    <!-- Gráfico 1: Receita X Despesa Mensal -->
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1 lg:col-span-2">
+                                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Receita vs. Despesa Mensal</h4>
+                                        <p class="text-sm text-gray-500 mb-4">Comparativo mensal entre o total de entradas e saídas no período selecionado.</p>
+                                        <canvas id="chart-receita-vs-despesa"></canvas>
                                     </div>
-                                    <div class="p-4 border rounded-lg shadow-sm">
-                                       <h4 class="text-lg font-semibold text-gray-700 mb-4">Composição de Receitas</h4>
-                                       <canvas id="composicao-receitas-chart"></canvas>
+
+                                    <!-- Gráfico 2: Acumulado Mensal -->
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1 lg:col-span-2">
+                                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Crescimento Acumulado</h4>
+                                        <p class="text-sm text-gray-500 mb-4">Trajetória do total de receitas e despesas somadas ao longo do período.</p>
+                                        <canvas id="chart-acumulado-mensal"></canvas>
                                     </div>
-                                    <div class="p-4 border rounded-lg shadow-sm col-span-1 lg:col-span-2">
-                                       <h4 class="text-lg font-semibold text-gray-700 mb-4">Composição de Despesas</h4>
-                                       <canvas id="composicao-despesas-chart"></canvas>
+
+                                    <!-- Gráfico 3: Evolução do Saldo da Conta -->
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1 lg:col-span-2">
+                                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Evolução do Saldo de Caixa</h4>
+                                        <p class="text-sm text-gray-500 mb-4">Projeção do saldo de caixa, combinando valores realizados e futuros.</p>
+                                        <canvas id="chart-evolucao-saldo"></canvas>
+                                    </div>
+
+                                    <!-- Gráfico 4: Análise de Despesas por Categoria -->
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1 lg:col-span-2">
+                                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Análise de Despesas por Categoria</h4>
+                                         <p class="text-sm text-gray-500 mb-4">Evolução dos gastos nas principais categorias ao longo do tempo.</p>
+                                        <canvas id="chart-despesas-categoria"></canvas>
+                                    </div>
+
+                                    <!-- Gráfico 5: Top 5 Despesas e Receitas -->
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1">
+                                       <h4 class="text-xl font-semibold text-gray-800 mb-4">Top 5 Fontes de Receita</h4>
+                                       <p class="text-sm text-gray-500 mb-4">Maiores entradas por cliente ou categoria no período.</p>
+                                       <canvas id="chart-top-5-receitas"></canvas>
+                                    </div>
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1">
+                                       <h4 class="text-xl font-semibold text-gray-800 mb-4">Top 5 Despesas</h4>
+                                       <p class="text-sm text-gray-500 mb-4">Maiores saídas por favorecido ou categoria no período.</p>
+                                       <canvas id="chart-top-5-despesas"></canvas>
+                                    </div>
+
+                                    <!-- Gráfico 6: Comparativo de Períodos -->
+                                    <div class="p-6 border rounded-lg shadow-sm bg-white col-span-1 lg:col-span-2">
+                                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Comparativo de Período</h4>
+                                        <p class="text-sm text-gray-500 mb-4">Análise das entradas e saídas do período atual contra o período anterior equivalente.</p>
+                                        <canvas id="chart-comparativo-periodos"></canvas>
                                     </div>
                                 </div>
                             </div>

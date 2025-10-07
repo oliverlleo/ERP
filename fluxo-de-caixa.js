@@ -191,7 +191,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             renderKPIs(kpis);
             renderExtrato(unifiedTransactions, kpis.saldoAnterior);
             renderDRE(unifiedTransactions);
-            renderCharts(unifiedTransactions);
+            renderAllNewCharts(unifiedTransactions, kpis.saldoAnterior);
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
@@ -517,166 +517,544 @@ export function initializeFluxoDeCaixa(db, userId, common) {
          dreTableBody.appendChild(createRow('(=) GERAÇÃO LÍQUIDA DE CAIXA', geracaoLiquida, false, false, true, true));
     }
 
-    function renderCharts(transactions) {
-        renderFluxoDiarioChart(transactions);
-        renderComposicaoReceitasChart(transactions);
-        renderComposicaoDespesasChart(transactions);
+    // --- New Charting Logic ---
+    let chartInstances = {};
+
+    function destroyAllCharts() {
+        Object.values(chartInstances).forEach(chart => chart.destroy());
+        chartInstances = {};
     }
 
-    let fluxoDiarioChartInstance, composicaoReceitasChartInstance, composicaoDespesasChartInstance;
+    function renderAllNewCharts(transactions, saldoAnterior) {
+        destroyAllCharts();
 
-    function renderFluxoDiarioChart(transactions) {
-        const ctx = document.getElementById('fluxo-diario-chart').getContext('2d');
-        if (fluxoDiarioChartInstance) {
-            fluxoDiarioChartInstance.destroy();
-        }
+        // 1. Receita vs. Despesa Mensal
+        const receitaVsDespesaData = processReceitaVsDespesaData(transactions);
+        renderReceitaVsDespesaChart(receitaVsDespesaData);
 
-        const dailyData = transactions.reduce((acc, t) => {
+        // 2. Acumulado Mensal
+        const acumuladoMensalData = processAcumuladoMensalData(transactions);
+        renderAcumuladoMensalChart(acumuladoMensalData);
+
+        // 3. Evolução do Saldo da Conta
+        const evolucaoSaldoData = processEvolucaoSaldoData(transactions, saldoAnterior);
+        renderEvolucaoSaldoChart(evolucaoSaldoData);
+
+        // 4. Análise de Despesas por Categoria
+        const despesasCategoriaData = processDespesasCategoriaData(transactions);
+        renderDespesasCategoriaChart(despesasCategoriaData);
+
+        // 5. Top 5 Despesas e Receitas
+        const { topReceitas, topDespesas } = processTop5Data(transactions);
+        renderTop5ReceitasChart(topReceitas);
+        renderTop5DespesasChart(topDespesas);
+
+        // 6. Comparativo de Períodos
+        // This will require an additional data fetch, handled inside its process function.
+        processAndRenderComparativoPeriodos();
+    }
+
+    // --- Data Processing Functions ---
+    function processReceitaVsDespesaData(transactions) {
+        const monthlyData = {};
+        const showRealizado = visaoRealizadoCheckbox.checked;
+        const showProjetado = visaoProjetadoCheckbox.checked;
+
+        transactions.forEach(t => {
+            if (!showRealizado && !t.isProjected) return;
+            if (!showProjetado && t.isProjected) return;
+
+            const month = t.data.substring(0, 7); // "YYYY-MM"
+            if (!monthlyData[month]) {
+                monthlyData[month] = { receitas: 0, despesas: 0 };
+            }
+            monthlyData[month].receitas += t.entrada || 0;
+            monthlyData[month].despesas += t.saida || 0;
+        });
+
+        const sortedMonths = Object.keys(monthlyData).sort();
+        const labels = sortedMonths.map(month => {
+            const [year, m] = month.split('-');
+            return new Date(year, m - 1).toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+        });
+        const receitas = sortedMonths.map(month => monthlyData[month].receitas / 100);
+        const despesas = sortedMonths.map(month => monthlyData[month].despesas / 100);
+
+        return { labels, receitas, despesas };
+    }
+
+    function processAcumuladoMensalData(transactions) {
+        const monthlyData = processReceitaVsDespesaData(transactions); // Reuse the monthly aggregation
+        const labels = monthlyData.labels;
+        let acumuladoReceitas = 0;
+        let acumuladoDespesas = 0;
+
+        const receitasAcumuladas = monthlyData.receitas.map(valor => {
+            acumuladoReceitas += valor;
+            return acumuladoReceitas;
+        });
+
+        const despesasAcumuladas = monthlyData.despesas.map(valor => {
+            acumuladoDespesas += valor;
+            return acumuladoDespesas;
+        });
+
+        return { labels, receitasAcumuladas, despesasAcumuladas };
+    }
+
+    function processEvolucaoSaldoData(transactions, saldoAnterior) {
+        const dailyData = {};
+        transactions.forEach(t => {
             const day = t.data;
-            if (!acc[day]) acc[day] = { entradas: 0, saidas: 0 };
-            acc[day].entradas += t.entrada || 0;
-            acc[day].saidas += t.saida || 0;
-            return acc;
-        }, {});
+            if (!dailyData[day]) {
+                dailyData[day] = { entradas: 0, saidas: 0, isProjected: t.isProjected };
+            }
+            dailyData[day].entradas += t.entrada || 0;
+            dailyData[day].saidas += t.saida || 0;
+            // If a day has both realized and projected, mark it as realized
+            if (!t.isProjected) {
+                dailyData[day].isProjected = false;
+            }
+        });
 
         const sortedDays = Object.keys(dailyData).sort();
+        const labels = [];
+        const dataPoints = [];
+        let saldoAcumulado = saldoAnterior;
+        let lastRealizedDayIndex = -1;
 
-        fluxoDiarioChartInstance = new Chart(ctx, {
+        sortedDays.forEach((day, index) => {
+            labels.push(new Date(day + 'T00:00:00').toLocaleDateString('pt-BR'));
+            const netChange = dailyData[day].entradas - dailyData[day].saidas;
+            saldoAcumulado += netChange;
+            dataPoints.push(saldoAcumulado / 100);
+            if (!dailyData[day].isProjected) {
+                lastRealizedDayIndex = index;
+            }
+        });
+
+        return { labels, dataPoints, lastRealizedDayIndex };
+    }
+
+    function processDespesasCategoriaData(transactions) {
+        const monthlyData = {};
+        const allCategories = new Set();
+
+        transactions.forEach(t => {
+            if (t.saida > 0) {
+                const month = t.data.substring(0, 7);
+                const category = t.planoDeConta || 'Sem Categoria';
+                allCategories.add(category);
+
+                if (!monthlyData[month]) {
+                    monthlyData[month] = {};
+                }
+                if (!monthlyData[month][category]) {
+                    monthlyData[month][category] = 0;
+                }
+                monthlyData[month][category] += t.saida;
+            }
+        });
+
+        const sortedMonths = Object.keys(monthlyData).sort();
+        const labels = sortedMonths.map(month => {
+            const [year, m] = month.split('-');
+            return new Date(year, m - 1).toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+        });
+
+        const datasets = Array.from(allCategories).map(category => {
+            const data = sortedMonths.map(month => (monthlyData[month][category] || 0) / 100);
+            return {
+                label: category,
+                data: data,
+                // backgroundColor will be assigned in the render function for better color cycling
+            };
+        });
+
+        return { labels, datasets };
+    }
+
+    function processTop5Data(transactions) {
+        const receitasPorCategoria = {};
+        const despesasPorCategoria = {};
+
+        transactions.forEach(t => {
+            const categoria = t.planoDeConta || 'Sem Categoria';
+            if (t.entrada > 0) {
+                if (!receitasPorCategoria[categoria]) receitasPorCategoria[categoria] = 0;
+                receitasPorCategoria[categoria] += t.entrada;
+            }
+            if (t.saida > 0) {
+                if (!despesasPorCategoria[categoria]) despesasPorCategoria[categoria] = 0;
+                despesasPorCategoria[categoria] += t.saida;
+            }
+        });
+
+        const sortAndSlice = (data) => Object.entries(data)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5);
+
+        const topReceitasRaw = sortAndSlice(receitasPorCategoria);
+        const topDespesasRaw = sortAndSlice(despesasPorCategoria);
+
+        const topReceitas = {
+            labels: topReceitasRaw.map(([label]) => label),
+            data: topReceitasRaw.map(([, value]) => value / 100)
+        };
+
+        const topDespesas = {
+            labels: topDespesasRaw.map(([label]) => label),
+            data: topDespesasRaw.map(([, value]) => value / 100)
+        };
+
+        return { topReceitas, topDespesas };
+    }
+
+    async function processAndRenderComparativoPeriodos() {
+        const startDateStr = periodoDeInput.value;
+        const endDateStr = periodoAteInput.value;
+        if (!startDateStr || !endDateStr) return;
+
+        const startDate = new Date(startDateStr + 'T00:00:00');
+        const endDate = new Date(endDateStr + 'T00:00:00');
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to be inclusive
+
+        const prevEndDate = new Date(startDate);
+        prevEndDate.setDate(prevEndDate.getDate() - 1);
+        const prevStartDate = new Date(prevEndDate);
+        prevStartDate.setDate(prevStartDate.getDate() - diffDays + 1);
+
+        const prevStartDateStr = prevStartDate.toISOString().split('T')[0];
+        const prevEndDateStr = prevEndDate.toISOString().split('T')[0];
+
+        try {
+            const [pagamentosAnteriores, recebimentosAnteriores] = await Promise.all([
+                fetchTransactionsEfficiently('despesas', 'pagamentos', prevStartDateStr, prevEndDateStr),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', prevStartDateStr, prevEndDateStr)
+            ]);
+
+            const transacoesAnteriores = await enrichAndUnifyTransactions(pagamentosAnteriores, recebimentosAnteriores, []);
+            const kpisAnteriores = calculateKPIs(0, transacoesAnteriores, 'todas');
+
+            const [pagamentosAtuais, recebimentosAtuais] = await Promise.all([
+                fetchTransactionsEfficiently('despesas', 'pagamentos', startDateStr, endDateStr),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', startDateStr, endDateStr)
+            ]);
+            const transacoesAtuais = await enrichAndUnifyTransactions(pagamentosAtuais, recebimentosAtuais, []);
+            const kpisAtuais = calculateKPIs(0, transacoesAtuais, 'todas');
+
+            const data = {
+                labels: ['Entradas', 'Saídas'],
+                periodoAtual: [kpisAtuais.totalEntradas / 100, kpisAtuais.totalSaidas / 100],
+                periodoAnterior: [kpisAnteriores.totalEntradas / 100, kpisAnteriores.totalSaidas / 100]
+            };
+
+            renderComparativoPeriodosChart(data);
+
+        } catch (error) {
+            console.error("Erro ao processar dados para gráfico comparativo:", error);
+        }
+    }
+
+    // --- Chart Rendering Functions ---
+    function renderReceitaVsDespesaChart({ labels, receitas, despesas }) {
+        const ctx = document.getElementById('chart-receita-vs-despesa')?.getContext('2d');
+        if (!ctx) return;
+
+        chartInstances.receitaVsDespesa = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: sortedDays.map(day => new Date(day + 'T00:00:00').toLocaleDateString('pt-BR')),
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Receitas',
+                        data: receitas,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Despesas',
+                        data: despesas,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => 'R$ ' + value.toLocaleString('pt-BR')
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.dataset.label}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderAcumuladoMensalChart({ labels, receitasAcumuladas, despesasAcumuladas }) {
+        const ctx = document.getElementById('chart-acumulado-mensal')?.getContext('2d');
+        if (!ctx) return;
+
+        chartInstances.acumuladoMensal = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Receitas Acumuladas',
+                        data: receitasAcumuladas,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Despesas Acumuladas',
+                        data: despesasAcumuladas,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: true,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => 'R$ ' + value.toLocaleString('pt-BR')
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: context => `${context.dataset.label}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderEvolucaoSaldoChart({ labels, dataPoints, lastRealizedDayIndex }) {
+        const ctx = document.getElementById('chart-evolucao-saldo')?.getContext('2d');
+        if (!ctx) return;
+
+        const realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
+        const projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
+
+        chartInstances.evolucaoSaldo = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Saldo Realizado',
+                        data: realizadoData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Saldo Projetado',
+                        data: projetadoData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderDash: [5, 5], // This makes the line dotted/dashed
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: value => 'R$ ' + value.toLocaleString('pt-BR')
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: context => `Saldo: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderDespesasCategoriaChart({ labels, datasets }) {
+        const ctx = document.getElementById('chart-despesas-categoria')?.getContext('2d');
+        if (!ctx) return;
+
+        const colors = [
+            'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)', 'rgba(83, 102, 255, 0.7)', 'rgba(255, 99, 255, 0.7)'
+        ];
+
+        datasets.forEach((dataset, index) => {
+            dataset.backgroundColor = colors[index % colors.length];
+        });
+
+        chartInstances.despesasCategoria = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => 'R$ ' + value.toLocaleString('pt-BR')
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.dataset.label}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTop5ReceitasChart({ labels, data }) {
+        const ctx = document.getElementById('chart-top-5-receitas')?.getContext('2d');
+        if (!ctx) return;
+
+        chartInstances.top5Receitas = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
                 datasets: [{
-                    label: 'Entradas',
-                    data: sortedDays.map(day => dailyData[day].entradas / 100),
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    label: 'Top 5 Receitas',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
-                }, {
-                    label: 'Saídas',
-                    data: sortedDays.map(day => dailyData[day].saidas / 100),
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                }]
+            },
+            options: {
+                indexAxis: 'y', // This makes the bar chart horizontal
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTop5DespesasChart({ labels, data }) {
+        const ctx = document.getElementById('chart-top-5-despesas')?.getContext('2d');
+        if (!ctx) return;
+
+        chartInstances.top5Despesas = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Top 5 Despesas',
+                    data: data,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderComparativoPeriodosChart({ labels, periodoAtual, periodoAnterior }) {
+        const ctx = document.getElementById('chart-comparativo-periodos')?.getContext('2d');
+        if (!ctx) return;
+
+        chartInstances.comparativoPeriodos = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Período Anterior',
+                        data: periodoAnterior,
+                        backgroundColor: 'rgba(156, 163, 175, 0.6)',
+                        borderColor: 'rgba(156, 163, 175, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Período Atual',
+                        data: periodoAtual,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            callback: function(value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR');
-                            }
+                            callback: value => 'R$ ' + value.toLocaleString('pt-BR')
                         }
                     }
-                }
-            }
-        });
-    }
-
-    function renderComposicaoReceitasChart(transactions) {
-        const ctx = document.getElementById('composicao-receitas-chart').getContext('2d');
-        if (composicaoReceitasChartInstance) {
-            composicaoReceitasChartInstance.destroy();
-        }
-
-        const receitaData = transactions
-            .filter(t => t.entrada > 0 && t.type === 'recebimento')
-            .reduce((acc, t) => {
-                const categoria = t.categoria || 'Sem Categoria';
-                if (!acc[categoria]) acc[categoria] = 0;
-                acc[categoria] += t.entrada;
-                return acc;
-            }, {});
-
-        composicaoReceitasChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: Object.keys(receitaData),
-                datasets: [{
-                    label: 'Composição de Receitas',
-                    data: Object.values(receitaData).map(v => v / 100),
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
-                }]
-            },
-            options: {
-                responsive: true,
+                },
                 plugins: {
-                    legend: { position: 'top' },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function renderComposicaoDespesasChart(transactions) {
-        const ctx = document.getElementById('composicao-despesas-chart').getContext('2d');
-        if (composicaoDespesasChartInstance) {
-            composicaoDespesasChartInstance.destroy();
-        }
-
-        const despesaData = transactions
-            .filter(t => t.saida > 0 && t.type === 'pagamento')
-            .reduce((acc, t) => {
-                const categoria = t.categoria || 'Sem Categoria';
-                if (!acc[categoria]) acc[categoria] = 0;
-                acc[categoria] += t.saida;
-                return acc;
-            }, {});
-
-        composicaoDespesasChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: Object.keys(despesaData),
-                datasets: [{
-                    label: 'Composição de Despesas',
-                    data: Object.values(despesaData).map(v => v / 100),
-                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(255, 205, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(201, 203, 207, 0.7)'
-                    ],
-                }]
-            },
-             options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                     tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
-                                }
-                                return label;
-                            }
+                            label: context => `${context.dataset.label}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw)}`
                         }
                     }
                 }
