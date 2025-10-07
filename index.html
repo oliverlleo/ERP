@@ -1818,6 +1818,9 @@
                             <button id="receber-selecionadas-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                                 <span class="material-symbols-outlined text-base">payments</span> Registrar Recebimento
                             </button>
+                             <button id="desdobrar-receita-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="material-symbols-outlined text-base">call_split</span> Desdobrar
+                            </button>
                             <button id="visualizar-receita-selecionada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                                 <span class="material-symbols-outlined text-base">visibility</span> Visualizar
                             </button>
@@ -1849,6 +1852,7 @@
                                     <button data-status="Vencido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Vencido</button>
                                     <button data-status="Recebido Parcialmente" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Parcial</button>
                                     <button data-status="Recebido" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Recebido</button>
+                                    <button data-status="Desdobrado" class="status-filter-btn px-3 py-1 text-sm font-medium rounded-md">Desdobrado</button>
                                 </div>
                             </div>
                         </div>
@@ -2204,6 +2208,74 @@
                 <button type="button" id="cancelar-recebimento-parcial-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
                 <button type="button" id="confirmar-recebimento-parcial-btn" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar e Salvar</button>
             </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Desdobramento de Receita -->
+  <div id="desdobrar-receita-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900">Desdobrar Título a Receber</h3>
+            <button id="close-desdobrar-receita-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <form id="desdobrar-receita-form" class="space-y-6">
+                <input type="hidden" id="desdobrar-receita-id-original">
+
+                <!-- Seção de Informações do Título Original (Apenas Leitura) -->
+                <div class="p-4 border rounded-md bg-gray-50">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Título Original</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Cliente</label>
+                            <p id="desdobrar-original-cliente" class="mt-1 text-base font-semibold text-gray-700"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Descrição</label>
+                            <p id="desdobrar-original-descricao" class="mt-1 text-base font-semibold text-gray-700"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Vencimento Original</label>
+                            <p id="desdobrar-original-vencimento" class="mt-1 text-base font-semibold text-gray-700"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-red-600">Saldo Pendente</label>
+                            <p id="desdobrar-original-saldo" class="mt-1 text-xl font-bold text-red-600"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário para os Novos Títulos -->
+                <div class="p-4 border rounded-md">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Novos Títulos</h4>
+                    <div class="mb-4">
+                        <label for="desdobrar-numero-parcelas" class="block text-sm font-medium text-gray-700">Dividir em quantas parcelas?</label>
+                        <input type="number" id="desdobrar-numero-parcelas" class="form-input mt-1 block w-32 rounded-md border-gray-300 shadow-sm" min="2">
+                    </div>
+
+                    <!-- Tabela para as novas parcelas -->
+                    <div id="desdobrar-parcelas-container" class="overflow-x-auto">
+                        <!-- As linhas da tabela serão geradas dinamicamente aqui -->
+                    </div>
+
+                    <!-- Validação do Total -->
+                    <div class="mt-4 pt-4 border-t flex justify-end items-center gap-4">
+                         <div id="desdobrar-validacao-total" class="text-base font-semibold">
+                            <span class="text-gray-600">Soma das Parcelas:</span>
+                            <span id="desdobrar-soma-parcelas" class="text-gray-800">R$ 0,00</span>
+                        </div>
+                        <div id="desdobrar-feedback" class="text-sm font-medium"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                    <button type="button" id="cancel-desdobrar-receita-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                    <button type="submit" id="submit-desdobrar-receita-btn" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>Salvar Desdobramento</button>
+                </div>
+            </form>
         </div>
     </div>
   </div>
@@ -2756,6 +2828,16 @@
     const visualizarReceitaModal = document.getElementById('visualizar-receita-modal');
     const closeVisualizarReceitaModalBtn = document.getElementById('close-visualizar-receita-modal-btn');
     const okVisualizarReceitaModalBtn = document.getElementById('ok-visualizar-receita-modal-btn');
+
+    // --- Elementos do Modal de Desdobramento ---
+    const desdobrarReceitaBtn = document.getElementById('desdobrar-receita-btn');
+    const desdobrarReceitaModal = document.getElementById('desdobrar-receita-modal');
+    const closeDesdobrarReceitaModalBtn = document.getElementById('close-desdobrar-receita-modal-btn');
+    const cancelDesdobrarReceitaBtn = document.getElementById('cancel-desdobrar-receita-btn');
+    const desdobrarReceitaForm = document.getElementById('desdobrar-receita-form');
+    const desdobrarNumeroParcelasInput = document.getElementById('desdobrar-numero-parcelas');
+    const desdobrarParcelasContainer = document.getElementById('desdobrar-parcelas-container');
+    let originalReceitaData = null; // Store original data for the transaction
 
     // --- Elementos de Recorrência Inteligente ---
     const despesaVencimentoInput = document.getElementById('despesa-vencimento');
@@ -4050,6 +4132,11 @@
                 const saldo = data.saldoPendente ?? 0;
                 const vencimentoStr = data.dataVencimento || data.vencimento;
 
+                // Ignore split (desdobrado) receivables in all financial calculations
+                if (status === 'Desdobrado') {
+                    return; // Skip to the next iteration
+                }
+
                 if (vencimentoStr) {
                     const vencimento = new Date(vencimentoStr + 'T00:00:00');
                     if (!isNaN(vencimento.getTime())) {
@@ -4120,7 +4207,8 @@
                 'Recebido': '#16a34a',
                 'Recebido Parcialmente': '#f59e0b',
                 'Vencido': '#dc2626',
-                'Pendente': '#3b82f6'
+                'Pendente': '#3b82f6',
+                'Desdobrado': '#6b7280' // gray-500
             };
             const eventColor = colorMap[status] || '#6b7280';
             const displayValue = status === 'Recebido' ? data.valorOriginal : (data.saldoPendente ?? data.valorOriginal);
@@ -6625,22 +6713,262 @@
         const selectedIds = getSelectedReceitaIds();
         const selectedCount = selectedIds.length;
 
+        visualizarReceitaSelecionadaBtn.disabled = true;
+        editarReceitaSelecionadaBtn.disabled = true;
+        excluirReceitasSelecionadasBtn.disabled = true;
+        receberSelecionadasBtn.disabled = true;
+        desdobrarReceitaBtn.disabled = true;
+
+
         if (selectedCount === 0) {
-            visualizarReceitaSelecionadaBtn.disabled = true;
-            editarReceitaSelecionadaBtn.disabled = true;
-            excluirReceitasSelecionadasBtn.disabled = true;
-            receberSelecionadasBtn.disabled = true;
             return;
         }
 
         const selectedReceitasData = selectedIds.map(id => allReceitas.find(d => d.id === id)?.data());
-        const anyReceived = selectedReceitasData.some(data => data && data.status === 'Recebido');
+        const anyFinalized = selectedReceitasData.some(data => data && (data.status === 'Recebido' || data.status === 'Desdobrado'));
 
-        visualizarReceitaSelecionadaBtn.disabled = selectedCount !== 1;
-        editarReceitaSelecionadaBtn.disabled = selectedCount !== 1 || anyReceived;
-        excluirReceitasSelecionadasBtn.disabled = anyReceived;
-        receberSelecionadasBtn.disabled = anyReceived;
+        // Can receive/delete multiple as long as none are finalized
+        if (!anyFinalized) {
+            receberSelecionadasBtn.disabled = false;
+            excluirReceitasSelecionadasBtn.disabled = false;
+        }
+
+        // Can only view, edit, or split a single item, and it cannot be finalized
+        if (selectedCount === 1 && !anyFinalized) {
+            visualizarReceitaSelecionadaBtn.disabled = false;
+            editarReceitaSelecionadaBtn.disabled = false;
+            desdobrarReceitaBtn.disabled = false;
+        } else if (selectedCount === 1) { // If it is finalized, you can still view it
+            visualizarReceitaSelecionadaBtn.disabled = false;
+        }
     }
+
+desdobrarReceitaForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleDesdobrarSubmit();
+});
+
+
+async function handleDesdobrarSubmit() {
+    if (!originalReceitaData) {
+        alert("Erro: Dados do título original não encontrados.");
+        return;
+    }
+
+    const newReceitasData = [];
+    const parcelaRows = desdobrarParcelasContainer.querySelectorAll('tbody > tr');
+    let hasInvalidData = false;
+
+    parcelaRows.forEach(row => {
+        const valorInput = row.querySelector('.desdobrar-valor-parcela');
+        const vencimentoInput = row.querySelector('.desdobrar-vencimento-parcela');
+        const descricaoInput = row.querySelector('.desdobrar-descricao-parcela');
+
+        if (!valorInput.value || !vencimentoInput.value || !descricaoInput.value) {
+            hasInvalidData = true;
+        }
+
+        newReceitasData.push({
+            valor: toCents(valorInput.value),
+            dataVencimento: vencimentoInput.value,
+            descricao: descricaoInput.value,
+        });
+    });
+
+    if (hasInvalidData) {
+        alert("Todos os campos das novas parcelas devem ser preenchidos.");
+        return;
+    }
+
+    const submitBtn = document.getElementById('submit-desdobrar-receita-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Salvando...';
+
+    const batch = writeBatch(db);
+    const originalDocRef = doc(db, 'users', effectiveUserId, 'receitas', originalReceitaData.id);
+
+    const newDocIds = [];
+
+    // Destructure original data to get a clean base object to inherit from
+    const {
+        id,
+        valorOriginal,
+        dataVencimento,
+        vencimento, // also handle older field name
+        descricao,
+        status,
+        saldoPendente,
+        totalRecebido,
+        totalJuros,
+        totalDescontos,
+        desdobradoPara,
+        origemDesdobramento,
+        numeroDocumento,
+        ...baseData // This contains the fields to inherit (clienteId, categoriaId, etc.)
+    } = originalReceitaData;
+
+
+    // Create new documents
+    newReceitasData.forEach((data, index) => {
+        const newDocRef = doc(collection(db, 'users', effectiveUserId, 'receitas'));
+        newDocIds.push(newDocRef.id);
+
+        batch.set(newDocRef, {
+            ...baseData,
+            valorOriginal: data.valor,
+            saldoPendente: data.valor,
+            dataVencimento: data.dataVencimento,
+            descricao: data.descricao,
+            status: 'Pendente',
+            totalRecebido: 0,
+            totalJuros: 0,
+            totalDescontos: 0,
+            origemDesdobramento: originalReceitaData.id,
+            numeroDocumento: `${originalReceitaData.numeroDocumento || 'S/N'}-D${index + 1}` // More robust numbering
+        });
+    });
+
+    // Update the original document
+    batch.update(originalDocRef, {
+        status: 'Desdobrado',
+        saldoPendente: 0,
+        desdobradoPara: newDocIds
+    });
+
+    try {
+        await batch.commit();
+        alert("Título desdobrado com sucesso!");
+        closeDesdobrarModal();
+    } catch (error) {
+        console.error("Erro ao desdobrar o título:", error);
+        alert("Ocorreu um erro ao salvar o desdobramento. Tente novamente.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Salvar Desdobramento';
+    }
+}
+
+
+if (desdobrarReceitaBtn) {
+    desdobrarReceitaBtn.addEventListener('click', () => {
+        const selectedIds = getSelectedReceitaIds();
+        if (selectedIds.length !== 1) return;
+        openDesdobrarModal(selectedIds[0]);
+    });
+}
+
+function closeDesdobrarModal() {
+    if (desdobrarReceitaModal) {
+        desdobrarReceitaModal.classList.add('hidden');
+        desdobrarReceitaForm.reset();
+        desdobrarParcelasContainer.innerHTML = '';
+        originalReceitaData = null;
+    }
+}
+
+if(closeDesdobrarReceitaModalBtn) closeDesdobrarReceitaModalBtn.addEventListener('click', closeDesdobrarModal);
+if(cancelDesdobrarReceitaBtn) cancelDesdobrarReceitaBtn.addEventListener('click', closeDesdobrarModal);
+
+
+async function openDesdobrarModal(receitaId) {
+    const docRef = doc(db, 'users', effectiveUserId, 'receitas', receitaId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+        alert("Erro: Título a receber não encontrado.");
+        return;
+    }
+
+    originalReceitaData = { id: docSnap.id, ...docSnap.data() };
+
+    document.getElementById('desdobrar-receita-id-original').value = originalReceitaData.id;
+    document.getElementById('desdobrar-original-cliente').textContent = originalReceitaData.clienteNome;
+    document.getElementById('desdobrar-original-descricao').textContent = originalReceitaData.descricao;
+    const vencimento = new Date((originalReceitaData.dataVencimento || originalReceitaData.vencimento) + 'T00:00:00');
+    document.getElementById('desdobrar-original-vencimento').textContent = vencimento.toLocaleDateString('pt-BR');
+    document.getElementById('desdobrar-original-saldo').textContent = formatCurrency(originalReceitaData.saldoPendente);
+
+    desdobrarReceitaModal.classList.remove('hidden');
+    desdobrarNumeroParcelasInput.value = 2;
+    desdobrarNumeroParcelasInput.dispatchEvent(new Event('input'));
+}
+
+desdobrarNumeroParcelasInput.addEventListener('input', () => {
+    const numParcelas = parseInt(desdobrarNumeroParcelasInput.value, 10);
+    if (numParcelas > 1 && originalReceitaData) {
+        generateParcelasTable(numParcelas, originalReceitaData.saldoPendente, originalReceitaData.descricao);
+    } else {
+        desdobrarParcelasContainer.innerHTML = '';
+    }
+});
+
+function generateParcelasTable(numParcelas, saldoOriginal, descricaoOriginal) {
+    const saldoPendenteCents = saldoOriginal || 0;
+    const valorBaseParcela = Math.floor(saldoPendenteCents / numParcelas);
+    const resto = saldoPendenteCents % numParcelas;
+
+    let tableHTML = `
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">`;
+
+    const dataVencimentoOriginal = new Date((originalReceitaData.dataVencimento || originalReceitaData.vencimento) + 'T00:00:00');
+
+    for (let i = 0; i < numParcelas; i++) {
+        const valorParcela = valorBaseParcela + (i < resto ? 1 : 0);
+        const novaDataVencimento = new Date(dataVencimentoOriginal);
+        novaDataVencimento.setMonth(novaDataVencimento.getMonth() + i + 1);
+
+        tableHTML += `
+            <tr>
+                <td class="px-3 py-2 text-sm text-gray-500">${i + 1}</td>
+                <td class="px-3 py-2"><input type="text" class="form-input w-full desdobrar-valor-parcela" value="${fromCents(valorParcela)}"></td>
+                <td class="px-3 py-2"><input type="date" class="form-input w-full desdobrar-vencimento-parcela" value="${novaDataVencimento.toISOString().split('T')[0]}"></td>
+                <td class="px-3 py-2"><input type="text" class="form-input w-full desdobrar-descricao-parcela" value="Ref. Título ${originalReceitaData.numeroDocumento || originalReceitaData.id.substring(0,4)} - Parc. ${i + 1}/${numParcelas}"></td>
+            </tr>`;
+    }
+
+    tableHTML += `</tbody></table>`;
+    desdobrarParcelasContainer.innerHTML = tableHTML;
+
+    // Add listeners and perform initial validation
+    desdobrarParcelasContainer.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', validateParcelasSum);
+    });
+    validateParcelasSum();
+}
+
+function validateParcelasSum() {
+    if (!originalReceitaData) return;
+
+    const saldoOriginalCents = originalReceitaData.saldoPendente;
+    let somaAtualCents = 0;
+    const parcelasInputs = desdobrarParcelasContainer.querySelectorAll('.desdobrar-valor-parcela');
+    parcelasInputs.forEach(input => {
+        somaAtualCents += toCents(input.value);
+    });
+
+    document.getElementById('desdobrar-soma-parcelas').textContent = formatCurrency(somaAtualCents);
+    const feedbackEl = document.getElementById('desdobrar-feedback');
+    const submitBtn = document.getElementById('submit-desdobrar-receita-btn');
+
+    if (somaAtualCents === saldoOriginalCents) {
+        feedbackEl.textContent = 'A soma confere!';
+        feedbackEl.className = 'text-sm font-medium text-green-600';
+        submitBtn.disabled = false;
+    } else {
+        feedbackEl.textContent = `A soma ( ${formatCurrency(somaAtualCents)} ) deve ser igual ao saldo pendente.`;
+        feedbackEl.className = 'text-sm font-medium text-red-600';
+        submitBtn.disabled = true;
+    }
+}
 
     if (receitasTableBody) {
         receitasTableBody.addEventListener('change', e => {
@@ -7190,6 +7518,7 @@
                 'Recebido Parcialmente': 'bg-yellow-100 text-yellow-800',
                 'Pendente': 'bg-blue-100 text-blue-800',
                 'Vencido': 'bg-red-100 text-red-800',
+                'Desdobrado': 'bg-gray-200 text-gray-800',
             };
             const statusText = data.status || 'Pendente';
             const statusClass = statusClasses[statusText] || 'bg-gray-100 text-gray-800';
