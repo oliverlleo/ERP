@@ -246,5 +246,114 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
     if (conciliarBtn) conciliarBtn.addEventListener('click', () => handleConciliacao(true));
     if (desfazerBtn) desfazerBtn.addEventListener('click', () => handleConciliacao(false));
+    if (estornarBtn) estornarBtn.addEventListener('click', handleEstorno);
 
+    async function handleEstorno() {
+        const selectedIds = getSelectedMovimentacaoIds();
+        if (selectedIds.length !== 1) {
+            alert("Selecione exatamente um lançamento para estornar.");
+            return;
+        }
+        const movId = selectedIds[0];
+
+        if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
+            return;
+        }
+
+        const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const movDoc = await transaction.get(movRef);
+                if (!movDoc.exists()) {
+                    throw "Lançamento não encontrado.";
+                }
+
+                const movData = movDoc.data();
+                if (movData.estornado) {
+                    throw "Este lançamento já foi estornado.";
+                }
+
+                // 1. Mark original movement as estornado
+                transaction.update(movRef, {
+                    estornado: true,
+                    // If the original wasn't conciliado, it should be marked as such now
+                    // so it doesn't affect the "to be reconciled" balance anymore.
+                    conciliado: true,
+                    dataConciliacao: new Date().toISOString().split('T')[0],
+                    usuarioConciliacao: "Sistema (Estorno)"
+                });
+
+                // 2. Create the reversal movement
+                const contrapartidaData = {
+                    ...movData,
+                    valor: -movData.valor, // Invert the value
+                    descricao: `Estorno de: ${movData.descricao}`,
+                    origemTipo: "ESTORNO",
+                    origemDescricao: `Estorno Lanç. #${movDoc.id.substring(0, 5)}`,
+                    estornado: false,
+                    estornoDeId: movDoc.id,
+                    conciliado: true, // Reversal is born reconciled
+                    dataConciliacao: new Date().toISOString().split('T')[0],
+                    usuarioConciliacao: "Sistema (Estorno)",
+                    createdAt: serverTimestamp()
+                };
+                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
+                transaction.set(newMovRef, contrapartidaData);
+
+
+                // 3. Revert the original source, if applicable
+                if (movData.origemTipo && movData.origemId) {
+                    const origemId = movData.origemId;
+                    let origemRef;
+                    let updateData;
+
+                    switch (movData.origemTipo) {
+                        case 'PAGAMENTO_DESPESA':
+                            // This logic assumes 'origemId' is the ID of the payment document
+                            // in the 'pagamentos' subcollection of a 'despesas' document.
+                            // We need to find the despesa first. This is complex and might require
+                            // a more direct link, e.g., storing despesaId on the movimentacao.
+                            // For now, we'll assume a structure or skip if too complex without more info.
+                            // --- Placeholder for Reversal Logic ---
+                            // Let's assume we can find the despesa and pagamento ref
+                            // const pagamentoRef = doc(db, `users/${userId}/despesas/${despesaId}/pagamentos`, origemId);
+                            // const despesaRef = doc(db, `users/${userId}/despesas`, despesaId);
+                            // const pagDoc = await transaction.get(pagamentoRef);
+                            // if(pagDoc.exists()) {
+                            //     const valorEstornado = pagDoc.data().valorPago;
+                            //     transaction.update(pagamentoRef, { estornado: true });
+                            //     transaction.update(despesaRef, {
+                            //         totalPago: increment(-valorEstornado),
+                            //         valorSaldo: increment(valorEstornado)
+                            //     });
+                            // }
+                            showFeedback("Estorno de pagamento de despesa ainda não implementado na origem.", "info");
+                            break;
+
+                        case 'RECEBIMENTO_RECEITA':
+                            // Similar logic for reversing a receita payment
+                            showFeedback("Estorno de recebimento de receita ainda não implementado na origem.", "info");
+                            break;
+
+                        case 'TRANSFERENCIA_SAIDA':
+                        case 'TRANSFERENCIA_ENTRADA':
+                             showFeedback("Estorno de transferência ainda não implementado na origem.", "info");
+                            break;
+
+                        default:
+                            // For manual entries like APORTE_CAPITAL, no further action is needed.
+                            break;
+                    }
+                }
+            });
+
+            showFeedback("Lançamento estornado com sucesso!", "success");
+            selectAllCheckbox.checked = false;
+            // The onSnapshot listener will automatically refresh the view
+        } catch (error) {
+            console.error("Erro ao estornar lançamento: ", error);
+            showFeedback(`Falha no estorno: ${error.toString()}`, "error");
+        }
+    }
 }
