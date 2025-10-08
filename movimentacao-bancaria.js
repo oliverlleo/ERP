@@ -144,9 +144,14 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
             const isEstornado = mov.estornado === true;
             tr.className = isEstornado ? 'bg-gray-100 text-gray-400' : 'hover:bg-gray-50';
 
-            const statusBadge = mov.conciliado
-                ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conciliado</span>`
-                : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">Pendente</span>`;
+            let statusBadge;
+            if (isEstornado) {
+                statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Estornado</span>`;
+            } else {
+                statusBadge = mov.conciliado
+                    ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conciliado</span>`
+                    : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">Pendente</span>`;
+            }
 
             const descricaoHtml = isEstornado ? `<del>${mov.descricao}</del>` : mov.descricao;
             const origemHtml = mov.origemId ? `<a href="#" class="text-blue-600 hover:underline view-origin-link" data-origin-id="${mov.origemId}" data-origin-type="${mov.origemTipo}">${mov.origemDescricao || 'Ver Origem'}</a>` : (mov.origemDescricao || 'N/A');
@@ -254,7 +259,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
         if (selectedIds.length !== 1) return;
         const movId = selectedIds[0];
 
-        if (!confirm("Esta ação irá EXCLUIR esta movimentação e REABRIR o título original em Contas a Pagar/Receber, mantendo o histórico. Deseja continuar?")) return;
+        if (!confirm("Esta ação irá marcar esta movimentação como ESTORNADA e REABRIR o título original em Contas a Pagar/Receber. Deseja continuar?")) return;
 
         if (estornarBtn) estornarBtn.disabled = true;
 
@@ -264,14 +269,15 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
             await runTransaction(db, async (transaction) => {
                 // 1. LÊ OS DOCUMENTOS NECESSÁRIOS
                 const movDoc = await transaction.get(movRef);
-                if (!movDoc.exists()) throw new Error("Lançamento bancário não encontrado para exclusão.");
+                if (!movDoc.exists()) throw new Error("Lançamento bancário não encontrado.");
 
                 const movData = movDoc.data();
+                if (movData.estornado) throw new Error("Este lançamento já foi estornado.");
 
-                // Se não tiver a "ponte" para a origem, apenas deleta a movimentação manual.
+                // Se não tiver a "ponte" para a origem, apenas marca como estornado.
                 if (!movData.origemParentId || !movData.origemId || !movData.origemTipo.includes('_')) {
-                    transaction.delete(movRef);
-                    return; // Fim da operação para lançamentos manuais
+                    transaction.update(movRef, { estornado: true, conciliado: true });
+                    return;
                 }
 
                 // Se tiver a "ponte", continua para reverter a despesa/receita
@@ -288,14 +294,17 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
 
                 const origemParentDoc = origemParentDocRaw.data();
                 const pagamentoOriginalData = origemDoc.data();
+
+                if (pagamentoOriginalData.estornado) throw new Error("O pagamento/recebimento de origem já foi estornado.");
+
                 const valorPrincipalEstornado = pagamentoOriginalData.valorPrincipal || 0;
                 const jurosEstornados = pagamentoOriginalData.jurosPagos || pagamentoOriginalData.jurosRecebidos || 0;
                 const descontosEstornados = pagamentoOriginalData.descontosAplicados || pagamentoOriginalData.descontosConcedidos || 0;
 
                 // 2. EXECUTA AS ALTERAÇÕES
 
-                // Deleta a movimentação bancária da tela de conciliação
-                transaction.delete(movRef);
+                // Marca a movimentação bancária como estornada
+                transaction.update(movRef, { estornado: true, conciliado: true });
 
                 // Marca o registro de pagamento/recebimento original como estornado, em vez de deletar
                 transaction.update(origemDocRef, { estornado: true });
@@ -335,11 +344,11 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
                 transaction.update(origemParentDocRef, updateData);
             });
 
-            showFeedback("Operação desfeita! A movimentação foi excluída e o título original reaberto com histórico.", "success");
+            showFeedback("Lançamento estornado com sucesso! O status foi atualizado e o título original reaberto.", "success");
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
         } catch (error) {
-            console.error("Erro ao desfazer lançamento: ", error);
-            showFeedback(`Falha ao desfazer: ${error.message}`, "error");
+            console.error("Erro ao estornar lançamento: ", error);
+            showFeedback(`Falha no estorno: ${error.message}`, "error");
         } finally {
             updateActionButtons();
         }
