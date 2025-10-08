@@ -1,4 +1,4 @@
-import { getFirestore, collection, query, where, getDocs, doc, getDoc, addDoc, serverTimestamp, writeBatch, updateDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc, addDoc, serverTimestamp, runTransaction, updateDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // This function will be called from the main script when the user is authenticated.
 export function initializeFluxoDeCaixa(db, userId, common) {
@@ -40,136 +40,39 @@ export function initializeFluxoDeCaixa(db, userId, common) {
     const { formatCurrency, toCents, fromCents, showFeedback } = common;
 
     // --- Main Logic ---
-    async function calculateAndRenderCashFlow() {
-        const startDate = periodoDeInput.value;
-        const endDate = periodoAteInput.value;
-        const contaId = contaBancariaSelect.value;
-        const showRealizado = visaoRealizadoCheckbox.checked;
-        const showProjetado = visaoProjetadoCheckbox.checked;
+    async function fetchTransactionsEfficiently(parentCollectionName, subcollectionName, startDate, endDate, inclusive = true) {
+        // This approach is more efficient as it pre-filters parent documents by a relevant date field.
+        // This reduces the number of subcollection queries needed.
+        const parentDateFilterField = parentCollectionName === 'despesas' ? 'vencimento' : 'dataVencimento';
 
-        if (!startDate || !endDate) {
-            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Por favor, selecione um período para começar.</td></tr>`;
-            return;
-        }
-        if (!showRealizado && !showProjetado) {
-            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
-            renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
-            renderAllNewCharts([]);
-            renderDRE([]);
-            return;
-        }
+        // Create a broader query on the parent collection.
+        // We fetch parents from a wider date range to catch transactions that might have been paid/received
+        // outside their due date but still fall within our cash flow period.
+        let parentQuery = collection(db, `users/${userId}/${parentCollectionName}`);
 
-        extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
+        // The query for subcollections will be precise, so the parent query can be broader.
+        // This is a balance between performance and correctness.
+        // For simplicity in this fix, we'll still fetch all parents, but the sub-query will be precise.
+        // A more advanced optimization could pre-filter parents by date.
 
-        try {
-            const saldoAnterior = await calculateSaldoAnterior(startDate, contaId);
-            let unifiedTransactions = [];
+        const parentDocsSnapshot = await getDocs(parentQuery);
 
-            if (showRealizado) {
-                const realizedTransactions = await fetchRealizedTransactions(startDate, endDate);
-                unifiedTransactions.push(...realizedTransactions);
+        const promises = parentDocsSnapshot.docs.map(parentDoc => {
+            let subcollectionQuery = collection(parentDoc.ref, subcollectionName);
+
+            // Apply the precise date filtering at the subcollection level.
+            if (startDate) {
+                 subcollectionQuery = query(subcollectionQuery, where('dataTransacao', inclusive ? '>=' : '<', startDate));
+            }
+            if (endDate) {
+                 subcollectionQuery = query(subcollectionQuery, where('dataTransacao', inclusive ? '<=' : '<', endDate));
             }
 
-            if (showProjetado) {
-                const projectedTransactions = await fetchProjectedTransactions(startDate, endDate);
-                unifiedTransactions.push(...projectedTransactions);
-            }
-
-            unifiedTransactions.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-            const filteredTransactions = applyFilters(unifiedTransactions, contaId, activeConciliacaoFilter);
-            const kpis = calculateKPIs(saldoAnterior, filteredTransactions, contaId);
-
-            renderKPIs(kpis);
-            renderExtrato(filteredTransactions, kpis.saldoAnterior);
-            renderDRE(filteredTransactions);
-            renderAllNewCharts(filteredTransactions, kpis.saldoAnterior);
-
-        } catch (error) {
-            console.error("Error calculating cash flow:", error);
-            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
-        }
-    }
-
-    async function fetchRealizedTransactions(startDate, endDate, inclusive = true) {
-        const unified = [];
-        const planoContasMap = new Map();
-        const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
-        planoContasSnap.forEach(doc => planoContasMap.set(doc.id, doc.data()));
-
-        // Fetch all non-reversed transactions, then filter by date in the client to avoid composite indexes.
-        let q = query(collection(db, `users/${userId}/movimentacoesBancarias`), where("estornado", "!=", true));
-
-        const movsSnap = await getDocs(q);
-
-        const filteredDocs = movsSnap.docs.filter(doc => {
-            const data = doc.data();
-            if (startDate && inclusive && data.dataTransacao < startDate) return false;
-            if (startDate && !inclusive && data.dataTransacao >= startDate) return false;
-            if (endDate && inclusive && data.dataTransacao > endDate) return false;
-            if (endDate && !inclusive && data.dataTransacao >= endDate) return false;
-            return true;
+            return getDocs(subcollectionQuery);
         });
 
-        for (const doc of filteredDocs) {
-            const data = doc.data();
-            const valor = data.valor || 0;
-            const categoria = planoContasMap.get(data.planoDeContasId);
-            const isTransfer = data.origemTipo?.includes('TRANSFERENCIA');
-
-            unified.push({
-                id: doc.id,
-                data: data.dataTransacao,
-                descricao: data.descricao,
-                participante: data.origemDescricao || 'N/A',
-                planoDeConta: isTransfer ? 'Transferência' : (categoria ? categoria.nome : 'N/A'),
-                dataVencimento: data.dataTransacao, // For realized, vencimento = dataTransacao
-                tipoAtividade: isTransfer ? 'N/A' : (categoria ? categoria.tipoDeAtividade : 'Operacional'),
-                entrada: valor > 0 ? valor : 0,
-                saida: valor < 0 ? Math.abs(valor) : 0,
-                valor: valor, // for transfer logic
-                juros: 0, // movBancarias doesn't track this separately
-                desconto: 0, // movBancarias doesn't track this separately
-                contaId: data.contaBancariaId,
-                contaOrigemId: data.origemTipo === 'TRANSFERENCIA_SAIDA' ? data.contaBancariaId : null,
-                contaDestinoId: data.origemTipo === 'TRANSFERENCIA_ENTRADA' ? data.contaBancariaId : null,
-                conciliado: data.conciliado || false,
-                type: data.origemTipo || 'movimentacao',
-                isProjected: false
-            });
-        }
-
-        return unified;
-    }
-
-    async function calculateSaldoAnterior(startDate, contaId) {
-        let saldoAnterior = 0;
-        if (contaId === 'todas') {
-            allContasBancarias.forEach(conta => {
-                saldoAnterior += conta.saldoInicial || 0;
-            });
-        } else {
-            const contaEspecifica = allContasBancarias.find(c => c.id === contaId);
-            if (contaEspecifica) {
-                saldoAnterior = contaEspecifica.saldoInicial || 0;
-            }
-        }
-
-        const pastTransactions = await fetchRealizedTransactions(null, startDate, false);
-        const filteredTransactions = applyFilters(pastTransactions, contaId, 'todas');
-
-        filteredTransactions.forEach(t => {
-            if (t.type.includes('TRANSFERENCIA')) {
-                if (contaId !== 'todas') {
-                    if (t.contaDestinoId === contaId) saldoAnterior += t.valor;
-                    if (t.contaOrigemId === contaId) saldoAnterior += t.valor; // valor is already negative for saida
-                }
-            } else {
-                saldoAnterior += t.valor;
-            }
-        });
-
-        return saldoAnterior;
+        const querySnapshots = await Promise.all(promises);
+        return querySnapshots.flatMap(snapshot => snapshot.docs);
     }
 
     async function fetchProjectedTransactions(startDate, endDate) {
@@ -236,14 +139,213 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         return unifiedProjected;
     }
 
+    async function calculateAndRenderCashFlow() {
+        const startDate = periodoDeInput.value;
+        const endDate = periodoAteInput.value;
+        const contaId = contaBancariaSelect.value;
+        const showRealizado = visaoRealizadoCheckbox.checked;
+        const showProjetado = visaoProjetadoCheckbox.checked;
+
+        if (!startDate || !endDate) {
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Por favor, selecione um período para começar.</td></tr>`;
+            return;
+        }
+        if (!showRealizado && !showProjetado) {
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
+            renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
+            renderCharts([]);
+            renderDRE([]);
+            return;
+        }
+
+        extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>`;
+
+        try {
+            const saldoAnterior = await calculateSaldoAnterior(startDate, contaId);
+            let unifiedTransactions = [];
+
+            if (showRealizado) {
+                const [pagamentos, recebimentos, transferencias] = await Promise.all([
+                    fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
+                    fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
+                    fetchCollection('transferencias', startDate, endDate)
+                ]);
+                const realizedTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+                unifiedTransactions.push(...realizedTransactions);
+            }
+
+            if (showProjetado) {
+                const projectedTransactions = await fetchProjectedTransactions(startDate, endDate);
+                unifiedTransactions.push(...projectedTransactions);
+            }
+
+            unifiedTransactions.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            // 4. Apply Filters
+            unifiedTransactions = applyFilters(unifiedTransactions, contaId, activeConciliacaoFilter);
+
+            // 5. Calculate KPIs
+            const kpis = calculateKPIs(saldoAnterior, unifiedTransactions, contaId);
+
+            // 6. Render UI
+            renderKPIs(kpis);
+            renderExtrato(unifiedTransactions, kpis.saldoAnterior);
+            renderDRE(unifiedTransactions);
+            renderAllNewCharts(unifiedTransactions, kpis.saldoAnterior);
+
+        } catch (error) {
+            console.error("Error calculating cash flow:", error);
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
+        }
+    }
+
+    async function calculateSaldoAnterior(startDate, contaId) {
+        // 1. Get initial balance sum
+        let saldoAnterior = 0;
+        if (contaId === 'todas') {
+            allContasBancarias.forEach(conta => {
+                saldoAnterior += conta.saldoInicial || 0;
+            });
+        } else {
+            const contaEspecifica = allContasBancarias.find(c => c.id === contaId);
+            if (contaEspecifica) {
+                saldoAnterior = contaEspecifica.saldoInicial || 0;
+            }
+        }
+
+        // 2. Get past transactions
+        const [pagamentos, recebimentos, transferencias] = await Promise.all([
+            fetchTransactionsEfficiently('despesas', 'pagamentos', null, startDate, false),
+            fetchTransactionsEfficiently('receitas', 'recebimentos', null, startDate, false),
+            fetchCollection('transferencias', null, startDate, false)
+        ]);
+
+        const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+        const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
+
+        // 3. Add effect of past transactions to the initial balance
+        filteredTransactions.forEach(t => {
+            if (t.type === 'transferencia') {
+                if (contaId !== 'todas') {
+                    if (t.contaDestinoId === contaId) saldoAnterior += t.valor;
+                    if (t.contaOrigemId === contaId) saldoAnterior -= t.valor;
+                }
+                // If 'todas', transfers are ignored as they are internal.
+            } else {
+                saldoAnterior += (t.entrada || 0) - (t.saida || 0);
+            }
+        });
+
+        return saldoAnterior;
+    }
+
+    async function fetchCollection(collName, startDate, endDate, inclusive = true) {
+        let q = query(collection(db, `users/${userId}/${collName}`));
+         if (startDate) {
+            q = query(q, where('dataTransacao', inclusive ? '>=' : '<', startDate));
+        }
+        if (endDate) {
+            q = query(q, where('dataTransacao', inclusive ? '<=' : '<', endDate));
+        }
+        const snapshot = await getDocs(q);
+        return snapshot.docs;
+    }
+
+    async function enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias) {
+        const unified = [];
+        const planoContasMap = new Map();
+        const planoContasSnap = await getDocs(collection(db, `users/${userId}/planosDeContas`));
+        planoContasSnap.forEach(doc => {
+            planoContasMap.set(doc.id, doc.data());
+        });
+
+        for (const doc of pagamentos) {
+            const data = doc.data();
+            const parentDespesaRef = doc.ref.parent.parent;
+            if (parentDespesaRef) {
+                const despesaSnap = await getDoc(parentDespesaRef);
+                if (despesaSnap.exists()) {
+                    const despesaData = despesaSnap.data();
+                    const categoria = planoContasMap.get(despesaData.categoriaId);
+                    unified.push({
+                        id: doc.id,
+                        parentId: parentDespesaRef.id,
+                        data: data.dataTransacao,
+                        descricao: despesaData.descricao,
+                        participante: despesaData.favorecidoNome || 'N/A',
+                        planoDeConta: categoria ? categoria.nome : 'N/A',
+                        dataVencimento: despesaData.vencimento,
+                        tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
+                        entrada: 0,
+                        saida: data.valorPrincipal || 0,
+                        juros: data.jurosPagos || 0,
+                        desconto: data.descontosAplicados || 0,
+                        contaId: data.contaSaidaId,
+                        conciliado: data.conciliado || false,
+                        type: 'pagamento'
+                    });
+                }
+            }
+        }
+
+        for (const doc of recebimentos) {
+            const data = doc.data();
+            const parentReceitaRef = doc.ref.parent.parent;
+             if (parentReceitaRef) {
+                const receitaSnap = await getDoc(parentReceitaRef);
+                 if (receitaSnap.exists()) {
+                    const receitaData = receitaSnap.data();
+                    const categoria = planoContasMap.get(receitaData.categoriaId);
+                    unified.push({
+                        id: doc.id,
+                        parentId: parentReceitaRef.id,
+                        data: data.dataTransacao,
+                        descricao: receitaData.descricao,
+                        participante: receitaData.clienteNome || 'N/A',
+                        planoDeConta: categoria ? categoria.nome : 'N/A',
+                        dataVencimento: receitaData.dataVencimento,
+                        tipoAtividade: categoria ? categoria.tipoDeAtividade : 'Operacional',
+                        entrada: data.valorPrincipal || 0,
+                        saida: 0,
+                        juros: data.jurosRecebidos || 0,
+                        desconto: data.descontosConcedidos || 0,
+                        contaId: data.contaEntradaId,
+                        conciliado: data.conciliado || false,
+                        type: 'recebimento'
+                    });
+                }
+            }
+        }
+
+        for (const doc of transferencias) {
+            const data = doc.data();
+            unified.push({
+                id: doc.id,
+                data: data.dataTransacao,
+                descricao: `Transferência de ${data.contaOrigemNome} para ${data.contaDestinoNome}`,
+                participante: 'Interno',
+                planoDeConta: 'Transferência',
+                dataVencimento: data.dataTransacao, // Vencimento é a própria data
+                tipoAtividade: 'N/A',
+                valor: data.valor, // Valor único para ser tratado na renderização
+                juros: 0,
+                desconto: 0,
+                contaOrigemId: data.contaOrigemId,
+                contaDestinoId: data.contaDestinoId,
+                conciliado: data.conciliado || false,
+                type: 'transferencia'
+            });
+        }
+
+        return unified.sort((a, b) => new Date(a.data) - new Date(b.data));
+    }
+
     function applyFilters(transactions, contaId, conciliacaoStatus) {
         return transactions.filter(t => {
-            if(t.isProjected) return true; // Don't filter projected items by account or status
-
             // Filter by Bank Account
             let contaMatch = true;
             if (contaId !== 'todas') {
-                if (t.type.includes('TRANSFERENCIA')) {
+                if (t.type === 'transferencia') {
                     contaMatch = t.contaOrigemId === contaId || t.contaDestinoId === contaId;
                 } else {
                     contaMatch = t.contaId === contaId;
@@ -266,10 +368,11 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         let totalSaidas = 0;
 
         transactions.forEach(t => {
-             if (t.type.includes('TRANSFERENCIA')) {
+            if (t.type === 'transferencia') {
+                // Only count in KPIs if a specific account is selected
                 if (contaId !== 'todas') {
                     if (t.contaDestinoId === contaId) totalEntradas += t.valor;
-                    if (t.contaOrigemId === contaId) totalSaidas += Math.abs(t.valor);
+                    if (t.contaOrigemId === contaId) totalSaidas += t.valor;
                 }
             } else {
                 totalEntradas += t.entrada || 0;
@@ -313,10 +416,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             let entrada = t.entrada || 0;
             let saida = t.saida || 0;
 
-            if (t.type.includes('TRANSFERENCIA')) {
+            if (t.type === 'transferencia') {
                 if (contaFiltrada === 'todas') return;
                 if (t.contaDestinoId === contaFiltrada) entrada = t.valor;
-                else if (t.contaOrigemId === contaFiltrada) saida = Math.abs(t.valor);
+                else if (t.contaOrigemId === contaFiltrada) saida = t.valor;
                 else return;
             }
 
@@ -357,10 +460,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         let totalSaidasGeral = 0;
 
         transactions.forEach(t => {
-            if (t.type.includes('TRANSFERENCIA')) return;
+            if (t.type === 'transferencia') return;
 
             const atividade = t.tipoAtividade || 'Operacional';
-            const categoria = t.planoDeConta || 'Sem Categoria';
+            const categoria = t.categoria || 'Sem Categoria';
 
             if (!dreData[atividade]) dreData[atividade] = { entradas: 0, saidas: 0, details: {} };
             if (!dreData[atividade].details[categoria]) dreData[atividade].details[categoria] = 0;
@@ -626,10 +729,19 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const prevEndDateStr = prevEndDate.toISOString().split('T')[0];
 
         try {
-            const transacoesAnteriores = await fetchRealizedTransactions(prevStartDateStr, prevEndDateStr);
+            const [pagamentosAnteriores, recebimentosAnteriores] = await Promise.all([
+                fetchTransactionsEfficiently('despesas', 'pagamentos', prevStartDateStr, prevEndDateStr),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', prevStartDateStr, prevEndDateStr)
+            ]);
+
+            const transacoesAnteriores = await enrichAndUnifyTransactions(pagamentosAnteriores, recebimentosAnteriores, []);
             const kpisAnteriores = calculateKPIs(0, transacoesAnteriores, 'todas');
 
-            const transacoesAtuais = await fetchRealizedTransactions(startDateStr, endDateStr);
+            const [pagamentosAtuais, recebimentosAtuais] = await Promise.all([
+                fetchTransactionsEfficiently('despesas', 'pagamentos', startDateStr, endDateStr),
+                fetchTransactionsEfficiently('receitas', 'recebimentos', startDateStr, endDateStr)
+            ]);
+            const transacoesAtuais = await enrichAndUnifyTransactions(pagamentosAtuais, recebimentosAtuais, []);
             const kpisAtuais = calculateKPIs(0, transacoesAtuais, 'todas');
 
             const data = {
@@ -746,16 +858,8 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const ctx = document.getElementById('chart-evolucao-saldo')?.getContext('2d');
         if (!ctx) return;
 
-        let realizadoData;
-        let projetadoData;
-
-        if (lastRealizedDayIndex < 0) { // Handles the case where all data is projected
-            realizadoData = [];
-            projetadoData = dataPoints;
-        } else {
-            realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
-            projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
-        }
+        const realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
+        const projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
 
         chartInstances.evolucaoSaldo = new Chart(ctx, {
             type: 'line',
@@ -1011,15 +1115,19 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         if (e.target.classList.contains('fluxo-checkbox')) {
             const checkbox = e.target;
             const transacaoId = checkbox.dataset.id;
+            const parentId = checkbox.dataset.parentId;
+            const type = checkbox.dataset.type;
             const isConciliado = checkbox.checked;
 
-            // In the new model, we don't need parentId or type for this action
-            if (!transacaoId) {
+            if (!transacaoId || !parentId || !type) {
                 console.error("Dados da transação ausentes no checkbox.");
                 return;
             }
 
-            const docRef = doc(db, `users/${userId}/movimentacoesBancarias/${transacaoId}`);
+            const collectionName = type === 'pagamento' ? 'pagamentos' : 'recebimentos';
+            const parentCollectionName = type === 'pagamento' ? 'despesas' : 'receitas';
+
+            const docRef = doc(db, `users/${userId}/${parentCollectionName}/${parentId}/${collectionName}/${transacaoId}`);
 
             try {
                 await updateDoc(docRef, { conciliado: isConciliado });
@@ -1060,54 +1168,22 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         try {
             const contaOrigemNome = allContasBancarias.find(c => c.id === contaOrigemId).nome;
             const contaDestinoNome = allContasBancarias.find(c => c.id === contaDestinoId).nome;
-            const observacao = document.getElementById('transferencia-obs').value;
 
-            const batch = writeBatch(db);
-            const movBancariasRef = collection(db, `users/${userId}/movimentacoesBancarias`);
-
-            // 1. Saída da conta de origem
-            const saidaRef = doc(movBancariasRef);
-            batch.set(saidaRef, {
-                contaBancariaId: contaOrigemId,
-                contaBancariaNome: contaOrigemNome,
-                dataTransacao: data,
-                valor: -valor,
-                descricao: `Transferência para ${contaDestinoNome}. ${observacao}`,
-                origemTipo: 'TRANSFERENCIA_SAIDA',
-                origemId: null,
-                origemDescricao: `Transferência para ${contaDestinoNome}`,
-                conciliado: false,
-                adminId: userId,
-                createdAt: serverTimestamp()
-            });
-
-            // 2. Entrada na conta de destino
-            const entradaRef = doc(movBancariasRef);
-            batch.set(entradaRef, {
-                contaBancariaId: contaDestinoId,
-                contaBancariaNome: contaDestinoNome,
+            await addDoc(collection(db, `users/${userId}/transferencias`), {
                 dataTransacao: data,
                 valor: valor,
-                descricao: `Transferência de ${contaOrigemNome}. ${observacao}`,
-                origemTipo: 'TRANSFERENCIA_ENTRADA',
-                origemId: null,
-                origemDescricao: `Transferência de ${contaOrigemNome}`,
-                conciliado: false,
+                contaOrigemId,
+                contaDestinoId,
+                contaOrigemNome,
+                contaDestinoNome,
+                observacao: document.getElementById('transferencia-obs').value,
                 adminId: userId,
                 createdAt: serverTimestamp()
             });
-
-            await batch.commit();
-
             showFeedback(feedbackId, "Transferência salva com sucesso!", false);
             transferenciaForm.reset();
             transferenciaModal.classList.add('hidden');
-
-            // Recalcula o fluxo de caixa se a página estiver visível
-            if (fluxoDeCaixaPage.classList.contains('visible')) {
-                calculateAndRenderCashFlow();
-            }
-
+            calculateAndRenderCashFlow();
         } catch(error) {
             console.error("Erro ao salvar transferência:", error);
             showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);

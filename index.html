@@ -2283,161 +2283,6 @@
     </div>
   </div>
 
-  <!-- Container da Tela de Movimentação Bancária -->
-  <div id="movimentacao-bancaria-page" class="view-container min-h-screen w-full">
-    <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
-        <div class="layout-container flex h-full grow flex-col w-full">
-            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
-                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
-                    <div class="size-8 text-[var(--primary-color)]">
-                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
-                    </div>
-                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
-                </a>
-                <nav class="flex items-center gap-8">
-                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
-                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
-                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
-                    <div class="relative">
-                        <button id="financeiro-nav-link-movimentacao" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
-                            <span>Financeiro</span>
-                            <span class="material-symbols-outlined text-base">expand_more</span>
-                        </button>
-                        <div id="financeiro-dropdown-movimentacao" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
-                        </div>
-                    </div>
-                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
-                </nav>
-                 <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
-                    </button>
-                    <div class="relative">
-                        <button id="profile-button-movimentacao" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
-                        <div id="profile-dropdown-movimentacao" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
-                                <p class="font-medium">Logado como:</p>
-                                <p id="user-email-movimentacao" class="truncate"></p>
-                            </div>
-                            <a href="#" id="logout-button-movimentacao" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            <main class="flex-1 px-10 py-8 bg-gray-50">
-                <div class="layout-content-container mx-auto flex w-full flex-col gap-8">
-                    <div class="flex flex-col gap-2">
-                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Movimentação Bancária / Conciliação</h1>
-                        <p class="text-gray-600 text-base font-normal leading-normal">Espelho do seu extrato bancário para conferência e lançamentos manuais.</p>
-                    </div>
-
-                    <!-- Painel de Controle e Filtros -->
-                    <div class="p-4 bg-white rounded-lg border shadow-sm">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <div class="md:col-span-1">
-                                <label for="mov-conta-bancaria-select" class="block text-sm font-medium text-gray-700">Conta Bancária <span class="text-red-500">*</span></label>
-                                <select id="mov-conta-bancaria-select" class="form-select mt-1 block w-full" required></select>
-                            </div>
-                            <div>
-                                <label for="mov-periodo-de" class="block text-sm font-medium text-gray-700">Período de:</label>
-                                <input type="date" id="mov-periodo-de" class="form-input mt-1 block w-full">
-                            </div>
-                            <div>
-                                <label for="mov-periodo-ate" class="block text-sm font-medium text-gray-700">Até:</label>
-                                <input type="date" id="mov-periodo-ate" class="form-input mt-1 block w-full">
-                            </div>
-                            <div class="flex justify-end">
-                                <button id="mov-filtrar-btn" class="inline-flex items-center justify-center rounded-md bg-[var(--primary-color)] px-4 py-2 text-sm font-medium text-white shadow-sm">Filtrar</button>
-                            </div>
-                        </div>
-                        <!-- KPIs -->
-                        <div class="mt-6 grid grid-cols-2 lg:grid-cols-6 gap-4 text-center">
-                            <div><p class="text-sm text-gray-500">Saldo Inicial</p><p id="kpi-mov-saldo-inicial" class="text-lg font-bold">R$ 0,00</p></div>
-                            <div><p class="text-sm text-gray-500">Total Entradas</p><p id="kpi-mov-total-entradas" class="text-lg font-bold text-green-600">R$ 0,00</p></div>
-                            <div><p class="text-sm text-gray-500">Total Saídas</p><p id="kpi-mov-total-saidas" class="text-lg font-bold text-red-600">R$ 0,00</p></div>
-                            <div><p class="text-sm text-gray-500">Saldo Período</p><p id="kpi-mov-saldo-periodo" class="text-lg font-bold">R$ 0,00</p></div>
-                            <div><p class="text-sm text-gray-500">Saldo Final</p><p id="kpi-mov-saldo-final" class="text-lg font-bold text-blue-700">R$ 0,00</p></div>
-                            <div><p class="text-sm text-orange-600">A Conciliar</p><p id="kpi-mov-saldo-a-conciliar" class="text-lg font-bold text-orange-700">R$ 0,00</p></div>
-                        </div>
-                    </div>
-
-                    <!-- Tabela de Movimentações -->
-                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
-                        <!-- Barra de Ações -->
-                        <div class="flex flex-wrap items-center gap-2 mb-4">
-                            <button id="mov-nova-entrada-btn" class="inline-flex items-center gap-2 rounded-md bg-green-500 px-3 py-2 text-sm font-medium text-white shadow-sm"><span class="material-symbols-outlined text-base">add</span>Nova Entrada</button>
-                            <button id="mov-nova-saida-btn" class="inline-flex items-center gap-2 rounded-md bg-red-500 px-3 py-2 text-sm font-medium text-white shadow-sm"><span class="material-symbols-outlined text-base">remove</span>Nova Saída</button>
-                            <button id="mov-transferencia-btn" class="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-3 py-2 text-sm font-medium text-white shadow-sm"><span class="material-symbols-outlined text-base">swap_horiz</span>Transferência</button>
-                            <button id="mov-conciliar-btn" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">check_circle</span>Conciliar</button>
-                            <button id="mov-desfazer-conciliacao-btn" class="inline-flex items-center gap-2 rounded-md bg-yellow-500 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">cancel</span>Desfazer</button>
-                            <button id="mov-estornar-btn" class="inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">undo</span>Estornar</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="p-4"><input id="mov-select-all-checkbox" type="checkbox"></th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entrada (R$)</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saída (R$)</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saldo (R$)</th>
-                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="movimentacoes-bancarias-table-body" class="bg-white divide-y divide-gray-200">
-                                     <tr><td colspan="8" class="text-center p-8 text-gray-500">Selecione uma conta bancária e um período para carregar as movimentações.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-  </div>
-
-  <!-- Modal para Nova Entrada/Saída Avulsa -->
-  <div id="movimentacao-avulsa-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-        <div class="flex justify-between items-center border-b pb-3">
-            <h3 id="mov-avulsa-modal-title" class="text-2xl font-bold text-gray-900">Nova Movimentação</h3>
-            <button id="close-mov-avulsa-modal-btn" class="p-2 rounded-full hover:bg-gray-200"><span class="material-symbols-outlined">close</span></button>
-        </div>
-        <div class="mt-5">
-            <form id="movimentacao-avulsa-form" class="space-y-4">
-                <input type="hidden" id="mov-avulsa-tipo" value=""> <!-- 'ENTRADA' ou 'SAIDA' -->
-                <div>
-                    <label for="mov-avulsa-data" class="block text-sm font-medium">Data</label>
-                    <input type="date" id="mov-avulsa-data" class="form-input mt-1 block w-full" required>
-                </div>
-                <div>
-                    <label for="mov-avulsa-valor" class="block text-sm font-medium">Valor (R$)</label>
-                    <input type="text" id="mov-avulsa-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
-                </div>
-                <div>
-                    <label for="mov-avulsa-descricao" class="block text-sm font-medium">Descrição</label>
-                    <input type="text" id="mov-avulsa-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Taxa bancária, Aporte de capital">
-                </div>
-                <div>
-                    <label for="mov-avulsa-plano-contas" class="block text-sm font-medium">Plano de Contas</label>
-                    <select id="mov-avulsa-plano-contas" class="form-select mt-1 block w-full" required></select>
-                </div>
-                <div class="flex justify-end pt-4 border-t space-x-2">
-                    <button type="button" id="cancel-mov-avulsa-modal-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-  </div>
-
-
   <!-- Container da Tela Financeiro - Fluxo de Caixa -->
   <div id="fluxo-de-caixa-page" class="view-container min-h-screen w-full">
      <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
@@ -2761,6 +2606,247 @@
       </div>
   </div>
 
+  <!-- Container da Tela de Movimentação Bancária -->
+  <div id="movimentacao-bancaria-page" class="view-container min-h-screen w-full">
+     <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <div class="relative">
+                        <button id="financeiro-nav-link-movimentacao" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
+                            <span>Financeiro</span>
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        <div id="financeiro-dropdown-movimentacao" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
+                        </div>
+                    </div>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-button-movimentacao" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-movimentacao" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-movimentacao" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-movimentacao" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8 bg-gray-50">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex justify-between items-center">
+                        <div class="flex flex-col gap-2">
+                            <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Conciliação Bancária</h1>
+                            <p class="text-gray-600 text-base font-normal leading-normal">Acompanhe e concilie suas movimentações bancárias.</p>
+                        </div>
+                    </div>
+
+                    <!-- 1. Painel de Controle e Filtros -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white rounded-lg border shadow-sm">
+                        <div class="md:col-span-1">
+                            <label for="mov-conta-bancaria-select" class="block text-sm font-medium text-gray-700">Conta Bancária (Obrigatório)</label>
+                            <select id="mov-conta-bancaria-select" class="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)]" required>
+                                <option value="">Selecione uma conta...</option>
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="mov-periodo-de" class="block text-sm font-medium text-gray-700">Período de:</label>
+                            <input type="date" id="mov-periodo-de" class="form-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="mov-periodo-ate" class="block text-sm font-medium text-gray-700">Até:</label>
+                            <input type="date" id="mov-periodo-ate" class="form-input mt-1 block w-full">
+                        </div>
+                    </div>
+
+                    <!-- KPIs (Indicadores Chave) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="flex flex-col gap-1 rounded-lg border bg-white p-4 shadow-sm">
+                           <p class="text-gray-600 text-sm font-medium">Saldo Inicial</p>
+                           <p id="kpi-saldo-inicial" class="text-gray-900 text-xl font-bold">R$ 0,00</p>
+                        </div>
+                        <div class="flex flex-col gap-1 rounded-lg border bg-white p-4 shadow-sm">
+                           <p class="text-green-600 text-sm font-medium">(+) Entradas</p>
+                           <p id="kpi-total-entradas-mov" class="text-green-700 text-xl font-bold">R$ 0,00</p>
+                        </div>
+                        <div class="flex flex-col gap-1 rounded-lg border bg-white p-4 shadow-sm">
+                           <p class="text-red-600 text-sm font-medium">(-) Saídas</p>
+                           <p id="kpi-total-saidas-mov" class="text-red-700 text-xl font-bold">R$ 0,00</p>
+                        </div>
+                        <div class="flex flex-col gap-1 rounded-lg border bg-white p-4 shadow-sm">
+                           <p class="text-gray-600 text-sm font-medium">Saldo Período</p>
+                           <p id="kpi-saldo-periodo" class="text-gray-900 text-xl font-bold">R$ 0,00</p>
+                        </div>
+                        <div class="flex flex-col gap-1 rounded-lg border bg-white p-4 shadow-sm">
+                           <p class="text-blue-600 text-sm font-medium">Saldo Final</p>
+                           <p id="kpi-saldo-final-mov" class="text-blue-700 text-xl font-bold">R$ 0,00</p>
+                        </div>
+                         <div class="flex flex-col gap-1 rounded-lg border border-yellow-400 bg-yellow-50 p-4 shadow-sm">
+                           <p class="text-yellow-800 text-sm font-medium">Saldo a Conciliar</p>
+                           <p id="kpi-saldo-a-conciliar" class="text-yellow-900 text-xl font-bold">R$ 0,00</p>
+                        </div>
+                    </div>
+
+                    <!-- 2. Barra de Ações e Tabela -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <!-- Barra de Ações -->
+                        <div class="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b">
+                            <button id="mov-nova-entrada-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-base">add</span> Nova Entrada
+                            </button>
+                             <button id="mov-nova-saida-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-base">remove</span> Nova Saída
+                            </button>
+                            <button id="mov-transferencia-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-base">swap_horiz</span> Transferência
+                            </button>
+                            <div class="flex-grow"></div>
+                            <button id="mov-conciliar-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-base">check_circle</span> Conciliar
+                            </button>
+                            <button id="mov-desfazer-conciliacao-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-base">cancel</span> Desfazer Conciliação
+                            </button>
+                            <button id="mov-estornar-lancamento-btn" class="inline-flex items-center gap-2 justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-base">undo</span> Estornar Lançamento
+                            </button>
+                        </div>
+
+                        <!-- 3. Tabela de Movimentações -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-4"><input id="mov-select-all-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-2/5">Descrição</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entrada (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saída (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saldo (R$)</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="movimentacoes-bancarias-table-body" class="bg-white divide-y divide-gray-200">
+                                   <!-- Linhas da tabela serão inseridas aqui -->
+                                   <tr><td colspan="8" class="text-center p-8 text-gray-500">Selecione uma conta bancária para começar.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Lançamento de Entrada/Saída Avulsa -->
+  <div id="mov-manual-entry-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 id="mov-manual-entry-title" class="text-2xl font-bold text-gray-900">Nova Entrada Avulsa</h3>
+              <button id="close-mov-manual-entry-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5">
+              <form id="mov-manual-entry-form" class="space-y-6">
+                  <input type="hidden" id="mov-manual-entry-type">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                          <label for="mov-manual-entry-data" class="block text-sm font-medium text-gray-700">Data da Transação</label>
+                          <input type="date" id="mov-manual-entry-data" class="form-input mt-1 block w-full" required>
+                      </div>
+                      <div>
+                          <label for="mov-manual-entry-valor" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                          <input type="text" id="mov-manual-entry-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
+                      </div>
+                  </div>
+                  <div>
+                      <label for="mov-manual-entry-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                      <input type="text" id="mov-manual-entry-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Aporte de capital do sócio">
+                  </div>
+                  <div>
+                      <label for="mov-manual-entry-plano-contas" class="block text-sm font-medium text-gray-700">Plano de Contas</label>
+                      <select id="mov-manual-entry-plano-contas" class="form-select mt-1 block w-full" required>
+                          <option value="">Selecione uma categoria...</option>
+                          <!-- Options populated by JS -->
+                      </select>
+                  </div>
+                   <div id="mov-manual-entry-form-feedback" class="text-sm mt-4"></div>
+                  <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                      <button type="button" id="cancel-mov-manual-entry-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                      <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Lançamento de Entrada/Saída Avulsa -->
+  <div id="mov-manual-entry-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+          <div class="flex justify-between items-center border-b pb-3">
+              <h3 id="mov-manual-entry-title" class="text-2xl font-bold text-gray-900">Nova Entrada Avulsa</h3>
+              <button id="close-mov-manual-entry-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                  <span class="material-symbols-outlined text-gray-600">close</span>
+              </button>
+          </div>
+          <div class="mt-5">
+              <form id="mov-manual-entry-form" class="space-y-6">
+                  <input type="hidden" id="mov-manual-entry-type">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                          <label for="mov-manual-entry-data" class="block text-sm font-medium text-gray-700">Data da Transação</label>
+                          <input type="date" id="mov-manual-entry-data" class="form-input mt-1 block w-full" required>
+                      </div>
+                      <div>
+                          <label for="mov-manual-entry-valor" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                          <input type="text" id="mov-manual-entry-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
+                      </div>
+                  </div>
+                  <div>
+                      <label for="mov-manual-entry-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                      <input type="text" id="mov-manual-entry-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Aporte de capital do sócio">
+                  </div>
+                  <div>
+                      <label for="mov-manual-entry-plano-contas" class="block text-sm font-medium text-gray-700">Plano de Contas</label>
+                      <select id="mov-manual-entry-plano-contas" class="form-select mt-1 block w-full" required>
+                          <option value="">Selecione uma categoria...</option>
+                          <!-- Options populated by JS -->
+                      </select>
+                  </div>
+                   <div id="mov-manual-entry-form-feedback" class="text-sm mt-4"></div>
+                  <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                      <button type="button" id="cancel-mov-manual-entry-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                      <button type="submit" id="submit-mov-manual-entry-btn" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar Lançamento</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+
   <!-- Modal de Troca de Senha Obrigatória -->
     <div id="change-password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
@@ -2798,7 +2884,6 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction, writeBatch, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
     import { initializeFluxoDeCaixa } from './fluxo-de-caixa.js';
-    import { initializeMovimentacaoBancaria } from './movimentacao-bancaria.js';
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -2823,6 +2908,13 @@
     const contasAPagarPage = document.getElementById('contas-a-pagar-page');
     const contasAReceberPage = document.getElementById('contas-a-receber-page');
     const fluxoDeCaixaPage = document.getElementById('fluxo-de-caixa-page');
+    const movimentacaoBancariaPage = document.getElementById('movimentacao-bancaria-page');
+    const profileButtonMovimentacao = document.getElementById('profile-button-movimentacao');
+    const profileDropdownMovimentacao = document.getElementById('profile-dropdown-movimentacao');
+    const userEmailMovimentacaoSpan = document.getElementById('user-email-movimentacao');
+    const logoutButtonMovimentacao = document.getElementById('logout-button-movimentacao');
+    const financeiroNavLinkMovimentacao = document.getElementById('financeiro-nav-link-movimentacao');
+    const financeiroDropdownMovimentacao = document.getElementById('financeiro-dropdown-movimentacao');
 
     // Forms e Modais de Login
     const userLoginForm = document.getElementById('user-login-form');
@@ -4428,7 +4520,7 @@
 
     // --- Lógica de Autenticação e Navegação ---
     function updateUiForUser(name) {
-        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan, userEmailReceberSpan, userEmailFluxoSpan];
+        const elements = [userEmailSpan, userEmailCadastrosSpan, userEmailContasSpan, userEmailReceberSpan, userEmailFluxoSpan, userEmailMovimentacaoSpan];
         elements.forEach(el => {
             if (el) el.textContent = name || '';
         });
@@ -4459,7 +4551,6 @@
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
             initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
-            initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
             showView('main-page');
             updateStatusFilterUI();
             updateReceitaStatusFilterUI();
@@ -4478,7 +4569,6 @@
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
-                initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
                 showView('main-page');
                 updateStatusFilterUI();
                 updateReceitaStatusFilterUI();
@@ -4690,8 +4780,9 @@
     logoutButtonContas.addEventListener('click', performLogout);
     logoutButtonReceber.addEventListener('click', performLogout);
     logoutButtonFluxo.addEventListener('click', performLogout);
+    logoutButtonMovimentacao.addEventListener('click', performLogout);
 
-    [profileButton, profileButtonCadastros, profileButtonContas, profileButtonReceber, profileButtonFluxo].forEach(btn => {
+    [profileButton, profileButtonCadastros, profileButtonContas, profileButtonReceber, profileButtonFluxo, profileButtonMovimentacao].forEach(btn => {
         if (btn) btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const dropdown = btn.nextElementSibling;
@@ -4715,6 +4806,9 @@
         if(profileDropdownFluxo && !profileDropdownFluxo.classList.contains('hidden')) {
             profileDropdownFluxo.classList.add('hidden');
         }
+        if(profileDropdownMovimentacao && !profileDropdownMovimentacao.classList.contains('hidden')) {
+            profileDropdownMovimentacao.classList.add('hidden');
+        }
         if(!financeiroDropdown.classList.contains('hidden')) {
             financeiroDropdown.classList.add('hidden');
         }
@@ -4726,6 +4820,9 @@
         }
         if(financeiroDropdownFluxo && !financeiroDropdownFluxo.classList.contains('hidden')) {
             financeiroDropdownFluxo.classList.add('hidden');
+        }
+        if(financeiroDropdownMovimentacao && !financeiroDropdownMovimentacao.classList.contains('hidden')) {
+            financeiroDropdownMovimentacao.classList.add('hidden');
         }
     });
 
@@ -6075,6 +6172,7 @@
     setupDropdown(financeiroNavLinkContas, financeiroDropdownContas);
     setupDropdown(financeiroNavLinkReceber, financeiroDropdownReceber);
     setupDropdown(financeiroNavLinkFluxo, financeiroDropdownFluxo);
+    setupDropdown(financeiroNavLinkMovimentacao, financeiroDropdownMovimentacao);
 
     async function openModal(isEdit = false) {
         if(despesaModal) {
@@ -6148,6 +6246,301 @@
     if(cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
     if(closePagarModalBtn) closePagarModalBtn.addEventListener('click', closePagarModal);
     if(cancelPagarModalBtn) cancelPagarModalBtn.addEventListener('click', closePagarModal);
+
+    // --- Lógica do Módulo de Movimentação Bancária ---
+    const movNovaEntradaBtn = document.getElementById('mov-nova-entrada-btn');
+    const movNovaSaidaBtn = document.getElementById('mov-nova-saida-btn');
+    const movTransferenciaBtn = document.getElementById('mov-transferencia-btn');
+    const movManualEntryModal = document.getElementById('mov-manual-entry-modal');
+    const movManualEntryForm = document.getElementById('mov-manual-entry-form');
+    const closeMovManualEntryBtn = document.getElementById('close-mov-manual-entry-modal-btn');
+    const cancelMovManualEntryBtn = document.getElementById('cancel-mov-manual-entry-modal-btn');
+    const movContaBancariaSelect = document.getElementById('mov-conta-bancaria-select');
+
+    async function openManualEntryModal(type) {
+        if (!movManualEntryModal) return;
+
+        const contaSelecionada = movContaBancariaSelect.value;
+        if (!contaSelecionada) {
+            alert("Por favor, selecione uma conta bancária primeiro.");
+            return;
+        }
+
+        movManualEntryForm.reset();
+        const titleEl = document.getElementById('mov-manual-entry-title');
+        const typeInput = document.getElementById('mov-manual-entry-type');
+        const submitBtn = document.getElementById('submit-mov-manual-entry-btn');
+        const planoContasSelect = document.getElementById('mov-manual-entry-plano-contas');
+
+        if (type === 'entrada') {
+            titleEl.textContent = 'Nova Entrada Avulsa';
+            typeInput.value = 'entrada';
+            submitBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            submitBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        } else { // saida
+            titleEl.textContent = 'Nova Saída Avulsa';
+            typeInput.value = 'saida';
+            submitBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            submitBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+        }
+
+        // Populate Plano de Contas dropdown
+        const contasQuery = query(collection(db, 'users', effectiveUserId, 'planosDeContas'));
+        const contasSnap = await getDocs(contasQuery);
+        const allContas = contasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const allowedTypes = type === 'entrada'
+            ? ['receita', 'investimento']
+            : ['despesa', 'custo', 'investimento'];
+
+        // For manual entries, both pagamentos and recebimentos can be used for 'investimento' type accounts
+        // We filter based on the main type, not the aplicavelEm field here.
+        populatePlanoContasDropdownForManualEntry(planoContasSelect, allContas, allowedTypes);
+
+        document.getElementById('mov-manual-entry-data').value = new Date().toISOString().split('T')[0];
+        movManualEntryModal.classList.remove('hidden');
+    }
+
+    function populatePlanoContasDropdownForManualEntry(selectElement, contas, allowedTipos) {
+        if (!selectElement) return;
+        selectElement.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+        contas
+            .filter(conta =>
+                conta.aceitaLancamento &&
+                conta.inativo !== true &&
+                allowedTipos.includes(conta.tipo)
+            )
+            .sort((a, b) => a.codigo.localeCompare(b.codigo))
+            .forEach(conta => {
+                const option = document.createElement('option');
+                option.value = conta.id;
+                option.textContent = `${conta.codigo} - ${conta.nome}`;
+                option.dataset.codigo = conta.codigo;
+                selectElement.appendChild(option);
+            });
+    }
+
+    function closeManualEntryModal() {
+        if(movManualEntryModal) movManualEntryModal.classList.add('hidden');
+    }
+
+    if(movNovaEntradaBtn) movNovaEntradaBtn.addEventListener('click', () => openManualEntryModal('entrada'));
+    if(movNovaSaidaBtn) movNovaSaidaBtn.addEventListener('click', () => openManualEntryModal('saida'));
+
+    const movEstornarLancamentoBtn = document.getElementById('mov-estornar-lancamento-btn');
+    if(movEstornarLancamentoBtn) {
+        movEstornarLancamentoBtn.addEventListener('click', () => {
+            const selectedIds = getSelectedMovimentacaoIds();
+            if (selectedIds.length !== 1) {
+                alert("Por favor, selecione exatamente um lançamento para estornar.");
+                return;
+            }
+            handleEstornoMovimentacao(selectedIds[0]);
+        });
+    }
+
+    function getSelectedMovimentacaoIds() {
+        const tableBody = document.getElementById('movimentacoes-bancarias-table-body');
+        if (!tableBody) return [];
+        return Array.from(tableBody.querySelectorAll('.mov-checkbox:checked')).map(cb => cb.dataset.id);
+    }
+
+    async function handleEstornoMovimentacao(movimentacaoId) {
+        const userId = effectiveUserId;
+        if (!userId) {
+            alert("Erro: Usuário não autenticado.");
+            return;
+        }
+
+        const motivo = prompt("Por favor, insira o motivo para o estorno:");
+        if (motivo === null || motivo.trim() === "") {
+            alert("O estorno foi cancelado. É necessário fornecer um motivo.");
+            return;
+        }
+
+        const movRef = doc(db, 'users', userId, 'movimentacoesBancarias', movimentacaoId);
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const movDoc = await transaction.get(movRef);
+                if (!movDoc.exists()) {
+                    throw new Error("Lançamento original não encontrado.");
+                }
+                const movData = movDoc.data();
+
+                if (movData.estornado) {
+                    throw new Error("Este lançamento já foi estornado.");
+                }
+
+                // Create the reversal (contrapartida) entry
+                const estornoRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
+                transaction.set(estornoRef, {
+                    ...movData, // Inherit most data
+                    valor: -movData.valor, // Invert the value
+                    descricao: `Estorno de: ${movData.descricao}`,
+                    origemTipo: "ESTORNO",
+                    origemId: movDoc.id,
+                    estornoDeId: movDoc.id,
+                    conciliado: true, // Estornos nascem conciliados
+                    dataConciliacao: new Date().toISOString().split('T')[0],
+                    estornado: false, // O estorno em si não é estornado
+                    createdAt: serverTimestamp()
+                });
+
+                // Mark the original movement as reversed and reconciled
+                transaction.update(movRef, {
+                    estornado: true,
+                    conciliado: true,
+                     dataConciliacao: new Date().toISOString().split('T')[0]
+                });
+
+                // Revert the source if it's from a system module
+                if (movData.origemTipo === 'PAGAMENTO_DESPESA' && movData.origemId) {
+                     const pagamentoRef = doc(db, 'users', userId, 'pagamentos', movData.origemId);
+                     const pagamentoDoc = await transaction.get(pagamentoRef);
+                     if(pagamentoDoc.exists()) {
+                         const pagamentoData = pagamentoDoc.data();
+                         const despesaRef = doc(db, 'users', userId, 'despesas', pagamentoData.despesaId);
+                         const despesaDoc = await transaction.get(despesaRef);
+                         if(despesaDoc.exists()) {
+                             const despesaData = despesaDoc.data();
+                             const valorEstornado = movData.valor; // é negativo
+
+                             const novoTotalPago = (despesaData.totalPago || 0) + valorEstornado; // somando um negativo
+                             const novoSaldo = despesaData.valorSaldo - valorEstornado;
+
+                             transaction.update(despesaRef, {
+                                 totalPago: novoTotalPago,
+                                 valorSaldo: novoSaldo,
+                                 status: novoSaldo > 0 ? 'Pago Parcialmente' : 'Pendente'
+                             });
+                             transaction.update(pagamentoRef, { estornado: true });
+                         }
+                     }
+                } else if (movData.origemTipo === 'RECEBIMENTO_RECEITA' && movData.origemId) {
+                     const recebimentoRef = doc(db, 'users', userId, 'recebimentos', movData.origemId);
+                     const recebimentoDoc = await transaction.get(recebimentoRef);
+                     if(recebimentoDoc.exists()) {
+                         const recebimentoData = recebimentoDoc.data();
+                         const receitaRef = doc(db, 'users', userId, 'receitas', recebimentoData.receitaId);
+                         const receitaDoc = await transaction.get(receitaRef);
+                         if(receitaDoc.exists()) {
+                             const receitaData = receitaDoc.data();
+                             const valorEstornado = movData.valor; // é positivo
+
+                             const novoTotalRecebido = (receitaData.totalRecebido || 0) - valorEstornado;
+                             const novoSaldoPendente = (receitaData.saldoPendente || 0) + valorEstornado;
+
+                              transaction.update(receitaRef, {
+                                 totalRecebido: novoTotalRecebido,
+                                 saldoPendente: novoSaldoPendente,
+                                 status: novoTotalRecebido > 0 ? 'Recebido Parcialmente' : 'Pendente'
+                             });
+                             transaction.update(recebimentoRef, { estornado: true });
+                         }
+                     }
+                }
+            });
+            alert("Lançamento estornado com sucesso!");
+            // Refresh the view after estorno
+            // A listener will automatically do this.
+        } catch (error) {
+            console.error("Erro na transação de estorno:", error);
+            alert("Falha ao processar o estorno: " + error.message);
+        }
+    }
+
+
+    if(movTransferenciaBtn) {
+        movTransferenciaBtn.addEventListener('click', () => {
+             const contaSelecionada = movContaBancariaSelect.value;
+            if (!contaSelecionada) {
+                alert("Por favor, selecione uma conta bancária primeiro para usar como padrão.");
+                return;
+            }
+            // Re-use the existing transfer modal from fluxo-de-caixa.js logic
+            const transferenciaModal = document.getElementById('transferencia-modal');
+            if(transferenciaModal) {
+                // Populate dropdowns, pre-select the source account
+                const contaOrigemSelect = document.getElementById('transferencia-conta-origem');
+                const contaDestinoSelect = document.getElementById('transferencia-conta-destino');
+                const contasBancariasQuery = query(collection(db, 'users', effectiveUserId, 'contasBancarias'));
+                getDocs(contasBancariasQuery).then(snapshot => {
+                    populateDropdown(contaOrigemSelect, snapshot.docs);
+                    populateDropdown(contaDestinoSelect, snapshot.docs);
+                    contaOrigemSelect.value = contaSelecionada;
+                });
+                transferenciaModal.classList.remove('hidden');
+            }
+        });
+    }
+    if(closeMovManualEntryBtn) closeMovManualEntryBtn.addEventListener('click', closeManualEntryModal);
+    if(cancelMovManualEntryBtn) cancelMovManualEntryBtn.addEventListener('click', closeManualEntryModal);
+
+    if (movManualEntryForm) {
+        movManualEntryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const feedbackId = 'mov-manual-entry-form-feedback';
+            if (!effectiveUserId) {
+                showFeedback(feedbackId, "Usuário não autenticado.", true);
+                return;
+            }
+
+            const contaBancariaId = movContaBancariaSelect.value;
+            const contaBancariaNome = movContaBancariaSelect.options[movContaBancariaSelect.selectedIndex].text;
+            if (!contaBancariaId) {
+                showFeedback(feedbackId, "Selecione uma conta bancária.", true);
+                return;
+            }
+
+            const type = document.getElementById('mov-manual-entry-type').value;
+            let valor = toCents(document.getElementById('mov-manual-entry-valor').value);
+            if (type === 'saida') {
+                valor = -Math.abs(valor);
+            }
+
+            let origemTipo;
+            if(type === 'entrada') {
+                // This could be more specific, e.g. based on the selected chart of accounts.
+                // For now, using a generic type.
+                origemTipo = 'OUTRAS_ENTRADAS';
+            } else {
+                origemTipo = 'OUTRAS_SAIDAS';
+            }
+
+            const movimentacaoData = {
+                contaBancariaId: contaBancariaId,
+                contaBancariaNome: contaBancariaNome,
+                dataTransacao: document.getElementById('mov-manual-entry-data').value,
+                valor: valor,
+                descricao: document.getElementById('mov-manual-entry-descricao').value,
+                origemTipo: origemTipo,
+                origemId: null, // No direct source document for manual entries
+                origemDescricao: "Lançamento Manual",
+                conciliado: false,
+                dataConciliacao: null,
+                usuarioConciliacao: null,
+                estornado: false,
+                estornoDeId: null,
+                createdAt: serverTimestamp(),
+                adminId: effectiveUserId
+            };
+
+            try {
+                const movRef = collection(db, 'users', effectiveUserId, 'movimentacoesBancarias');
+                await addDoc(movRef, movimentacaoData);
+                showFeedback(feedbackId, "Lançamento salvo com sucesso!", false);
+                setTimeout(() => {
+                    closeManualEntryModal();
+                }, 1500);
+            } catch (error) {
+                console.error("Erro ao salvar lançamento manual:", error);
+                showFeedback(feedbackId, "Erro ao salvar. Tente novamente.", true);
+            }
+        });
+    }
+
 
     if(visualizarSelecionadaBtn) {
         visualizarSelecionadaBtn.addEventListener('click', () => {
@@ -6306,43 +6699,28 @@
 
         const despesaRef = doc(db, 'users', userId, 'despesas', despesaId);
         const pagamentoRef = doc(despesaRef, 'pagamentos', pagamentoId);
-        const movimentacoesBancariasRef = collection(db, 'users', userId, 'movimentacoesBancarias');
+        const novoEstornoRef = doc(collection(despesaRef, 'pagamentos'));
 
         try {
-            // Passo 1: Encontrar a movimentação bancária original FORA da transação.
-            const qMovimentacaoOriginal = query(movimentacoesBancariasRef, where("origemId", "==", pagamentoId));
-            const movimentacaoOriginalSnap = await getDocs(qMovimentacaoOriginal);
-
-            if (movimentacaoOriginalSnap.empty) {
-                alert("ERRO CRÍTICO: Movimentação bancária original correspondente ao pagamento não encontrada. O estorno não pode prosseguir. Contate o suporte.");
-                console.error("Não foi possível encontrar a movimentação bancária para estornar com origemId:", pagamentoId);
-                return;
-            }
-            const movimentacaoOriginalDoc = movimentacaoOriginalSnap.docs[0];
-            const movimentacaoOriginalRef = movimentacaoOriginalDoc.ref;
-
-            // Passo 2: Executar a transação atômica.
             await runTransaction(db, async (transaction) => {
                 const despesaDoc = await transaction.get(despesaRef);
                 const pagamentoDoc = await transaction.get(pagamentoRef);
 
                 if (!despesaDoc.exists() || !pagamentoDoc.exists()) {
-                    throw new Error("Despesa ou pagamento original não encontrado.");
+                    throw "Despesa ou pagamento original não encontrado.";
                 }
 
                 const despesaData = despesaDoc.data();
                 const pagamentoData = pagamentoDoc.data();
 
                 if (pagamentoData.estornado) {
-                    throw new Error("Esta transação já foi estornada.");
+                    throw "Esta transação já foi estornada.";
                 }
 
-                // ---- Lógica de Reversão ----
-
-                // 1. Reverter os valores na despesa principal
                 const valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
-                const novoTotalPago = (despesaData.totalPago || 0) - valorPrincipalEstornado;
-                const novoSaldo = (despesaData.valorSaldo || 0) + valorPrincipalEstornado;
+
+                const novoTotalPago = despesaData.totalPago - valorPrincipalEstornado;
+                const novoSaldo = despesaData.valorSaldo + valorPrincipalEstornado;
 
                 let novoStatus;
                 const today = new Date();
@@ -6354,21 +6732,10 @@
                 } else if (novoSaldo > 0) {
                     novoStatus = 'Pago Parcialmente';
                 } else {
-                    novoStatus = 'Pago'; // Should not happen if saldo is positive, but for safety
+                    novoStatus = 'Pago';
                 }
 
-                transaction.update(despesaRef, {
-                    totalPago: novoTotalPago,
-                    valorSaldo: novoSaldo,
-                    status: novoStatus
-                });
-
-                // 2. Marcar o pagamento original como estornado
-                transaction.update(pagamentoRef, { estornado: true });
-
-                // 3. Criar o registro de estorno na subcoleção de pagamentos
-                const novoEstornoPagamentoRef = doc(collection(despesaRef, 'pagamentos'));
-                transaction.set(novoEstornoPagamentoRef, {
+                transaction.set(novoEstornoRef, {
                     tipoTransacao: "Estorno",
                     dataTransacao: new Date().toISOString().split('T')[0],
                     valorPrincipal: valorPrincipalEstornado,
@@ -6378,26 +6745,12 @@
                     createdAt: serverTimestamp()
                 });
 
-                // --- Lógica da Movimentação Bancária ---
+                transaction.update(pagamentoRef, { estornado: true });
 
-                // 4. Marcar a movimentação bancária original como estornada e conciliada
-                transaction.update(movimentacaoOriginalRef, { estornado: true, conciliado: true });
-
-                // 5. Criar a movimentação bancária de contrapartida (o estorno)
-                const movimentacaoOriginalData = movimentacaoOriginalDoc.data();
-                const novaMovimentacaoEstornoRef = doc(movimentacoesBancariasRef);
-                transaction.set(novaMovimentacaoEstornoRef, {
-                    ...movimentacaoOriginalData,
-                    valor: -movimentacaoOriginalData.valor, // Inverte o valor
-                    descricao: `Estorno do lançamento: ${movimentacaoOriginalData.descricao}`,
-                    origemTipo: "ESTORNO",
-                    origemId: novoEstornoPagamentoRef.id, // ID do NOVO registro de estorno do pagamento
-                    estornado: false,
-                    estornoDeId: movimentacaoOriginalDoc.id,
-                    conciliado: true, // Nasce conciliado
-                    dataConciliacao: new Date().toISOString().split('T')[0],
-                    usuarioConciliacao: "Sistema (Estorno)",
-                    createdAt: serverTimestamp(),
+                transaction.update(despesaRef, {
+                    totalPago: novoTotalPago,
+                    valorSaldo: novoSaldo,
+                    status: novoStatus
                 });
             });
 
@@ -6407,7 +6760,7 @@
 
         } catch (error) {
             console.error("Erro na transação de estorno: ", error);
-            alert("Falha ao processar o estorno: " + error.message);
+            alert("Falha ao processar o estorno: " + error);
         }
     }
 
@@ -6544,30 +6897,25 @@
 
                 transaction.update(despesaRef, updateData);
 
-                // 3. Create a corresponding bank transaction
-                const contaSaidaSelect = document.getElementById('pagar-conta-saida');
-                const contaSaidaNome = contaSaidaSelect.options[contaSaidaSelect.selectedIndex].text;
-                const movBancariaRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
-                transaction.set(movBancariaRef, {
+                // 3. Create the bank transaction movement
+                const movRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
+                transaction.set(movRef, {
                     contaBancariaId: contaSaidaId,
-                    contaBancariaNome: contaSaidaNome,
+                    contaBancariaNome: document.getElementById('pagar-conta-saida').options[document.getElementById('pagar-conta-saida').selectedIndex].text,
                     dataTransacao: dataTransacao,
-                    valor: -valorPrincipalCents, // Negative for an expense payment
-                    descricao: `Pagto: ${data.descricao}`,
+                    valor: -Math.abs(valorPrincipalCents), // Negative value for an expense
+                    descricao: `Pagamento: ${data.descricao}`,
                     origemTipo: 'PAGAMENTO_DESPESA',
-                    origemId: novoPagamentoRef.id, // ID of the payment document
-                    origemParentId: despesaRef.id, // ID of the parent despesa document
-                    planoDeContasId: data.categoriaId, // For DRE reporting
-                    origemDescricao: `Pagamento Despesa #${data.numeroDocumento || data.id.substring(0,4)}`,
+                    origemId: novoPagamentoRef.id, // Link to the payment document in the subcollection
+                    origemDescricao: `Pagamento Despesa #${data.numeroDocumento || despesaId.substring(0,4)}`,
                     conciliado: false,
                     dataConciliacao: null,
                     usuarioConciliacao: null,
                     estornado: false,
                     estornoDeId: null,
-                    adminId: userId,
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    adminId: userId
                 });
-
             });
 
             console.log("Transação de pagamento e movimentação bancária concluídas com sucesso!");
@@ -6639,6 +6987,7 @@
         const vencimentoOriginal = document.getElementById('despesa-vencimento').value;
 
         try {
+            // --- UPDATE LOGIC (Existing functionality, remains mostly unchanged) ---
             if (expenseId) {
                 const docRef = doc(db, 'users', userId, 'despesas', expenseId);
                 await updateDoc(docRef, {
@@ -6656,8 +7005,10 @@
                 return;
             }
 
+            // --- CREATE LOGIC (New functionality for installments and recurring) ---
             const userRef = collection(db, 'users', userId, 'despesas');
             const despesasParaCriar = [];
+
             const categoriaSelect = document.getElementById('despesa-categoria');
             const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
 
@@ -6681,7 +7032,7 @@
             };
 
             if (formaPagamento === 'parcelado' || formaPagamento === 'recorrente') {
-                const groupId = doc(collection(db, 'users', userId, 'despesas')).id;
+                const groupId = doc(collection(db, 'users', userId, 'despesas')).id; // Generate a unique ID for the group
                 let numIteracoes = 0;
                 let valorIteracao = valorOriginalCents;
                 let dataVencimento = new Date(vencimentoOriginal + 'T00:00:00');
@@ -6692,79 +7043,58 @@
                     if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de parcelas válido."); return; }
                     valorIteracao = Math.round(valorOriginalCents / numIteracoes);
                     const intervalo = document.getElementById('parcelas-intervalo').value;
-                    if(intervalo === 'quinzenal') intervaloMeses = 0.5;
-                    if(intervalo === 'semanal') intervaloMeses = 0.25;
-                } else {
+                    if(intervalo === 'quinzenal') intervaloMeses = 0.5; // Special handling needed
+                    if(intervalo === 'semanal') intervaloMeses = 0.25; // Special handling needed
+
+                } else { // recorrente
                     numIteracoes = parseInt(document.getElementById('recorrencia-fim-ocorrencias').value, 10);
-                    if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de ocorrências válido."); return; }
-                    intervaloMeses = getRecurrenceMultiplier(document.getElementById('recorrencia-frequencia').value);
+                    if (!numIteracoes || numIteracoes <= 0) { alert("Por favor, insira um número de ocorrências válido para a recorrência."); return; }
+                    const freq = document.getElementById('recorrencia-frequencia').value;
+                    intervaloMeses = getRecurrenceMultiplier(freq);
                 }
 
                 for (let i = 0; i < numIteracoes; i++) {
                     let vencimentoIteracao = new Date(dataVencimento.getTime());
-                    if(intervaloMeses === 0.5) vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 15));
-                    else if (intervaloMeses === 0.25) vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 7));
-                    else vencimentoIteracao.setMonth(vencimentoIteracao.getMonth() + (i * intervaloMeses));
-                    despesasParaCriar.push({ ...baseData, groupId, descricao: `${baseDescricao} (${formaPagamento === 'parcelado' ? `Parcela ${i + 1}/${numIteracoes}` : `Recorrência ${i + 1}`})`, valorOriginal: valorIteracao, valorSaldo: valorIteracao, vencimento: vencimentoIteracao.toISOString().split('T')[0] });
+                    if(intervaloMeses === 0.5) { // Quinzenal
+                         vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 15));
+                    } else if (intervaloMeses === 0.25) { // Semanal
+                         vencimentoIteracao.setDate(vencimentoIteracao.getDate() + (i * 7));
+                    } else { // Mensal, Bimestral, etc.
+                        vencimentoIteracao.setMonth(vencimentoIteracao.getMonth() + (i * intervaloMeses));
+                    }
+
+                    despesasParaCriar.push({
+                        ...baseData,
+                        groupId: groupId, // Link the installments
+                        descricao: `${baseDescricao} (${formaPagamento === 'parcelado' ? `Parcela ${i + 1}/${numIteracoes}` : `Recorrência ${i + 1}`})`,
+                        valorOriginal: valorIteracao,
+                        valorSaldo: valorIteracao,
+                        vencimento: vencimentoIteracao.toISOString().split('T')[0],
+                    });
                 }
             } else {
-                 let singleExpenseData = { ...baseData, valorOriginal: valorOriginalCents, valorSaldo: valorOriginalCents, vencimento: vencimentoOriginal };
-                if (marcarPagoCheckbox.checked) {
-                    const valorPagoCents = toCents(document.getElementById('pagamento-valor').value);
-                    const dataPagamento = document.getElementById('pagamento-data').value;
-                    const contaId = document.getElementById('pagamento-conta').value;
-                    if (!dataPagamento || !contaId) { alert("Data de pagamento e conta de saída são obrigatórios ao marcar como pago."); return; }
-                    singleExpenseData.totalPago = valorPagoCents;
-                    singleExpenseData.valorSaldo = valorOriginalCents - valorPagoCents;
-                    singleExpenseData.status = singleExpenseData.valorSaldo <= 0 ? 'Pago' : 'Pago Parcialmente';
-                }
-                despesasParaCriar.push(singleExpenseData);
+                // Logic for a single expense ('a_vista', 'boleto', etc.)
+                despesasParaCriar.push({
+                    ...baseData,
+                    valorOriginal: valorOriginalCents,
+                    valorSaldo: valorOriginalCents,
+                    vencimento: vencimentoOriginal,
+                });
             }
 
+            // Batch write all expenses to Firestore using a transaction for sequential numbering
             const counterRef = doc(db, 'users', userId, 'counters', 'despesas');
             await runTransaction(db, async (transaction) => {
                 const counterDoc = await transaction.get(counterRef);
                 let nextNumber = counterDoc.exists() ? counterDoc.data().currentNumber + 1 : 1;
 
                 for (const despesa of despesasParaCriar) {
-                    const newDocRef = doc(userRef);
+                    const newDocRef = doc(userRef); // Firestore generates a new ID
                     despesa.numeroDocumento = String(nextNumber).padStart(4, '0');
                     transaction.set(newDocRef, despesa);
-
-                    if (despesa.status === 'Pago' || despesa.status === 'Pago Parcialmente') {
-                        const pagamentoRef = doc(collection(newDocRef, 'pagamentos'));
-                        transaction.set(pagamentoRef, {
-                            tipoTransacao: "Pagamento",
-                            dataTransacao: document.getElementById('pagamento-data').value,
-                            valorPrincipal: despesa.totalPago,
-                            jurosPagos: 0,
-                            descontosAplicados: 0,
-                            contaSaidaId: document.getElementById('pagamento-conta').value,
-                            usuarioResponsavel: currentUserName || "N/A",
-                            createdAt: serverTimestamp()
-                        });
-
-                        const contaSaidaSelect = document.getElementById('pagamento-conta');
-                        const contaSaidaNome = contaSaidaSelect.options[contaSaidaSelect.selectedIndex].text;
-                        const movBancariaRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
-                        transaction.set(movBancariaRef, {
-                            contaBancariaId: document.getElementById('pagamento-conta').value,
-                            contaBancariaNome: contaSaidaNome,
-                            dataTransacao: document.getElementById('pagamento-data').value,
-                            valor: -despesa.totalPago,
-                            descricao: `Pagto: ${despesa.descricao}`,
-                            origemTipo: 'PAGAMENTO_DESPESA',
-                            origemId: pagamentoRef.id,
-                            origemParentId: newDocRef.id,
-                            planoDeContasId: despesa.categoriaId,
-                            origemDescricao: `Pagamento Despesa #${despesa.numeroDocumento}`,
-                            conciliado: false, dataConciliacao: null, usuarioConciliacao: null,
-                            estornado: false, estornoDeId: null,
-                            adminId: userId, createdAt: serverTimestamp()
-                        });
-                    }
                     nextNumber++;
                 }
+
                 transaction.set(counterRef, { currentNumber: nextNumber - 1 }, { merge: true });
             });
 
@@ -6917,10 +7247,6 @@
 
                         if (marcarRecebidoCheckbox.checked) {
                             const valorRecebidoCents = toCents(document.getElementById('recebimento-valor').value);
-                            const dataRecebimento = document.getElementById('recebimento-data').value;
-                            const contaEntradaId = document.getElementById('recebimento-conta').value;
-                            if (!dataRecebimento || !contaEntradaId) { throw new Error("Data de recebimento e conta de entrada são obrigatórios."); }
-
                             receitaData.totalRecebido = valorRecebidoCents;
                             receitaData.saldoPendente = receitaData.valorOriginal - valorRecebidoCents;
                             receitaData.status = receitaData.saldoPendente <= 0 ? 'Recebido' : 'Recebido Parcialmente';
@@ -6928,33 +7254,14 @@
                             const recebimentoRef = doc(collection(newDocRef, 'recebimentos'));
                             transaction.set(recebimentoRef, {
                                 tipoTransacao: "Recebimento",
-                                dataTransacao: dataRecebimento,
+                                dataTransacao: document.getElementById('recebimento-data').value,
                                 valorPrincipal: valorRecebidoCents,
                                 jurosRecebidos: 0,
                                 descontosConcedidos: 0,
-                                contaEntradaId: contaEntradaId,
+                                contaEntradaId: document.getElementById('recebimento-conta').value,
                                 usuarioResponsavel: currentUserName || "N/A",
                                 createdAt: serverTimestamp()
                             });
-
-                             const contaEntradaSelect = document.getElementById('recebimento-conta');
-                             const contaEntradaNome = contaEntradaSelect.options[contaEntradaSelect.selectedIndex].text;
-                             const movBancariaRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
-                             transaction.set(movBancariaRef, {
-                                 contaBancariaId: contaEntradaId,
-                                 contaBancariaNome: contaEntradaNome,
-                                 dataTransacao: dataRecebimento,
-                                 valor: valorRecebidoCents,
-                                 descricao: `Recbto: ${receitaData.descricao}`,
-                                 origemTipo: 'RECEBIMENTO_RECEITA',
-                                 origemId: recebimentoRef.id,
-                                 origemParentId: newDocRef.id,
-                                 planoDeContasId: receitaData.categoriaId,
-                                 origemDescricao: `Recebimento Receita #${receitaData.numeroDocumento}`,
-                                 conciliado: false, dataConciliacao: null, usuarioConciliacao: null,
-                                 estornado: false, estornoDeId: null,
-                                 adminId: userId, createdAt: serverTimestamp()
-                             });
                         }
                         transaction.set(newDocRef, receitaData);
                         transaction.set(counterRef, { currentNumber: nextNumber });
@@ -7434,97 +7741,67 @@ function validateParcelasSum() {
 
         const receitaRef = doc(db, 'users', userId, 'receitas', receitaId);
         const recebimentoRef = doc(receitaRef, 'recebimentos', recebimentoId);
-        const movimentacoesBancariasRef = collection(db, 'users', userId, 'movimentacoesBancarias');
+        const novoEstornoRef = doc(collection(receitaRef, 'recebimentos'));
 
         try {
-            // Encontrar a movimentação bancária original
-            const qMovimentacaoOriginal = query(movimentacoesBancariasRef, where("origemId", "==", recebimentoId));
-            const movimentacaoOriginalSnap = await getDocs(qMovimentacaoOriginal);
-
-            if (movimentacaoOriginalSnap.empty) {
-                alert("ERRO CRÍTICO: Movimentação bancária original correspondente ao recebimento não encontrada. O estorno não pode prosseguir.");
-                console.error("Não foi possível encontrar a movimentação bancária para estornar com origemId:", recebimentoId);
-                return;
-            }
-            const movimentacaoOriginalDoc = movimentacaoOriginalSnap.docs[0];
-            const movimentacaoOriginalRef = movimentacaoOriginalDoc.ref;
-
-            // Executar a transação atômica
             await runTransaction(db, async (transaction) => {
                 const receitaDoc = await transaction.get(receitaRef);
                 const recebimentoDoc = await transaction.get(recebimentoRef);
 
                 if (!receitaDoc.exists() || !recebimentoDoc.exists()) {
-                    throw new Error("Receita ou recebimento original não encontrado.");
+                    throw "Receita ou recebimento original não encontrado.";
                 }
 
                 const receitaData = receitaDoc.data();
                 const recebimentoData = recebimentoDoc.data();
 
                 if (recebimentoData.estornado) {
-                    throw new Error("Esta transação já foi estornada.");
+                    throw "Esta transação já foi estornada.";
                 }
 
-                // 1. Reverter valores na receita
                 const valorPrincipalEstornado = recebimentoData.valorPrincipal || 0;
-                const novoTotalRecebido = (receitaData.totalRecebido || 0) - valorPrincipalEstornado;
-                const novoSaldoPendente = (receitaData.saldoPendente || 0) + valorPrincipalEstornado;
+                const jurosEstornados = recebimentoData.jurosRecebidos || 0;
+                const descontosEstornados = recebimentoData.descontosConcedidos || 0;
+
+                const novoTotalRecebido = receitaData.totalRecebido - valorPrincipalEstornado;
+                const novoTotalJuros = receitaData.totalJuros - jurosEstornados;
+                const novoTotalDescontos = receitaData.totalDescontos - descontosEstornados;
+                const novoSaldoPendente = (receitaData.valorOriginal + novoTotalJuros) - novoTotalRecebido - novoTotalDescontos;
+
 
                 let novoStatus;
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const vencimento = new Date((receitaData.dataVencimento || receitaData.vencimento) + 'T00:00:00');
 
-                if (novoTotalRecebido <= 0 && novoSaldoPendente > 0) {
-                     novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
-                } else if (novoSaldoPendente > 0 && novoTotalRecebido > 0) {
-                    novoStatus = 'Recebido Parcialmente';
-                } else if (novoSaldoPendente <= 0) {
+                if (novoSaldoPendente <= 0) {
                     novoStatus = 'Recebido';
+                } else if (novoTotalRecebido > 0) {
+                    novoStatus = 'Recebido Parcialmente';
                 } else {
-                    novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                     novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
                 }
 
-
-                transaction.update(receitaRef, {
-                    totalRecebido: novoTotalRecebido,
-                    saldoPendente: novoSaldoPendente,
-                    status: novoStatus
-                });
-
-                // 2. Marcar o recebimento original como estornado
-                transaction.update(recebimentoRef, { estornado: true });
-
-                // 3. Criar registro de estorno na subcoleção
-                const novoEstornoRecebimentoRef = doc(collection(receitaRef, 'recebimentos'));
-                transaction.set(novoEstornoRecebimentoRef, {
+                transaction.set(novoEstornoRef, {
                     tipoTransacao: "Estorno",
                     dataTransacao: new Date().toISOString().split('T')[0],
                     valorPrincipal: valorPrincipalEstornado,
+                    jurosRecebidos: jurosEstornados,
+                    descontosConcedidos: descontosEstornados,
                     usuarioResponsavel: currentUserName || "N/A",
                     motivoEstorno: motivo,
                     recebimentoOriginalId: recebimentoId,
                     createdAt: serverTimestamp()
                 });
 
-                // 4. Marcar a movimentação bancária original como estornada e conciliada
-                transaction.update(movimentacaoOriginalRef, { estornado: true, conciliado: true });
+                transaction.update(recebimentoRef, { estornado: true });
 
-                // 5. Criar a movimentação bancária de contrapartida
-                const movimentacaoOriginalData = movimentacaoOriginalDoc.data();
-                const novaMovimentacaoEstornoRef = doc(movimentacoesBancariasRef);
-                transaction.set(novaMovimentacaoEstornoRef, {
-                    ...movimentacaoOriginalData,
-                    valor: -movimentacaoOriginalData.valor, // Inverte o valor
-                    descricao: `Estorno do lançamento: ${movimentacaoOriginalData.descricao}`,
-                    origemTipo: "ESTORNO",
-                    origemId: novoEstornoRecebimentoRef.id,
-                    estornado: false,
-                    estornoDeId: movimentacaoOriginalDoc.id,
-                    conciliado: true,
-                    dataConciliacao: new Date().toISOString().split('T')[0],
-                    usuarioConciliacao: "Sistema (Estorno)",
-                    createdAt: serverTimestamp(),
+                transaction.update(receitaRef, {
+                    totalRecebido: novoTotalRecebido,
+                    totalJuros: novoTotalJuros,
+                    totalDescontos: novoTotalDescontos,
+                    saldoPendente: novoSaldoPendente,
+                    status: novoStatus
                 });
             });
 
@@ -7534,7 +7811,7 @@ function validateParcelasSum() {
 
         } catch (error) {
             console.error("Erro na transação de estorno de recebimento: ", error);
-            alert("Falha ao processar o estorno: " + error.message);
+            alert("Falha ao processar o estorno: " + error);
         }
     }
 
@@ -7728,28 +8005,24 @@ function validateParcelasSum() {
 
                     transaction.update(receitaRef, updateData);
 
-                    // 3. Create a corresponding bank transaction
-                    const contaEntradaSelect = document.getElementById('receber-conta-entrada');
-                    const contaEntradaNome = contaEntradaSelect.options[contaEntradaSelect.selectedIndex].text;
-                    const movBancariaRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
-                    transaction.set(movBancariaRef, {
+                    // 3. Create the bank transaction movement for the receipt
+                    const movRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
+                    transaction.set(movRef, {
                         contaBancariaId: contaEntradaId,
-                        contaBancariaNome: contaEntradaNome,
+                        contaBancariaNome: document.getElementById('receber-conta-entrada').options[document.getElementById('receber-conta-entrada').selectedIndex].text,
                         dataTransacao: dataTransacao,
-                        valor: valorPrincipalCents, // Positive for a receipt
-                        descricao: `Recbto: ${data.descricao}`,
+                        valor: Math.abs(valorPrincipalCents), // Positive value for a receipt
+                        descricao: `Recebimento: ${data.descricao}`,
                         origemTipo: 'RECEBIMENTO_RECEITA',
-                        origemId: novoRecebimentoRef.id, // ID of the receipt document
-                        origemParentId: receitaRef.id, // ID of the parent receita document
-                        planoDeContasId: data.categoriaId, // For DRE reporting
-                        origemDescricao: `Recebimento Receita #${data.numeroDocumento || data.id.substring(0,4)}`,
+                        origemId: novoRecebimentoRef.id, // Link to the receipt document in the subcollection
+                        origemDescricao: `Recebimento Receita #${data.numeroDocumento || receitaId.substring(0,4)}`,
                         conciliado: false,
                         dataConciliacao: null,
                         usuarioConciliacao: null,
                         estornado: false,
                         estornoDeId: null,
-                        adminId: userId,
-                        createdAt: serverTimestamp()
+                        createdAt: serverTimestamp(),
+                        adminId: userId
                     });
                 });
 
@@ -8001,6 +8274,88 @@ function validateParcelasSum() {
 
     // --- Lógica do Seletor de Visão do Dashboard Financeiro ---
     const dashboardFinanceiroSelector = document.getElementById('dashboard-financeiro-selector');
+    const transferenciaForm = document.getElementById('transferencia-form');
+
+    if(transferenciaForm) {
+        transferenciaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const feedbackId = 'transferencia-form-feedback';
+            const userId = effectiveUserId;
+            if(!userId) {
+                showFeedback(feedbackId, "Usuário não autenticado.", true);
+                return;
+            }
+
+            const contaOrigemSelect = document.getElementById('transferencia-conta-origem');
+            const contaDestinoSelect = document.getElementById('transferencia-conta-destino');
+            const contaOrigemId = contaOrigemSelect.value;
+            const contaOrigemNome = contaOrigemSelect.options[contaOrigemSelect.selectedIndex].text;
+            const contaDestinoId = contaDestinoSelect.value;
+            const contaDestinoNome = contaDestinoSelect.options[contaDestinoSelect.selectedIndex].text;
+            const valorCents = toCents(document.getElementById('transferencia-valor').value);
+            const dataTransacao = document.getElementById('transferencia-data').value;
+            const obs = document.getElementById('transferencia-obs').value;
+
+            if (contaOrigemId === contaDestinoId) {
+                showFeedback(feedbackId, "A conta de origem e destino não podem ser a mesma.", true);
+                return;
+            }
+            if(valorCents <= 0) {
+                 showFeedback(feedbackId, "O valor da transferência deve ser positivo.", true);
+                 return;
+            }
+
+            const batch = writeBatch(db);
+            const movimentacoesRef = collection(db, 'users', userId, 'movimentacoesBancarias');
+            const transferenciaId = doc(movimentacoesRef).id; // Unique ID for the whole operation
+
+            // 1. Saída da conta de origem
+            const saidaRef = doc(movimentacoesRef);
+            batch.set(saidaRef, {
+                contaBancariaId: contaOrigemId,
+                contaBancariaNome: contaOrigemNome,
+                dataTransacao: dataTransacao,
+                valor: -Math.abs(valorCents),
+                descricao: `Transferência para ${contaDestinoNome}. ${obs}`,
+                origemTipo: "TRANSFERENCIA_SAIDA",
+                origemId: transferenciaId,
+                origemDescricao: `Transferência #${transferenciaId.substring(0,6)}`,
+                conciliado: false,
+                estornado: false,
+                adminId: userId,
+                createdAt: serverTimestamp()
+            });
+
+            // 2. Entrada na conta de destino
+            const entradaRef = doc(movimentacoesRef);
+             batch.set(entradaRef, {
+                contaBancariaId: contaDestinoId,
+                contaBancariaNome: contaDestinoNome,
+                dataTransacao: dataTransacao,
+                valor: Math.abs(valorCents),
+                descricao: `Transferência de ${contaOrigemNome}. ${obs}`,
+                origemTipo: "TRANSFERENCIA_ENTRADA",
+                origemId: transferenciaId,
+                origemDescricao: `Transferência #${transferenciaId.substring(0,6)}`,
+                conciliado: false,
+                estornado: false,
+                adminId: userId,
+                createdAt: serverTimestamp()
+            });
+
+            try {
+                await batch.commit();
+                showFeedback(feedbackId, "Transferência realizada com sucesso!", false);
+                transferenciaForm.reset();
+                setTimeout(() => document.getElementById('transferencia-modal').classList.add('hidden'), 1500);
+            } catch (error) {
+                 console.error("Erro ao realizar transferência:", error);
+                 showFeedback(feedbackId, "Erro ao salvar a transferência.", true);
+            }
+        });
+    }
+
+
     if (dashboardFinanceiroSelector) {
         dashboardFinanceiroSelector.addEventListener('change', (e) => {
             const selectedValue = e.target.value;
