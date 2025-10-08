@@ -274,7 +274,9 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
         try {
             await runTransaction(db, async (transaction) => {
+                // =================================================
                 // PHASE 1: ALL READS
+                // =================================================
                 const movDoc = await transaction.get(movRef);
                 if (!movDoc.exists()) throw new Error("Lançamento não encontrado.");
                 const movData = movDoc.data();
@@ -299,7 +301,9 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                     if (!receitaDoc.exists() || !recebimentoDocGet.exists()) throw new Error("Documento de receita ou recebimento original não encontrado.");
                 }
 
+                // =================================================
                 // PHASE 2: ALL WRITES
+                // =================================================
                 const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
                 transaction.set(newMovRef, {
                     ...movData,
