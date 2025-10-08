@@ -254,7 +254,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
         if (selectedIds.length !== 1) return;
         const movId = selectedIds[0];
 
-        if (!confirm("Esta ação irá EXCLUIR esta movimentação e REABRIR o título original em Contas a Pagar/Receber. Deseja continuar?")) return;
+        if (!confirm("Esta ação irá EXCLUIR esta movimentação e REABRIR o título original em Contas a Pagar/Receber, mantendo o histórico. Deseja continuar?")) return;
 
         if (estornarBtn) estornarBtn.disabled = true;
 
@@ -279,24 +279,39 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
                 const subCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'pagamentos' : 'recebimentos';
                 const origemParentDocRef = doc(db, `users/${userId}/${parentCollection}`, movData.origemParentId);
                 const origemDocRef = doc(origemParentDocRef, subCollection, movData.origemId);
+                const historicoCollectionRef = collection(origemParentDocRef, subCollection);
 
                 const [origemDoc, origemParentDocRaw] = await Promise.all([transaction.get(origemDocRef), transaction.get(origemParentDocRef)]);
 
                 if (!origemParentDocRaw.exists()) throw new Error(`O título original (ID: ${movData.origemParentId}) não foi encontrado.`);
+                if (!origemDoc.exists()) throw new Error(`O registro de pagamento/recebimento original (ID: ${movData.origemId}) não foi encontrado no histórico.`);
 
                 const origemParentDoc = origemParentDocRaw.data();
-                const valorPrincipalEstornado = origemDoc.exists() ? (origemDoc.data().valorPrincipal || 0) : 0;
-                const jurosEstornados = origemDoc.exists() ? (origemDoc.data().jurosPagos || origemDoc.data().jurosRecebidos || 0) : 0;
-                const descontosEstornados = origemDoc.exists() ? (origemDoc.data().descontosAplicados || origemDoc.data().descontosConcedidos || 0) : 0;
+                const pagamentoOriginalData = origemDoc.data();
+                const valorPrincipalEstornado = pagamentoOriginalData.valorPrincipal || 0;
+                const jurosEstornados = pagamentoOriginalData.jurosPagos || pagamentoOriginalData.jurosRecebidos || 0;
+                const descontosEstornados = pagamentoOriginalData.descontosAplicados || pagamentoOriginalData.descontosConcedidos || 0;
 
                 // 2. EXECUTA AS ALTERAÇÕES
 
-                // Deleta a movimentação bancária
+                // Deleta a movimentação bancária da tela de conciliação
                 transaction.delete(movRef);
-                // Deleta o registro de pagamento/recebimento da subcoleção
-                if (origemDoc.exists()) {
-                    transaction.delete(origemDocRef);
-                }
+
+                // Marca o registro de pagamento/recebimento original como estornado, em vez de deletar
+                transaction.update(origemDocRef, { estornado: true });
+
+                // Adiciona um novo registro de "Estorno" no histórico do título
+                const novoEstornoRef = doc(historicoCollectionRef);
+                transaction.set(novoEstornoRef, {
+                    tipoTransacao: "Estorno",
+                    dataTransacao: new Date().toISOString().split('T')[0],
+                    valorPrincipal: valorPrincipalEstornado,
+                    jurosPagos: jurosEstornados,
+                    descontosAplicados: descontosEstornados,
+                    usuarioResponsavel: currentUserName || "Sistema",
+                    motivoEstorno: "Estornado via Conciliação Bancária",
+                    createdAt: serverTimestamp()
+                });
 
                 // Recalcula e atualiza o título original (despesa/receita)
                 const updateData = {};
@@ -320,7 +335,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
                 transaction.update(origemParentDocRef, updateData);
             });
 
-            showFeedback("Operação desfeita! A movimentação foi excluída e o título original reaberto.", "success");
+            showFeedback("Operação desfeita! A movimentação foi excluída e o título original reaberto com histórico.", "success");
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
         } catch (error) {
             console.error("Erro ao desfazer lançamento: ", error);
