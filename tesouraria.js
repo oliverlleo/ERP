@@ -65,14 +65,16 @@ export function initializeTesouraria(db, userId, common) {
         // 2. Query all movements *before* the start date for that specific account
         const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
             where("contaBancariaId", "==", contaId),
-            where("dataTransacao", "<", startDate),
-            where("estornado", "==", false)
+            where("dataTransacao", "<", startDate)
         );
         const pastMovimentacoesSnap = await getDocs(q);
 
-        // 3. Adjust the initial balance with past movements
+        // 3. Adjust the initial balance with past movements, filtering out reversed ones client-side
         pastMovimentacoesSnap.docs.forEach(doc => {
-            saldoAnterior += doc.data().valor;
+            const data = doc.data();
+            if (data.estornado !== true) {
+                saldoAnterior += data.valor;
+            }
         });
 
         return saldoAnterior;
@@ -131,11 +133,13 @@ export function initializeTesouraria(db, userId, common) {
             const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
                 where("contaBancariaId", "==", contaId),
                 where("dataTransacao", ">=", startDate),
-                where("dataTransacao", "<=", endDate),
-                where("estornado", "==", false)
+                where("dataTransacao", "<=", endDate)
             );
             const snapshot = await getDocs(q);
-            allMovimentacoes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Filter out reversed transactions on the client side
+            allMovimentacoes = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(mov => mov.estornado !== true);
             allMovimentacoes.sort((a, b) => new Date(a.dataTransacao) - new Date(b.dataTransacao));
 
             // Calculate KPIs based on the fetched movements for the period
