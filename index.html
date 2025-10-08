@@ -8445,7 +8445,9 @@ function validateParcelasSum() {
 
             const batch = writeBatch(db);
             const movimentacoesRef = collection(db, 'users', userId, 'movimentacoesBancarias');
-            const transferenciaId = doc(movimentacoesRef).id; // Unique ID for the whole operation
+
+            // Unique ID for the entire transfer operation, linking the two movements.
+            const transferenciaGrupoId = doc(collection(db, 'transferenciaGrupos')).id;
 
             // 1. Saída da conta de origem
             const saidaRef = doc(movimentacoesRef);
@@ -8456,9 +8458,11 @@ function validateParcelasSum() {
                 valor: -Math.abs(valorCents),
                 descricao: `Transferência para ${contaDestinoNome}. ${obs}`,
                 origemTipo: "TRANSFERENCIA_SAIDA",
-                origemId: transferenciaId,
-                origemDescricao: `Transferência #${transferenciaId.substring(0,6)}`,
-                conciliado: false,
+                origemId: transferenciaGrupoId, // Link to the group
+                origemDescricao: `Transf. #${transferenciaGrupoId.substring(0,6)}`,
+                conciliado: true, // Transfers are typically auto-conciled
+                dataConciliacao: new Date().toISOString().split('T')[0],
+                usuarioConciliacao: "Sistema",
                 estornado: false,
                 adminId: userId,
                 createdAt: serverTimestamp()
@@ -8473,9 +8477,11 @@ function validateParcelasSum() {
                 valor: Math.abs(valorCents),
                 descricao: `Transferência de ${contaOrigemNome}. ${obs}`,
                 origemTipo: "TRANSFERENCIA_ENTRADA",
-                origemId: transferenciaId,
-                origemDescricao: `Transferência #${transferenciaId.substring(0,6)}`,
-                conciliado: false,
+                origemId: transferenciaGrupoId, // Link to the group
+                origemDescricao: `Transf. #${transferenciaGrupoId.substring(0,6)}`,
+                conciliado: true, // Transfers are typically auto-conciled
+                dataConciliacao: new Date().toISOString().split('T')[0],
+                usuarioConciliacao: "Sistema",
                 estornado: false,
                 adminId: userId,
                 createdAt: serverTimestamp()
