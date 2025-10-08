@@ -4537,7 +4537,7 @@
         }
     }
 
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => {
         detachListeners();
 
         const commonUtils = { formatCurrency, toCents, fromCents, showFeedback };
@@ -4556,7 +4556,7 @@
             sessionStorage.setItem('userSession', JSON.stringify(sessionData));
 
             updateUiForUser(currentUserName);
-            await setupListeners(effectiveUserId);
+            setupListeners(effectiveUserId);
             initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
             initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
             showView('main-page');
@@ -4575,7 +4575,7 @@
                 currentUserName = sessionData.currentUserName;
 
                 updateUiForUser(currentUserName);
-                await setupListeners(effectiveUserId);
+                setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
                 initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
                 showView('main-page');
@@ -4693,7 +4693,7 @@
 
                 // We are NOT a Firebase Auth user, so we call setupListeners with the admin's ID
                 // to access the correct data partitions.
-                await setupListeners(effectiveUserId);
+                setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
                 initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
                 showView('main-page');
@@ -4760,7 +4760,7 @@
             userEmailCadastrosSpan.textContent = currentUserName;
             userEmailContasSpan.textContent = currentUserName;
 
-            await setupListeners(effectiveUserId);
+            setupListeners(effectiveUserId);
             showView('main-page');
 
         } catch (error) {
@@ -8141,7 +8141,7 @@ function validateParcelasSum() {
                         descricao: `Recebimento: ${data.descricao}`,
                         origemTipo: 'RECEBIMENTO_RECEITA',
                         origemId: novoRecebimentoRef.id, // Link to the receipt document in the subcollection
-                        origemPaiId: receitaId, // Direct link to the parent revenue document
+                    origemPaiId: receitaId, // <-- This was the missing piece
                         origemDescricao: `Recebimento Receita #${data.numeroDocumento || receitaId.substring(0,4)}`,
                         conciliado: false,
                         dataConciliacao: null,
