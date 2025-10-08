@@ -248,21 +248,29 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
     if (desfazerBtn) desfazerBtn.addEventListener('click', () => handleConciliacao(false));
     if (estornarBtn) estornarBtn.addEventListener('click', handleEstorno);
 
+    let isReverting = false; // Safeguard flag
+
     async function handleEstorno() {
-        const selectedIds = getSelectedMovimentacaoIds();
-        if (selectedIds.length !== 1) {
-            alert("Selecione exatamente um lançamento para estornar.");
+        if (isReverting) {
+            console.warn("Reversal already in progress. Ignoring duplicate call.");
             return;
         }
-        const movId = selectedIds[0];
-
-        if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
-            return;
-        }
-
-        const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
+        isReverting = true;
 
         try {
+            const selectedIds = getSelectedMovimentacaoIds();
+            if (selectedIds.length !== 1) {
+                alert("Selecione exatamente um lançamento para estornar.");
+                return;
+            }
+            const movId = selectedIds[0];
+
+            if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
+                return;
+            }
+
+            const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
+
             await runTransaction(db, async (transaction) => {
                 const movDoc = await transaction.get(movRef);
                 if (!movDoc.exists()) {
@@ -407,10 +415,11 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
             showFeedback("Lançamento estornado com sucesso!", "success");
             selectAllCheckbox.checked = false;
-            // The onSnapshot listener will automatically refresh the view
         } catch (error) {
             console.error("Erro ao estornar lançamento: ", error);
             showFeedback(`Falha no estorno: ${error.toString()}`, "error");
+        } finally {
+            isReverting = false;
         }
     }
 }
