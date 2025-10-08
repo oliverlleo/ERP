@@ -2881,7 +2881,6 @@
 
   <script type="module" src="fluxo-de-caixa.js"></script>
   <script type="module" src="movimentacao-bancaria.js"></script>
-  <script type="module" src="movimentacao-bancaria.js"></script>
   <script type="module">
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
@@ -6466,23 +6465,6 @@
     if(movNovaEntradaBtn) movNovaEntradaBtn.addEventListener('click', () => openManualEntryModal('entrada'));
     if(movNovaSaidaBtn) movNovaSaidaBtn.addEventListener('click', () => openManualEntryModal('saida'));
 
-    const movEstornarLancamentoBtn = document.getElementById('mov-estornar-lancamento-btn');
-    if(movEstornarLancamentoBtn) {
-        movEstornarLancamentoBtn.addEventListener('click', () => {
-            const selectedIds = getSelectedMovimentacaoIds();
-            if (selectedIds.length !== 1) {
-                alert("Por favor, selecione exatamente um lançamento para estornar.");
-                return;
-            }
-            handleEstornoMovimentacao(selectedIds[0]);
-        });
-    }
-
-    function getSelectedMovimentacaoIds() {
-        const tableBody = document.getElementById('movimentacoes-bancarias-table-body');
-        if (!tableBody) return [];
-        return Array.from(tableBody.querySelectorAll('.mov-checkbox:checked')).map(cb => cb.dataset.id);
-    }
 
     if(movTransferenciaBtn) {
         movTransferenciaBtn.addEventListener('click', () => {
