@@ -251,12 +251,15 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
     async function handleEstorno() {
         const selectedIds = getSelectedMovimentacaoIds();
         if (selectedIds.length !== 1) {
-            alert("Selecione exatamente um lançamento para estornar.");
+            showFeedback("Selecione exatamente um lançamento para estornar.", "error");
             return;
         }
         const movId = selectedIds[0];
 
+        estornarBtn.disabled = true; // Disable button immediately to prevent double-clicks
+
         if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
+            estornarBtn.disabled = false; // Re-enable if user cancels
             return;
         }
 
@@ -264,96 +267,121 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
         try {
             await runTransaction(db, async (transaction) => {
+                // --- 1. READ PHASE ---
                 const movDoc = await transaction.get(movRef);
-                if (!movDoc.exists()) {
-                    throw "Lançamento não encontrado.";
-                }
-
+                if (!movDoc.exists()) throw new Error("Lançamento não encontrado.");
                 const movData = movDoc.data();
-                if (movData.estornado) {
-                    throw "Este lançamento já foi estornado.";
+                if (movData.estornado) throw new Error("Este lançamento já foi estornado.");
+
+                const { origemTipo, origemId, origemPaiId, valor } = movData;
+                let parentRef, parentDoc, paymentRef, paymentDoc;
+
+                if (origemTipo === 'PAGAMENTO_DESPESA' && origemPaiId && origemId) {
+                    parentRef = doc(db, `users/${userId}/despesas`, origemPaiId);
+                    paymentRef = doc(parentRef, 'pagamentos', origemId);
+                    [parentDoc, paymentDoc] = await Promise.all([transaction.get(parentRef), transaction.get(paymentRef)]);
+                    if (!parentDoc.exists() || !paymentDoc.exists()) throw new Error("Despesa ou pagamento original não encontrado.");
+
+                } else if (origemTipo === 'RECEBIMENTO_RECEITA' && origemPaiId && origemId) {
+                    parentRef = doc(db, `users/${userId}/receitas`, origemPaiId);
+                    paymentRef = doc(parentRef, 'recebimentos', origemId);
+                    [parentDoc, paymentDoc] = await Promise.all([transaction.get(parentRef), transaction.get(paymentRef)]);
+                    if (!parentDoc.exists() || !paymentDoc.exists()) throw new Error("Receita ou recebimento original não encontrado.");
                 }
 
-                // 1. Mark original movement as estornado
+
+                // --- 2. WRITE PHASE ---
+
+                // a. Mark original bank movement as reversed
                 transaction.update(movRef, {
                     estornado: true,
-                    // If the original wasn't conciliado, it should be marked as such now
-                    // so it doesn't affect the "to be reconciled" balance anymore.
                     conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
                     usuarioConciliacao: "Sistema (Estorno)"
                 });
 
-                // 2. Create the reversal movement
-                const contrapartidaData = {
+                // b. Create the new reversal bank movement
+                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
+                transaction.set(newMovRef, {
                     ...movData,
-                    valor: -movData.valor, // Invert the value
+                    valor: -valor,
                     descricao: `Estorno de: ${movData.descricao}`,
                     origemTipo: "ESTORNO",
-                    origemDescricao: `Estorno Lanç. #${movDoc.id.substring(0, 5)}`,
+                    origemDescricao: `Estorno Lanç. #${movId.substring(0, 5)}`,
                     estornado: false,
-                    estornoDeId: movDoc.id,
-                    conciliado: true, // Reversal is born reconciled
+                    estornoDeId: movId,
+                    conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
                     usuarioConciliacao: "Sistema (Estorno)",
                     createdAt: serverTimestamp()
-                };
-                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
-                transaction.set(newMovRef, contrapartidaData);
+                });
+
+                // c. Reverse the original financial document (Despesa/Receita)
+                if (parentRef && parentDoc && paymentRef && paymentDoc) {
+                    const parentData = parentDoc.data();
+                    const paymentData = paymentDoc.data();
+                    const valorEstornado = Math.abs(paymentData.valorPrincipal || 0);
+
+                    // Mark original payment/receipt as reversed
+                    transaction.update(paymentRef, { estornado: true });
+
+                    // Add a new transaction log for the reversal
+                    const estornoLogRef = doc(collection(parentRef, paymentRef.parent.id));
+                    transaction.set(estornoLogRef, {
+                        tipoTransacao: "Estorno",
+                        dataTransacao: new Date().toISOString().split('T')[0],
+                        valorPrincipal: valorEstornado,
+                        usuarioResponsavel: "Sistema", // Replace with actual user if available
+                        motivoEstorno: "Reversão via conciliação bancária.",
+                        pagamentoOriginalId: origemId,
+                        createdAt: serverTimestamp()
+                    });
+
+                    // Update the parent document's balance and status
+                    if (origemTipo === 'PAGAMENTO_DESPESA') {
+                        const novoTotalPago = (parentData.totalPago || 0) - valorEstornado;
+                        const novoSaldo = (parentData.valorSaldo || 0) + valorEstornado;
+                        const vencimento = new Date(parentData.vencimento + 'T00:00:00');
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        let novoStatus = (novoSaldo > 0 && novoSaldo < parentData.valorOriginal) ? 'Pago Parcialmente' : (vencimento < today ? 'Vencido' : 'Pendente');
+                         if (novoSaldo >= parentData.valorOriginal) {
+                             novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                         }
 
 
-                // 3. Revert the original source, if applicable
-                if (movData.origemTipo && movData.origemId) {
-                    const origemId = movData.origemId;
-                    let origemRef;
-                    let updateData;
+                        transaction.update(parentRef, {
+                            totalPago: novoTotalPago,
+                            valorSaldo: novoSaldo,
+                            status: novoStatus
+                        });
+                    } else if (origemTipo === 'RECEBIMENTO_RECEITA') {
+                        const novoTotalRecebido = (parentData.totalRecebido || 0) - valorEstornado;
+                        const novoSaldoPendente = (parentData.saldoPendente || 0) + valorEstornado;
+                        const vencimento = new Date((parentData.dataVencimento || parentData.vencimento) + 'T00:00:00');
+                         const today = new Date();
+                        today.setHours(0,0,0,0);
+                        let novoStatus = (novoSaldoPendente > 0 && novoSaldoPendente < parentData.valorOriginal) ? 'Recebido Parcialmente' : (vencimento < today ? 'Vencido' : 'Pendente');
+                         if (novoSaldoPendente >= parentData.valorOriginal) {
+                             novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                         }
 
-                    switch (movData.origemTipo) {
-                        case 'PAGAMENTO_DESPESA':
-                            // This logic assumes 'origemId' is the ID of the payment document
-                            // in the 'pagamentos' subcollection of a 'despesas' document.
-                            // We need to find the despesa first. This is complex and might require
-                            // a more direct link, e.g., storing despesaId on the movimentacao.
-                            // For now, we'll assume a structure or skip if too complex without more info.
-                            // --- Placeholder for Reversal Logic ---
-                            // Let's assume we can find the despesa and pagamento ref
-                            // const pagamentoRef = doc(db, `users/${userId}/despesas/${despesaId}/pagamentos`, origemId);
-                            // const despesaRef = doc(db, `users/${userId}/despesas`, despesaId);
-                            // const pagDoc = await transaction.get(pagamentoRef);
-                            // if(pagDoc.exists()) {
-                            //     const valorEstornado = pagDoc.data().valorPago;
-                            //     transaction.update(pagamentoRef, { estornado: true });
-                            //     transaction.update(despesaRef, {
-                            //         totalPago: increment(-valorEstornado),
-                            //         valorSaldo: increment(valorEstornado)
-                            //     });
-                            // }
-                            showFeedback("Estorno de pagamento de despesa ainda não implementado na origem.", "info");
-                            break;
-
-                        case 'RECEBIMENTO_RECEITA':
-                            // Similar logic for reversing a receita payment
-                            showFeedback("Estorno de recebimento de receita ainda não implementado na origem.", "info");
-                            break;
-
-                        case 'TRANSFERENCIA_SAIDA':
-                        case 'TRANSFERENCIA_ENTRADA':
-                             showFeedback("Estorno de transferência ainda não implementado na origem.", "info");
-                            break;
-
-                        default:
-                            // For manual entries like APORTE_CAPITAL, no further action is needed.
-                            break;
+                        transaction.update(parentRef, {
+                            totalRecebido: novoTotalRecebido,
+                            saldoPendente: novoSaldoPendente,
+                            status: novoStatus
+                        });
                     }
                 }
             });
 
-            showFeedback("Lançamento estornado com sucesso!", "success");
+            showFeedback("Lançamento estornado com sucesso! A pendência original foi reaberta.", "success");
             selectAllCheckbox.checked = false;
-            // The onSnapshot listener will automatically refresh the view
+            // No need to re-enable button, onSnapshot will trigger updateActionButtons() which will handle the state.
         } catch (error) {
             console.error("Erro ao estornar lançamento: ", error);
-            showFeedback(`Falha no estorno: ${error.toString()}`, "error");
+            showFeedback(`Falha no estorno: ${error.message}`, "error");
+            estornarBtn.disabled = false; // Re-enable on failure
         }
     }
 }
