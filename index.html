@@ -4510,6 +4510,7 @@
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+                initializeTesouraria(db, effectiveUserId, commonUtils);
                 showView('main-page');
                 updateStatusFilterUI();
                 updateReceitaStatusFilterUI();
@@ -6546,7 +6547,7 @@
                     descricao: `Pagamento: ${data.descricao}`,
                     origemTipo: 'PAGAMENTO_DESPESA',
                     origemId: novoPagamentoRef.id,
-                    origemPath: novoPagamentoRef.path, // Store the full path for direct access
+                    origemPath: novoPagamentoRef.path,
                     origemDescricao: `Pagamento Despesa #${data.numeroDocumento || despesaId.substring(0,4)}`,
                     conciliado: false,
                     dataConciliacao: null,
@@ -6916,9 +6917,7 @@
         });
     }
 
-    // Expose functions for testing and cross-module calls
-    window.openVisualizarModal = openVisualizarModal;
-    window.openVisualizarReceitaModal = openVisualizarReceitaModal;
+    // Expose functions for testing
     window.testHooks = { setupListeners, auth };
 
     function getSelectedReceitaIds() {
@@ -7657,8 +7656,8 @@ function validateParcelasSum() {
                         valor: valorPrincipalCents, // Positive for inflow
                         descricao: `Recebimento: ${data.descricao}`,
                         origemTipo: 'RECEBIMENTO_RECEITA',
-                    origemId: novoRecebimentoRef.id,
-                    origemPath: novoRecebimentoRef.path, // Store the full path for direct access
+                        origemId: novoRecebimentoRef.id,
+                        origemPath: novoRecebimentoRef.path,
                         origemDescricao: `Recebimento Receita #${data.numeroDocumento || receitaId.substring(0,4)}`,
                         conciliado: false,
                         dataConciliacao: null,

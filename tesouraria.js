@@ -1,12 +1,9 @@
-import { getFirestore, collection, query, where, getDocs, doc, getDoc, addDoc, serverTimestamp, runTransaction, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, addDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-// This function will be called from the main script (index.html)
-// when the user is authenticated and the Firestore (db) is ready.
 export function initializeTesouraria(db, userId, common) {
     const tesourariaPage = document.getElementById('movimentacao-bancaria-page');
     if (!tesourariaPage) {
-        // console.log("Página de Tesouraria não encontrada. A inicialização foi pulada.");
-        return; // Exit if the page is not in the DOM
+        return;
     }
 
     // --- DOM Elements ---
@@ -26,7 +23,7 @@ export function initializeTesouraria(db, userId, common) {
 
     const novaEntradaBtn = document.getElementById('tesouraria-nova-entrada-btn');
     const novaSaidaBtn = document.getElementById('tesouraria-nova-saida-btn');
-    const transferenciaBtn = document.getElementById('tesouraria-transferencia-btn'); // Note: This might open the existing transfer modal
+    const transferenciaBtn = document.getElementById('tesouraria-transferencia-btn');
     const conciliarBtn = document.getElementById('tesouraria-conciliar-btn');
     const desfazerConciliacaoBtn = document.getElementById('tesouraria-desfazer-conciliacao-btn');
     const estornarBtn = document.getElementById('tesouraria-estornar-btn');
@@ -51,34 +48,9 @@ export function initializeTesouraria(db, userId, common) {
     let selectedMovimentacaoForEstorno = null;
 
     // --- Common Functions ---
-    const { formatCurrency, toCents, fromCents, showFeedback } = common;
+    const { formatCurrency, toCents } = common;
 
     // --- Main Functions ---
-
-    async function calculateSaldoAnterior(contaId, startDate) {
-        if (!contaId) return 0;
-
-        // 1. Get initial balance from the account's definition
-        const conta = allContasBancarias.find(c => c.id === contaId);
-        let saldoAnterior = conta ? (conta.saldoInicial || 0) : 0;
-
-        // 2. Query all movements *before* the start date for that specific account
-        const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
-            where("contaBancariaId", "==", contaId),
-            where("dataTransacao", "<", startDate)
-        );
-        const pastMovimentacoesSnap = await getDocs(q);
-
-        // 3. Adjust the initial balance with past movements, filtering out reversed ones client-side
-        pastMovimentacoesSnap.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.estornado !== true) {
-                saldoAnterior += data.valor;
-            }
-        });
-
-        return saldoAnterior;
-    }
 
     async function loadInitialData() {
         await populateContasBancarias();
@@ -99,13 +71,35 @@ export function initializeTesouraria(db, userId, common) {
         const snapshot = await getDocs(q);
         allContasBancarias = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        contaBancariaSelect.innerHTML = '<option value="">Selecione uma conta</option>'; // Prompt user to select
+        contaBancariaSelect.innerHTML = '<option value="">Selecione uma conta</option>';
         allContasBancarias.forEach(conta => {
             const option = document.createElement('option');
             option.value = conta.id;
             option.textContent = conta.nome;
             contaBancariaSelect.appendChild(option);
         });
+    }
+
+    async function calculateSaldoAnterior(contaId, startDate) {
+        if (!contaId) return 0;
+
+        const conta = allContasBancarias.find(c => c.id === contaId);
+        let saldoAnterior = conta ? (conta.saldoInicial || 0) : 0;
+
+        const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
+            where("contaBancariaId", "==", contaId),
+            where("dataTransacao", "<", startDate)
+        );
+        const pastMovimentacoesSnap = await getDocs(q);
+
+        pastMovimentacoesSnap.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.estornado !== true) {
+                saldoAnterior += data.valor;
+            }
+        });
+
+        return saldoAnterior;
     }
 
     async function fetchDataAndRender() {
@@ -136,35 +130,33 @@ export function initializeTesouraria(db, userId, common) {
                 where("dataTransacao", "<=", endDate)
             );
             const snapshot = await getDocs(q);
-            // Filter out reversed transactions on the client side
+
             allMovimentacoes = snapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(mov => mov.estornado !== true);
             allMovimentacoes.sort((a, b) => new Date(a.dataTransacao) - new Date(b.dataTransacao));
 
-            // Calculate KPIs based on the fetched movements for the period
             let totalEntradas = 0;
             let totalSaidas = 0;
             let saldoAConciliar = 0;
             allMovimentacoes.forEach(mov => {
                 if (mov.valor > 0) totalEntradas += mov.valor;
-                else totalSaidas += mov.valor; // Saidas are negative
+                else totalSaidas += mov.valor;
                 if (!mov.conciliado) {
                     saldoAConciliar += mov.valor;
                 }
             });
-            totalSaidas = -totalSaidas; // Make it a positive number for display
 
-            const saldoPeriodo = totalEntradas - totalSaidas;
+            const saldoPeriodo = totalEntradas + totalSaidas;
             const saldoFinal = saldoAnterior + saldoPeriodo;
 
-            updateKPIs({ saldoAnterior, totalEntradas, totalSaidas, saldoPeriodo, saldoFinal, saldoAConciliar });
+            updateKPIs({ saldoAnterior, totalEntradas, totalSaidas: -totalSaidas, saldoPeriodo, saldoFinal, saldoAConciliar });
             renderTable(allMovimentacoes, saldoAnterior);
             updateActionButtonsState();
 
         } catch (error) {
             console.error("Erro ao buscar movimentações:", error);
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console.</td></tr>`;
         }
     }
 
@@ -193,7 +185,6 @@ export function initializeTesouraria(db, userId, common) {
 
         movimentacoes.forEach(mov => {
             const tr = document.createElement('tr');
-            const isEstornado = mov.estornado === true;
 
             let statusBadge = '';
             if (mov.conciliado) {
@@ -209,8 +200,8 @@ export function initializeTesouraria(db, userId, common) {
             tr.innerHTML = `
                 <td class="p-4"><input type="checkbox" class="movimentacao-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${mov.id}"></td>
                 <td class="px-4 py-2 text-sm text-gray-700">${new Date(mov.dataTransacao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-4 py-2 text-sm text-gray-800 ${isEstornado ? 'line-through' : ''}">${mov.descricao}</td>
-                <td class="px-4 py-2 text-sm text-gray-600"><u>${mov.origemDescricao || 'Manual'}</u></td>
+                <td class="px-4 py-2 text-sm text-gray-800">${mov.descricao}</td>
+                <td class="px-4 py-2 text-sm text-blue-600 hover:underline cursor-pointer origem-link" data-mov-id="${mov.id}"><u>${mov.origemDescricao || 'Manual'}</u></td>
                 <td class="px-4 py-2 text-sm text-right text-green-600">${entrada > 0 ? formatCurrency(entrada) : ''}</td>
                 <td class="px-4 py-2 text-sm text-right text-red-600">${saida > 0 ? formatCurrency(saida) : ''}</td>
                 <td class="px-4 py-2 text-sm text-right font-medium">${formatCurrency(saldoAcumulado)}</td>
@@ -231,28 +222,22 @@ export function initializeTesouraria(db, userId, common) {
 
     async function openOperacaoModal(type) {
         operacaoForm.reset();
-        showFeedback('tesouraria-operacao-feedback', '', false); // Clear previous feedback
+        document.getElementById('tesouraria-operacao-feedback').textContent = '';
         document.getElementById('tesouraria-operacao-type').value = type;
 
         let accountTypes;
         if (type === 'entrada') {
             operacaoTitle.textContent = 'Nova Entrada Manual';
             accountTypes = ['receita', 'investimento'];
-        } else { // 'saida'
+        } else {
             operacaoTitle.textContent = 'Nova Saída Manual';
             accountTypes = ['despesa', 'custo', 'investimento'];
         }
 
         try {
-            const q = query(
-                collection(db, `users/${userId}/planosDeContas`),
-                where('aceitaLancamento', '==', true),
-                where('inativo', '!=', true)
-            );
+            const q = query(collection(db, `users/${userId}/planosDeContas`), where('aceitaLancamento', '==', true), where('inativo', '!=', true));
             const snapshot = await getDocs(q);
-            const contas = snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(conta => accountTypes.includes(conta.tipo));
+            const contas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(conta => accountTypes.includes(conta.tipo));
 
             operacaoPlanoContasSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
             contas.sort((a, b) => a.codigo.localeCompare(b.codigo)).forEach(conta => {
@@ -261,10 +246,8 @@ export function initializeTesouraria(db, userId, common) {
                 option.textContent = `${conta.codigo} - ${conta.nome}`;
                 operacaoPlanoContasSelect.appendChild(option);
             });
-
         } catch (error) {
-            console.error("Erro ao carregar plano de contas para o modal:", error);
-            showFeedback('tesouraria-operacao-feedback', "Erro ao carregar categorias.", true);
+            console.error("Erro ao carregar plano de contas:", error);
         }
 
         document.getElementById('tesouraria-operacao-data').value = new Date().toISOString().split('T')[0];
@@ -293,91 +276,6 @@ export function initializeTesouraria(db, userId, common) {
         estornarBtn.disabled = count !== 1 || anyEstornado;
     }
 
-    // --- Event Listeners ---
-    [contaBancariaSelect, periodoDeInput, periodoAteInput].forEach(el => {
-        el.addEventListener('change', fetchDataAndRender);
-    });
-
-    novaEntradaBtn.addEventListener('click', () => openOperacaoModal('entrada'));
-    novaSaidaBtn.addEventListener('click', () => openOperacaoModal('saida'));
-    closeOperacaoModalBtn.addEventListener('click', () => operacaoModal.classList.add('hidden'));
-    cancelOperacaoModalBtn.addEventListener('click', () => operacaoModal.classList.add('hidden'));
-
-    operacaoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const feedbackId = 'tesouraria-operacao-feedback';
-        const contaBancariaId = contaBancariaSelect.value;
-        if (!contaBancariaId) {
-            showFeedback(feedbackId, "Por favor, selecione uma conta bancária primeiro.", true);
-            return;
-        }
-
-        const tipoOperacao = document.getElementById('tesouraria-operacao-type').value;
-        const valorCents = toCents(document.getElementById('tesouraria-operacao-valor').value);
-        const data = document.getElementById('tesouraria-operacao-data').value;
-        const descricao = document.getElementById('tesouraria-operacao-descricao').value;
-        const planoContasId = operacaoPlanoContasSelect.value;
-        const planoContasText = operacaoPlanoContasSelect.options[operacaoPlanoContasSelect.selectedIndex].text;
-
-        const valorFinal = tipoOperacao === 'entrada' ? valorCents : -valorCents;
-        const origemTipo = tipoOperacao === 'entrada' ? 'OUTRAS_ENTRADAS' : 'OUTRAS_SAIDAS';
-
-        try {
-            const contaBancariaNome = allContasBancarias.find(c => c.id === contaBancariaId)?.nome || 'N/A';
-
-            await addDoc(collection(db, `users/${userId}/movimentacoesBancarias`), {
-                contaBancariaId,
-                contaBancariaNome,
-                dataTransacao: data,
-                valor: valorFinal,
-                descricao: descricao,
-                planoContasId: planoContasId, // Storing for reference
-                origemTipo: origemTipo,
-                origemId: null,
-                origemDescricao: `Lançamento Manual: ${planoContasText}`,
-                conciliado: false,
-                estornado: false,
-                adminId: userId,
-                createdAt: serverTimestamp()
-            });
-
-            operacaoModal.classList.add('hidden');
-            fetchDataAndRender(); // Refresh data
-        } catch (error) {
-            console.error("Erro ao salvar operação de tesouraria:", error);
-            showFeedback(feedbackId, "Erro ao salvar a operação.", true);
-        }
-    });
-
-    tableBody.addEventListener('click', (e) => {
-        if (e.target.closest('.origem-link')) {
-            e.preventDefault();
-            const link = e.target.closest('.origem-link');
-            const movId = link.dataset.movId;
-            const mov = allMovimentacoes.find(m => m.id === movId);
-
-            if (mov && mov.origemPath) {
-                const pathParts = mov.origemPath.split('/');
-                const parentId = pathParts[pathParts.length - 2]; // The ID of the despesa/receita
-
-                if (mov.origemTipo === 'PAGAMENTO_DESPESA') {
-                    window.openVisualizarModal(parentId);
-                } else if (mov.origemTipo === 'RECEBIMENTO_RECEITA') {
-                    window.openVisualizarReceitaModal(parentId);
-                }
-            }
-        }
-    });
-
-    tableBody.addEventListener('change', (e) => {
-        if (e.target.classList.contains('movimentacao-checkbox')) {
-            updateActionButtonsState();
-        }
-    });
-
-    conciliarBtn.addEventListener('click', () => updateConciliacaoStatus(true));
-    desfazerConciliacaoBtn.addEventListener('click', () => updateConciliacaoStatus(false));
-
     async function updateConciliacaoStatus(isConciliado) {
         const selectedIds = Array.from(tableBody.querySelectorAll('.movimentacao-checkbox:checked')).map(cb => cb.dataset.id);
         if (selectedIds.length === 0) return;
@@ -393,19 +291,92 @@ export function initializeTesouraria(db, userId, common) {
 
         try {
             await batch.commit();
-            console.log(`Successfully updated ${selectedIds.length} items to conciliado: ${isConciliado}`);
-            fetchDataAndRender(); // Refresh the view
+            await fetchDataAndRender();
         } catch (error) {
             console.error("Error updating conciliation status: ", error);
-            alert("Failed to update conciliation status.");
         }
     }
+
+    // --- Event Listeners ---
+    [contaBancariaSelect, periodoDeInput, periodoAteInput].forEach(el => {
+        el.addEventListener('change', fetchDataAndRender);
+    });
+
+    tableBody.addEventListener('click', (e) => {
+        if (e.target.closest('.origem-link')) {
+            e.preventDefault();
+            // This relies on global functions exposed by the main script
+            const link = e.target.closest('.origem-link');
+            const movId = link.dataset.movId;
+            const mov = allMovimentacoes.find(m => m.id === movId);
+
+            if (mov && mov.origemPath) {
+                const parentId = mov.origemPath.split('/')[3];
+                if (mov.origemTipo === 'PAGAMENTO_DESPESA' && window.openVisualizarModal) {
+                    window.openVisualizarModal(parentId);
+                } else if (mov.origemTipo === 'RECEBIMENTO_RECEITA' && window.openVisualizarReceitaModal) {
+                    window.openVisualizarReceitaModal(parentId);
+                }
+            }
+        }
+    });
+
+    tableBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('movimentacao-checkbox')) {
+            updateActionButtonsState();
+        }
+    });
 
     selectAllCheckbox.addEventListener('change', () => {
         tableBody.querySelectorAll('.movimentacao-checkbox').forEach(checkbox => {
             checkbox.checked = selectAllCheckbox.checked;
         });
         updateActionButtonsState();
+    });
+
+    novaEntradaBtn.addEventListener('click', () => openOperacaoModal('entrada'));
+    novaSaidaBtn.addEventListener('click', () => openOperacaoModal('saida'));
+    closeOperacaoModalBtn.addEventListener('click', () => operacaoModal.classList.add('hidden'));
+    cancelOperacaoModalBtn.addEventListener('click', () => operacaoModal.classList.add('hidden'));
+    conciliarBtn.addEventListener('click', () => updateConciliacaoStatus(true));
+    desfazerConciliacaoBtn.addEventListener('click', () => updateConciliacaoStatus(false));
+
+    operacaoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contaBancariaId = contaBancariaSelect.value;
+        if (!contaBancariaId) return;
+
+        const tipoOperacao = document.getElementById('tesouraria-operacao-type').value;
+        const valorCents = toCents(document.getElementById('tesouraria-operacao-valor').value);
+        const data = document.getElementById('tesouraria-operacao-data').value;
+        const descricao = document.getElementById('tesouraria-operacao-descricao').value;
+        const planoContasId = operacaoPlanoContasSelect.value;
+        const planoContasText = operacaoPlanoContasSelect.options[operacaoPlanoContasSelect.selectedIndex].text;
+
+        const valorFinal = tipoOperacao === 'entrada' ? valorCents : -valorCents;
+        const origemTipo = tipoOperacao === 'entrada' ? 'OUTRAS_ENTRADAS' : 'OUTRAS_SAIDAS';
+
+        try {
+            const contaBancariaNome = allContasBancarias.find(c => c.id === contaBancariaId)?.nome || 'N/A';
+            await addDoc(collection(db, `users/${userId}/movimentacoesBancarias`), {
+                contaBancariaId,
+                contaBancariaNome,
+                dataTransacao: data,
+                valor: valorFinal,
+                descricao: descricao,
+                planoContasId,
+                origemTipo: origemTipo,
+                origemDescricao: `Lançamento Manual: ${planoContasText}`,
+                conciliado: false,
+                estornado: false,
+                adminId: userId,
+                createdAt: serverTimestamp()
+            });
+            operacaoModal.classList.add('hidden');
+            fetchDataAndRender();
+        } catch (error) {
+            console.error("Erro ao salvar operação:", error);
+        }
     });
 
     estornarBtn.addEventListener('click', () => {
@@ -510,7 +481,6 @@ export function initializeTesouraria(db, userId, common) {
         }
     }
 
-
-    // --- Module Initialization ---
+    // --- Initial Load ---
     loadInitialData();
 }
