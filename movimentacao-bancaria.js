@@ -260,16 +260,41 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
             return;
         }
 
-        estornarBtn.disabled = true; // Disable button to prevent double-clicks
+        estornarBtn.disabled = true;
         const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
 
         try {
             await runTransaction(db, async (transaction) => {
+                // --- PHASE 1: ALL READS ---
                 const movDoc = await transaction.get(movRef);
                 if (!movDoc.exists()) throw new Error("Lançamento não encontrado.");
 
                 const movData = movDoc.data();
                 if (movData.estornado) throw new Error("Este lançamento já foi estornado.");
+
+                const { origemTipo, origemId, origemPaiId, valor } = movData;
+                let despesaRef, despesaDoc, pagamentoRef;
+                let receitaRef, receitaDoc, recebimentoRef;
+
+                if (origemTipo === 'PAGAMENTO_DESPESA' && origemPaiId && origemId) {
+                    despesaRef = doc(db, `users/${userId}/despesas`, origemPaiId);
+                    pagamentoRef = doc(db, `users/${userId}/despesas/${origemPaiId}/pagamentos`, origemId);
+                    despesaDoc = await transaction.get(despesaRef);
+                    if (!despesaDoc.exists()) throw new Error(`Despesa original (${origemPaiId}) não encontrada.`);
+                } else if (origemTipo === 'RECEBIMENTO_RECEITA' && origemPaiId && origemId) {
+                    receitaRef = doc(db, `users/${userId}/receitas`, origemPaiId);
+                    recebimentoRef = doc(db, `users/${userId}/receitas/${origemPaiId}/recebimentos`, origemId);
+                    receitaDoc = await transaction.get(receitaRef);
+                    if (!receitaDoc.exists()) throw new Error(`Receita original (${origemPaiId}) não encontrada.`);
+                }
+
+                // --- PHASE 2: ALL WRITES ---
+                const valorEstornado = Math.abs(valor);
+                const historyEntry = {
+                    data: new Date().toISOString(),
+                    usuario: "Sistema (Estorno)",
+                    acao: `Estorno de ${formatCurrency(valorEstornado)} via reconciliação (Mov. ID: ${movId}).`
+                };
 
                 // 1. Mark original movement as estornado
                 transaction.update(movRef, {
@@ -296,90 +321,56 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                 const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
                 transaction.set(newMovRef, contrapartidaData);
 
-                // 3. Revert the original source, if applicable
-                const { origemTipo, origemId, origemPaiId, valor } = movData;
-                if (origemTipo && origemId && origemPaiId) {
-                    const valorEstornado = Math.abs(valor); // valor is negative for payments, positive for receipts
-                    const historyEntry = {
-                        data: new Date().toISOString(),
-                        usuario: "Sistema (Estorno)",
-                        acao: `Pagamento/Recebimento estornado no valor de ${formatCurrency(valorEstornado)} através da reconciliação bancária (ID Mov: ${movId}).`
-                    };
+                // 3. Revert the original source
+                if (origemTipo === 'PAGAMENTO_DESPESA' && despesaDoc) {
+                    transaction.update(pagamentoRef, { estornado: true, historico: arrayUnion(historyEntry) });
 
-                    if (origemTipo === 'PAGAMENTO_DESPESA') {
-                        const pagamentoRef = doc(db, `users/${userId}/despesas/${origemPaiId}/pagamentos`, origemId);
-                        const despesaRef = doc(db, `users/${userId}/despesas`, origemPaiId);
+                    const novoTotalPago = (despesaDoc.data().totalPago || 0) - valorEstornado;
+                    const valorTotalDespesa = despesaDoc.data().valor;
 
-                        // Mark payment as reversed
-                        transaction.update(pagamentoRef, {
-                            estornado: true,
-                            historico: arrayUnion(historyEntry)
-                        });
-
-                        // Update parent expense
-                        const despesaDoc = await transaction.get(despesaRef);
-                        if (!despesaDoc.exists()) throw new Error(`Despesa original (${origemPaiId}) não encontrada.`);
-
-                        const novoTotalPago = (despesaDoc.data().totalPago || 0) - valorEstornado;
-                        const valorTotalDespesa = despesaDoc.data().valor;
-                        const novoSaldo = valorTotalDespesa - novoTotalPago;
-
-                        let novoStatus = 'Pendente';
-                        if (novoTotalPago > 0 && novoTotalPago < valorTotalDespesa) {
-                            novoStatus = 'Pago Parcialmente';
-                        } else if (novoTotalPago >= valorTotalDespesa) {
-                            novoStatus = 'Pago'; // Should not happen in reversal, but for safety
-                        } else {
-                             const hoje = new Date().toISOString().split('T')[0];
-                             if (despesaDoc.data().dataVencimento < hoje) {
-                                 novoStatus = 'Vencido';
-                             }
+                    let novoStatus = 'Pendente';
+                    if (novoTotalPago > 0 && novoTotalPago < valorTotalDespesa) {
+                        novoStatus = 'Pago Parcialmente';
+                    } else if (novoTotalPago <= 0) {
+                        const hoje = new Date().toISOString().split('T')[0];
+                        if (despesaDoc.data().dataVencimento < hoje) {
+                            novoStatus = 'Vencido';
                         }
-
-                        transaction.update(despesaRef, {
-                            totalPago: increment(-valorEstornado),
-                            valorSaldo: increment(valorEstornado),
-                            status: novoStatus,
-                            historico: arrayUnion({ ...historyEntry, acao: `Pagamento de ${formatCurrency(valorEstornado)} estornado. Saldo recalculado.` })
-                        });
-
-                    } else if (origemTipo === 'RECEBIMENTO_RECEITA') {
-                        const recebimentoRef = doc(db, `users/${userId}/receitas/${origemPaiId}/recebimentos`, origemId);
-                        const receitaRef = doc(db, `users/${userId}/receitas`, origemPaiId);
-
-                         // Mark receipt as reversed
-                        transaction.update(recebimentoRef, {
-                            estornado: true,
-                            historico: arrayUnion(historyEntry)
-                        });
-
-                        // Update parent revenue
-                        const receitaDoc = await transaction.get(receitaRef);
-                        if (!receitaDoc.exists()) throw new Error(`Receita original (${origemPaiId}) não encontrada.`);
-
-                        const novoTotalRecebido = (receitaDoc.data().totalRecebido || 0) - valorEstornado;
-                        const valorTotalReceita = receitaDoc.data().valor;
-                        const novoSaldo = valorTotalReceita - novoTotalRecebido;
-
-                        let novoStatus = 'Pendente';
-                        if (novoTotalRecebido > 0 && novoTotalRecebido < valorTotalReceita) {
-                            novoStatus = 'Recebido Parcialmente';
-                        } else if (novoTotalRecebido >= valorTotalReceita) {
-                            novoStatus = 'Recebido';
-                        } else {
-                             const hoje = new Date().toISOString().split('T')[0];
-                             if (receitaDoc.data().dataVencimento < hoje) {
-                                 novoStatus = 'Vencido';
-                             }
-                        }
-
-                         transaction.update(receitaRef, {
-                            totalRecebido: increment(-valorEstornado),
-                            valorSaldo: increment(valorEstornado),
-                            status: novoStatus,
-                            historico: arrayUnion({ ...historyEntry, acao: `Recebimento de ${formatCurrency(valorEstornado)} estornado. Saldo recalculado.` })
-                        });
+                    } else {
+                         novoStatus = 'Pago'; // Should not happen
                     }
+
+                    transaction.update(despesaRef, {
+                        totalPago: increment(-valorEstornado),
+                        valorSaldo: increment(valorEstornado),
+                        status: novoStatus,
+                        historico: arrayUnion({ ...historyEntry, acao: `Pagamento de ${formatCurrency(valorEstornado)} estornado. Saldo recalculado.` })
+                    });
+
+                } else if (origemTipo === 'RECEBIMENTO_RECEITA' && receitaDoc) {
+                    transaction.update(recebimentoRef, { estornado: true, historico: arrayUnion(historyEntry) });
+
+                    const novoTotalRecebido = (receitaDoc.data().totalRecebido || 0) - valorEstornado;
+                    const valorTotalReceita = receitaDoc.data().valor;
+
+                    let novoStatus = 'Pendente';
+                    if (novoTotalRecebido > 0 && novoTotalRecebido < valorTotalReceita) {
+                        novoStatus = 'Recebido Parcialmente';
+                    } else if (novoTotalRecebido <= 0) {
+                        const hoje = new Date().toISOString().split('T')[0];
+                        if (receitaDoc.data().dataVencimento < hoje) {
+                            novoStatus = 'Vencido';
+                        }
+                    } else {
+                        novoStatus = 'Recebido'; // Should not happen
+                    }
+
+                    transaction.update(receitaRef, {
+                        totalRecebido: increment(-valorEstornado),
+                        valorSaldo: increment(valorEstornado),
+                        status: novoStatus,
+                        historico: arrayUnion({ ...historyEntry, acao: `Recebimento de ${formatCurrency(valorEstornado)} estornado. Saldo recalculado.` })
+                    });
                 }
             });
 
@@ -389,7 +380,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
             console.error("Erro ao estornar lançamento: ", error);
             showFeedback(`Erro no estorno: ${error.message}`, "error");
         } finally {
-            estornarBtn.disabled = false; // Re-enable button
+            estornarBtn.disabled = false;
             updateActionButtons();
         }
     }
