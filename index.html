@@ -2880,12 +2880,15 @@
 
 
   <script type="module" src="fluxo-de-caixa.js"></script>
+  <script type="module" src="movimentacao-bancaria.js"></script>
+  <script type="module" src="movimentacao-bancaria.js"></script>
   <script type="module">
     // Importações do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction, writeBatch, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
     import { initializeFluxoDeCaixa } from './fluxo-de-caixa.js';
+    import { initializeMovimentacaoBancaria } from './movimentacao-bancaria.js';
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -4555,6 +4558,7 @@
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
             initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+            initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
             showView('main-page');
             updateStatusFilterUI();
             updateReceitaStatusFilterUI();
@@ -4573,6 +4577,7 @@
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+                initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
                 showView('main-page');
                 updateStatusFilterUI();
                 updateReceitaStatusFilterUI();
@@ -4689,6 +4694,8 @@
                 // We are NOT a Firebase Auth user, so we call setupListeners with the admin's ID
                 // to access the correct data partitions.
                 setupListeners(effectiveUserId);
+                initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
+                initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
                 showView('main-page');
             }
         } catch (error) {
@@ -6260,6 +6267,133 @@
     const closeMovManualEntryBtn = document.getElementById('close-mov-manual-entry-modal-btn');
     const cancelMovManualEntryBtn = document.getElementById('cancel-mov-manual-entry-modal-btn');
     const movContaBancariaSelect = document.getElementById('mov-conta-bancaria-select');
+    let movimentacoesUnsubscribe = null; // To hold the listener
+
+    if (movContaBancariaSelect) {
+        movContaBancariaSelect.addEventListener('change', loadAndRenderMovimentacoes);
+        const periodoDeInput = document.getElementById('mov-periodo-de');
+        const periodoAteInput = document.getElementById('mov-periodo-ate');
+        if(periodoDeInput) periodoDeInput.addEventListener('change', loadAndRenderMovimentacoes);
+        if(periodoAteInput) periodoAteInput.addEventListener('change', loadAndRenderMovimentacoes);
+    }
+
+    function resetMovimentacaoKPIs() {
+        document.getElementById('kpi-saldo-inicial').textContent = formatCurrency(0);
+        document.getElementById('kpi-total-entradas-mov').textContent = formatCurrency(0);
+        document.getElementById('kpi-total-saidas-mov').textContent = formatCurrency(0);
+        document.getElementById('kpi-saldo-periodo').textContent = formatCurrency(0);
+        document.getElementById('kpi-saldo-final-mov').textContent = formatCurrency(0);
+        document.getElementById('kpi-saldo-a-conciliar').textContent = formatCurrency(0);
+    }
+
+    async function loadAndRenderMovimentacoes() {
+        const tableBody = document.getElementById('movimentacoes-bancarias-table-body');
+        if (!effectiveUserId || !tableBody) return;
+
+        const contaId = movContaBancariaSelect.value;
+        if (!contaId) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-500">Selecione uma conta bancária para começar.</td></tr>';
+            resetMovimentacaoKPIs();
+            return;
+        }
+
+        if (movimentacoesUnsubscribe) {
+            movimentacoesUnsubscribe(); // Detach previous listener
+        }
+
+        const startDate = document.getElementById('mov-periodo-de').value;
+        const endDate = document.getElementById('mov-periodo-ate').value;
+
+        const movimentacoesQuery = query(
+            collection(db, 'users', effectiveUserId, 'movimentacoesBancarias'),
+            where("contaBancariaId", "==", contaId)
+            // We fetch all and filter by date on the client to calculate running balance correctly
+        );
+
+        movimentacoesUnsubscribe = onSnapshot(movimentacoesQuery, async (snapshot) => {
+            const allMovs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => new Date(a.dataTransacao) - new Date(b.dataTransacao));
+
+            // 1. Calculate Saldo Anterior
+            const contaBancariaRef = doc(db, 'users', effectiveUserId, 'contasBancarias', contaId);
+            const contaBancariaSnap = await getDoc(contaBancariaRef);
+            let saldoAnterior = contaBancariaSnap.exists() ? (contaBancariaSnap.data().saldoInicial || 0) : 0;
+
+            allMovs.forEach(mov => {
+                if (!startDate || mov.dataTransacao < startDate) {
+                    saldoAnterior += mov.valor;
+                }
+            });
+
+            // 2. Filter for the selected period
+            const periodMovs = allMovs.filter(mov => {
+                if (startDate && mov.dataTransacao < startDate) return false;
+                if (endDate && mov.dataTransacao > endDate) return false;
+                return true;
+            });
+
+            // 3. Render table and calculate KPIs for the period
+            let saldoCorrente = saldoAnterior;
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+            let saldoAConciliar = 0;
+
+            tableBody.innerHTML = '';
+            if (periodMovs.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-500">Nenhuma movimentação encontrada para o período.</td></tr>';
+            } else {
+                periodMovs.forEach(mov => {
+                    saldoCorrente += mov.valor;
+                    const isEntrada = mov.valor > 0;
+
+                    if (isEntrada) {
+                        totalEntradas += mov.valor;
+                    } else {
+                        totalSaidas += mov.valor; // valor is already negative
+                    }
+                    if (!mov.conciliado) {
+                        saldoAConciliar += mov.valor;
+                    }
+
+                    const tr = tableBody.insertRow();
+                    tr.setAttribute('data-id', mov.id);
+                    const isEstornado = mov.estornado;
+                    tr.className = isEstornado ? 'bg-gray-100' : '';
+
+                    let rowHTML;
+                    if (isEstornado) {
+                        rowHTML = `<td class="p-4"><input type="checkbox" class="mov-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${mov.id}" disabled></td>` +
+                                  `<td colspan="7" class="px-4 py-2 text-sm text-gray-500"><del>${new Date(mov.dataTransacao + 'T00:00:00').toLocaleDateString('pt-BR')} - ${mov.descricao} [ESTORNADO]</del></td>`;
+                    } else {
+                         rowHTML = `
+                            <td class="p-4"><input type="checkbox" class="mov-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded" data-id="${mov.id}"></td>
+                            <td class="px-4 py-2 text-sm">${new Date(mov.dataTransacao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                            <td class="px-4 py-2 text-sm w-2/5">${mov.descricao}</td>
+                            <td class="px-4 py-2 text-sm"><a href="#" class="text-blue-600 hover:underline">${mov.origemDescricao || 'N/A'}</a></td>
+                            <td class="px-4 py-2 text-right text-sm text-green-600">${isEntrada ? formatCurrency(mov.valor) : ''}</td>
+                            <td class="px-4 py-2 text-right text-sm text-red-600">${!isEntrada ? formatCurrency(Math.abs(mov.valor)) : ''}</td>
+                            <td class="px-4 py-2 text-right text-sm font-bold">${formatCurrency(saldoCorrente)}</td>
+                            <td class="px-4 py-2 text-center text-sm">
+                                ${mov.conciliado
+                                    ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conciliado</span>'
+                                    : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">Pendente</span>'
+                                }
+                            </td>
+                        `;
+                    }
+                     tr.innerHTML = rowHTML;
+                });
+            }
+
+            // 4. Update KPIs
+            document.getElementById('kpi-saldo-inicial').textContent = formatCurrency(saldoAnterior);
+            document.getElementById('kpi-total-entradas-mov').textContent = formatCurrency(totalEntradas);
+            document.getElementById('kpi-total-saidas-mov').textContent = formatCurrency(Math.abs(totalSaidas));
+            document.getElementById('kpi-saldo-periodo').textContent = formatCurrency(totalEntradas + totalSaidas);
+            document.getElementById('kpi-saldo-final-mov').textContent = formatCurrency(saldoCorrente);
+            document.getElementById('kpi-saldo-a-conciliar').textContent = formatCurrency(saldoAConciliar);
+        });
+    }
 
     async function openManualEntryModal(type) {
         if (!movManualEntryModal) return;
