@@ -153,7 +153,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         if (!showRealizado && !showProjetado) {
             extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
             renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
-            destroyAllCharts(); // Correct function to clear charts
+            destroyAllCharts();
             renderDRE([]);
             return;
         }
@@ -165,12 +165,14 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             let unifiedTransactions = [];
 
             if (showRealizado) {
-                const [pagamentos, recebimentos, transferencias] = await Promise.all([
-                    fetchTransactionsEfficiently('despesas', 'pagamentos', startDate, endDate),
-                    fetchTransactionsEfficiently('receitas', 'recebimentos', startDate, endDate),
-                    fetchCollection('transferencias', startDate, endDate)
-                ]);
-                const realizedTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
+                 const movsQuery = query(
+                    collection(db, `users/${userId}/movimentacoesBancarias`),
+                    where('dataTransacao', '>=', startDate),
+                    where('dataTransacao', '<=', endDate),
+                    where('estornado', '==', false)
+                );
+                const movsSnap = await getDocs(movsQuery);
+                const realizedTransactions = await enrichAndUnifyMovimentacoes(movsSnap.docs);
                 unifiedTransactions.push(...realizedTransactions);
             }
 
@@ -180,27 +182,21 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             }
 
             unifiedTransactions.sort((a, b) => new Date(a.data) - new Date(b.data));
+            const filteredTransactions = applyFilters(unifiedTransactions, contaId, activeConciliacaoFilter);
+            const kpis = calculateKPIs(saldoAnterior, filteredTransactions);
 
-            // 4. Apply Filters
-            unifiedTransactions = applyFilters(unifiedTransactions, contaId, activeConciliacaoFilter);
-
-            // 5. Calculate KPIs
-            const kpis = calculateKPIs(saldoAnterior, unifiedTransactions, contaId);
-
-            // 6. Render UI
             renderKPIs(kpis);
-            renderExtrato(unifiedTransactions, kpis.saldoAnterior);
-            renderDRE(unifiedTransactions);
-            renderAllNewCharts(unifiedTransactions, kpis.saldoAnterior);
+            renderExtrato(filteredTransactions, saldoAnterior);
+            renderDRE(filteredTransactions);
+            renderAllNewCharts(filteredTransactions, saldoAnterior);
 
         } catch (error) {
             console.error("Error calculating cash flow:", error);
-            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console para mais detalhes.</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-red-500">Ocorreu um erro ao carregar os dados. Verifique o console.</td></tr>`;
         }
     }
 
     async function calculateSaldoAnterior(startDate, contaId) {
-        // 1. Get initial balance sum
         let saldoAnterior = 0;
         if (contaId === 'todas') {
             allContasBancarias.forEach(conta => {
@@ -208,31 +204,26 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             });
         } else {
             const contaEspecifica = allContasBancarias.find(c => c.id === contaId);
-            if (contaEspecifica) {
-                saldoAnterior = contaEspecifica.saldoInicial || 0;
-            }
+            saldoAnterior = contaEspecifica ? (contaEspecifica.saldoInicial || 0) : 0;
         }
 
-        // 2. Get past transactions
-        const [pagamentos, recebimentos, transferencias] = await Promise.all([
-            fetchTransactionsEfficiently('despesas', 'pagamentos', null, startDate, false),
-            fetchTransactionsEfficiently('receitas', 'recebimentos', null, startDate, false),
-            fetchCollection('transferencias', null, startDate, false)
-        ]);
+        const movsQuery = query(
+            collection(db, `users/${userId}/movimentacoesBancarias`),
+            where('dataTransacao', '<', startDate),
+            where('estornado', '==', false)
+        );
 
-        const allTransactions = await enrichAndUnifyTransactions(pagamentos, recebimentos, transferencias);
-        const filteredTransactions = applyFilters(allTransactions, contaId, 'todas');
-
-        // 3. Add effect of past transactions to the initial balance
-        filteredTransactions.forEach(t => {
-            if (t.type === 'transferencia') {
-                if (contaId !== 'todas') {
-                    if (t.contaDestinoId === contaId) saldoAnterior += t.valor;
-                    if (t.contaOrigemId === contaId) saldoAnterior -= t.valor;
+        const movsSnap = await getDocs(movsQuery);
+        movsSnap.docs.forEach(doc => {
+            const movData = doc.data();
+            if (contaId !== 'todas') {
+                if (movData.contaBancariaId === contaId) {
+                    saldoAnterior += movData.valor;
                 }
-                // If 'todas', transfers are ignored as they are internal.
             } else {
-                saldoAnterior += (t.entrada || 0) - (t.saida || 0);
+                if (movData.origemTipo !== 'TRANSFERENCIA_SAIDA' && movData.origemTipo !== 'TRANSFERENCIA_ENTRADA') {
+                    saldoAnterior += movData.valor;
+                }
             }
         });
 
@@ -261,6 +252,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         for (const doc of pagamentos) {
             const data = doc.data();
+            // Do not include reversed transactions in cash flow
+            if (data.estornado) {
+                continue;
+            }
             const parentDespesaRef = doc.ref.parent.parent;
             if (parentDespesaRef) {
                 const despesaSnap = await getDoc(parentDespesaRef);
@@ -290,6 +285,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         for (const doc of recebimentos) {
             const data = doc.data();
+            // Do not include reversed transactions in cash flow
+            if (data.estornado) {
+                continue;
+            }
             const parentReceitaRef = doc.ref.parent.parent;
              if (parentReceitaRef) {
                 const receitaSnap = await getDoc(parentReceitaRef);

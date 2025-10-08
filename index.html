@@ -4368,7 +4368,8 @@
                 pagamentosSnapshots[index].forEach(pagoDoc => {
                     const pagoData = pagoDoc.data();
                     const transacaoDateStr = pagoData.dataTransacao;
-                    if (pagoData.tipoTransacao === 'Pagamento' && transacaoDateStr) {
+                    // Only include non-reversed payments in calculations
+                    if (pagoData.tipoTransacao === 'Pagamento' && transacaoDateStr && !pagoData.estornado) {
                         const transacaoDate = new Date(transacaoDateStr + 'T00:00:00');
                         if (!isNaN(transacaoDate.getTime())) {
                             if (transacaoDate.getMonth() === currentMonth && transacaoDate.getFullYear() === currentYear) {
@@ -4413,7 +4414,8 @@
                 recebimentosSnapshots[index].forEach(recebidoDoc => {
                     const recebidoData = recebidoDoc.data();
                     const transacaoDateStr = recebidoData.dataTransacao;
-                    if (recebidoData.tipoTransacao === 'Recebimento' && transacaoDateStr) {
+                    // Only include non-reversed receipts in calculations
+                    if (recebidoData.tipoTransacao === 'Recebimento' && transacaoDateStr && !recebidoData.estornado) {
                         const transacaoDate = new Date(transacaoDateStr + 'T00:00:00');
                          if (!isNaN(transacaoDate.getTime())) {
                             if (transacaoDate.getMonth() === currentMonth && transacaoDate.getFullYear() === currentYear) {
@@ -6503,73 +6505,98 @@
             await runTransaction(db, async (transaction) => {
                 // --- PHASE 1: ALL READS ---
                 const movDoc = await transaction.get(movRef);
-                if (!movDoc.exists()) {
-                    throw new Error("Lançamento original não encontrado.");
-                }
+                if (!movDoc.exists()) throw new Error("Lançamento original não encontrado.");
                 const movData = movDoc.data();
-                if (movData.estornado) {
-                    throw new Error("Este lançamento já foi estornado.");
+                if (movData.estornado) throw new Error("Este lançamento já foi estornado.");
+
+                let despesaRef, despesaDoc, pagamentoRef, pagamentoDoc;
+                let receitaRef, receitaDoc, recebimentoRef, recebimentoDoc;
+
+                if (movData.origemTipo === 'PAGAMENTO_DESPESA' && movData.origemPaiId && movData.origemId) {
+                    despesaRef = doc(db, 'users', userId, 'despesas', movData.origemPaiId);
+                    pagamentoRef = doc(despesaRef, 'pagamentos', movData.origemId);
+                    despesaDoc = await transaction.get(despesaRef);
+                    pagamentoDoc = await transaction.get(pagamentoRef);
+                    if (!despesaDoc.exists() || !pagamentoDoc.exists()) throw new Error("Documento de despesa ou pagamento original não encontrado.");
+                } else if (movData.origemTipo === 'RECEBIMENTO_RECEITA' && movData.origemPaiId && movData.origemId) {
+                    receitaRef = doc(db, 'users', userId, 'receitas', movData.origemPaiId);
+                    recebimentoRef = doc(receitaRef, 'recebimentos', movData.origemId);
+                    receitaDoc = await transaction.get(receitaRef);
+                    recebimentoDoc = await transaction.get(recebimentoRef);
+                    if (!receitaDoc.exists() || !recebimentoDoc.exists()) throw new Error("Documento de receita ou recebimento original não encontrado.");
                 }
-
-                let pagamentoRef, pagamentoDoc, despesaRef, despesaDoc;
-                let recebimentoRef, recebimentoDoc, receitaRef, receitaDoc;
-
-                if (movData.origemTipo === 'PAGAMENTO_DESPESA' && movData.origemId) {
-                    // This is a subcollection document, so we need the parent `despesa` ref first.
-                    // This part of the logic is complex and needs the despesaId which is not in the payment doc.
-                    // A potential solution is to store despesaId in the 'pagamentos' subcollection.
-                    // For now, let's assume we can get it. If not, this will need a data model change.
-                    // Looking at the code, it seems `pagamentos` are a subcollection of `despesas`.
-                    // But `handleEstornoMovimentacao` is called from `movimentacoesBancarias`, which doesn't have the despesaId directly.
-                    // The `origemId` is the *payment* ID. We need to query to find the parent despesa. This cannot be done in a transaction.
-                    // THIS IS A SIGNIFICANT FLAW IN THE CURRENT DATA MODEL.
-                    // A workaround is to query for the parent outside the transaction, which is not ideal but will work.
-                    // However, the prompt requires fixing the transaction logic. Let's assume for a moment the logic was slightly different and we had the ID.
-                    // The error is read-after-write, so let's fix that order.
-                    // The correct fix requires a data model change: storing the parent `despesaId` on the `movimentacaoBancaria` document.
-                    // Let's proceed with the reordering assuming we can get the refs.
-                } else if (movData.origemTipo === 'RECEBIMENTO_RECEITA' && movData.origemId) {
-                    // Similar issue as above for receipts.
-                }
-
 
                 // --- PHASE 2: ALL WRITES ---
 
-                // Create the reversal (contrapartida) entry
+                // 1. Create the reversal (contrapartida) bank movement
                 const estornoRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
                 transaction.set(estornoRef, {
-                    ...movData, // Inherit most data
-                    valor: -movData.valor, // Invert the value
+                    ...movData,
+                    valor: -movData.valor,
                     descricao: `Estorno de: ${movData.descricao} (Motivo: ${motivo})`,
                     origemTipo: "ESTORNO",
                     origemId: movDoc.id,
                     estornoDeId: movDoc.id,
-                    conciliado: true, // Estornos nascem conciliados
+                    conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
-                    estornado: false, // O estorno em si não é estornado
+                    estornado: false,
                     createdAt: serverTimestamp()
                 });
 
-                // Mark the original movement as reversed and reconciled
+                // 2. Mark the original bank movement as reversed and reconciled
                 transaction.update(movRef, {
                     estornado: true,
                     conciliado: true,
-                     dataConciliacao: new Date().toISOString().split('T')[0]
+                    dataConciliacao: new Date().toISOString().split('T')[0]
                 });
 
-                // Revert the source if it's from a system module
-                if (movData.origemTipo === 'PAGAMENTO_DESPESA' && movData.origemId) {
-                    // This part of the logic is problematic due to the data model.
-                    // A robust solution would require querying for the parent document outside the transaction.
-                    // For the purpose of fixing the read/write order, we'll comment out the dependent logic.
-                    // This will fix the immediate bug but leave a functional gap.
-                    console.warn("Estorno de pagamento de despesa não pode reverter o saldo da despesa original devido a limitações do modelo de dados. A reversão no extrato bancário foi concluída.");
+                // 3. Revert the source document and its sub-collection entry
+                if (despesaDoc) {
+                    const despesaData = despesaDoc.data();
+                    const pagamentoData = pagamentoDoc.data();
+                    const valorPrincipalEstornado = Math.abs(movData.valor); // valor is negative, so we need positive
+                    const jurosEstornados = pagamentoData.jurosPagos || 0;
+                    const descontosEstornados = pagamentoData.descontosAplicados || 0;
 
-                } else if (movData.origemTipo === 'RECEBIMENTO_RECEITA' && movData.origemId) {
-                     console.warn("Estorno de recebimento de receita não pode reverter o saldo da receita original devido a limitações do modelo de dados. A reversão no extrato bancário foi concluída.");
+                    const novoTotalPago = (despesaData.totalPago || 0) - valorPrincipalEstornado;
+                    const novoTotalJuros = (despesaData.totalJuros || 0) - jurosEstornados;
+                    const novoTotalDescontos = (despesaData.totalDescontos || 0) - descontosEstornados;
+                    const novoSaldo = (despesaData.valorOriginal + novoTotalJuros) - novoTotalPago - novoTotalDescontos;
+                    const novoStatus = novoSaldo <= 0 ? 'Pago' : (novoTotalPago > 0 ? 'Pago Parcialmente' : 'Pendente');
+
+                    transaction.update(despesaRef, {
+                        totalPago: novoTotalPago,
+                        totalJuros: novoTotalJuros,
+                        totalDescontos: novoTotalDescontos,
+                        valorSaldo: novoSaldo,
+                        status: novoStatus
+                    });
+                    transaction.update(pagamentoRef, { estornado: true });
+
+                } else if (receitaDoc) {
+                    const receitaData = receitaDoc.data();
+                    const recebimentoData = recebimentoDoc.data();
+                    const valorPrincipalEstornado = Math.abs(movData.valor); // valor is positive
+                    const jurosEstornados = recebimentoData.jurosRecebidos || 0;
+                    const descontosEstornados = recebimentoData.descontosConcedidos || 0;
+
+                    const novoTotalRecebido = (receitaData.totalRecebido || 0) - valorPrincipalEstornado;
+                    const novoTotalJuros = (receitaData.totalJuros || 0) - jurosEstornados;
+                    const novoTotalDescontos = (receitaData.totalDescontos || 0) - descontosEstornados;
+                    const novoSaldoPendente = (receitaData.valorOriginal + novoTotalJuros) - novoTotalRecebido - novoTotalDescontos;
+                    const novoStatus = novoSaldoPendente <= 0 ? 'Recebido' : (novoTotalRecebido > 0 ? 'Recebido Parcialmente' : 'Pendente');
+
+                    transaction.update(receitaRef, {
+                        totalRecebido: novoTotalRecebido,
+                        totalJuros: novoTotalJuros,
+                        totalDescontos: novoTotalDescontos,
+                        saldoPendente: novoSaldoPendente,
+                        status: novoStatus
+                    });
+                    transaction.update(recebimentoRef, { estornado: true });
                 }
             });
-            alert("Lançamento estornado com sucesso! A transação de origem não foi alterada.");
+            alert("Lançamento estornado com sucesso!");
         } catch (error) {
             console.error("Erro na transação de estorno:", error);
             alert("Falha ao processar o estorno: " + error.message);
@@ -7032,6 +7059,7 @@
                     descricao: `Pagamento: ${data.descricao}`,
                     origemTipo: 'PAGAMENTO_DESPESA',
                     origemId: novoPagamentoRef.id, // Link to the payment document in the subcollection
+                    origemPaiId: despesaId, // Link to the parent expense document
                     origemDescricao: `Pagamento Despesa #${data.numeroDocumento || despesaId.substring(0,4)}`,
                     conciliado: false,
                     dataConciliacao: null,
@@ -8140,6 +8168,7 @@ function validateParcelasSum() {
                         descricao: `Recebimento: ${data.descricao}`,
                         origemTipo: 'RECEBIMENTO_RECEITA',
                         origemId: novoRecebimentoRef.id, // Link to the receipt document in the subcollection
+                    origemPaiId: receitaId, // Link to the parent revenue document
                         origemDescricao: `Recebimento Receita #${data.numeroDocumento || receitaId.substring(0,4)}`,
                         conciliado: false,
                         dataConciliacao: null,
