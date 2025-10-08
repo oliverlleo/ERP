@@ -176,6 +176,11 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
     // --- Action Button Logic ---
 
+    function getSelectedMovimentacaoIds() {
+        if (!tableBody) return [];
+        return Array.from(tableBody.querySelectorAll('.mov-checkbox:checked')).map(cb => cb.dataset.id);
+    }
+
     function updateActionButtons() {
         const selectedIds = getSelectedMovimentacaoIds();
         const selectedCount = selectedIds.length;
