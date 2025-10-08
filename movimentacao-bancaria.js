@@ -274,62 +274,34 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
             const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
 
             await runTransaction(db, async (transaction) => {
-                // =================================================
                 // PHASE 1: ALL READS
-                // =================================================
                 const movDoc = await transaction.get(movRef);
-                if (!movDoc.exists()) {
-                    throw new Error("Lançamento não encontrado.");
-                }
-
+                if (!movDoc.exists()) throw new Error("Lançamento não encontrado.");
                 const movData = movDoc.data();
-                if (movData.estornado) {
-                    throw new Error("Este lançamento já foi estornado.");
-                }
+                if (movData.estornado) throw new Error("Este lançamento já foi estornado.");
 
                 let despesaRef, pagamentoRef, despesaDoc, pagamentoDoc;
-                let receitaRef, recebimentoRef, receitaDoc, recebimentoDocData; // Use different name to avoid scope issues
+                let receitaRef, recebimentoRef, receitaDoc, recebimentoDocGet;
 
                 if (movData.origemTipo === 'PAGAMENTO_DESPESA') {
-                    if (!movData.despesaId || !movData.origemId) {
-                        throw new Error("Dados de origem da despesa incompletos na movimentação.");
-                    }
+                    if (!movData.despesaId || !movData.origemId) throw new Error("Dados de origem da despesa incompletos.");
                     despesaRef = doc(db, `users/${userId}/despesas`, movData.despesaId);
                     pagamentoRef = doc(despesaRef, 'pagamentos', movData.origemId);
                     despesaDoc = await transaction.get(despesaRef);
                     pagamentoDoc = await transaction.get(pagamentoRef);
-
-                    if (!despesaDoc.exists() || !pagamentoDoc.exists()) {
-                        throw new Error("Documento de despesa ou pagamento original não encontrado para o estorno.");
-                    }
+                    if (!despesaDoc.exists() || !pagamentoDoc.exists()) throw new Error("Documento de despesa ou pagamento original não encontrado.");
                 } else if (movData.origemTipo === 'RECEBIMENTO_RECEITA') {
-                     if (!movData.receitaId || !movData.origemId) {
-                        throw new Error("Dados de origem da receita incompletos na movimentação.");
-                    }
+                    if (!movData.receitaId || !movData.origemId) throw new Error("Dados de origem da receita incompletos.");
                     receitaRef = doc(db, `users/${userId}/receitas`, movData.receitaId);
                     recebimentoRef = doc(receitaRef, 'recebimentos', movData.origemId);
                     receitaDoc = await transaction.get(receitaRef);
-                    recebimentoDocData = await transaction.get(recebimentoRef);
-
-                    if (!receitaDoc.exists() || !recebimentoDocData.exists()) {
-                        throw new Error("Documento de receita ou recebimento original não encontrado para o estorno.");
-                    }
+                    recebimentoDocGet = await transaction.get(recebimentoRef);
+                    if (!receitaDoc.exists() || !recebimentoDocGet.exists()) throw new Error("Documento de receita ou recebimento original não encontrado.");
                 }
 
-                // =================================================
-                // PHASE 2: ALL WRITES (Calculations are done here too)
-                // =================================================
-
-                // 1. Mark original movement as estornado
-                transaction.update(movRef, {
-                    estornado: true,
-                    conciliado: true,
-                    dataConciliacao: new Date().toISOString().split('T')[0],
-                    usuarioConciliacao: "Sistema (Estorno)"
-                });
-
-                // 2. Create the reversal movement
-                const contrapartidaData = {
+                // PHASE 2: ALL WRITES
+                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
+                transaction.set(newMovRef, {
                     ...movData,
                     valor: -movData.valor,
                     descricao: `Estorno de: ${movData.descricao}`,
@@ -341,65 +313,45 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                     dataConciliacao: new Date().toISOString().split('T')[0],
                     usuarioConciliacao: "Sistema (Estorno)",
                     createdAt: serverTimestamp()
-                };
-                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
-                transaction.set(newMovRef, contrapartidaData);
+                });
 
-                // 3. Revert the original source, if applicable
+                transaction.update(movRef, {
+                    estornado: true,
+                    conciliado: true,
+                    dataConciliacao: new Date().toISOString().split('T')[0],
+                    usuarioConciliacao: "Sistema (Estorno)"
+                });
+
                 if (movData.origemTipo === 'PAGAMENTO_DESPESA') {
                     const despesaData = despesaDoc.data();
                     const pagamentoData = pagamentoDoc.data();
                     const valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
-
                     const novoTotalPago = (despesaData.totalPago || 0) - valorPrincipalEstornado;
                     const novoSaldo = (despesaData.valorSaldo || 0) + valorPrincipalEstornado;
 
-                    let novoStatus;
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
                     const vencimento = new Date(despesaData.vencimento + 'T00:00:00');
-
-                    if (novoSaldo <= 0) {
-                        novoStatus = 'Pago';
-                    } else if (novoTotalPago > 0) {
-                        novoStatus = 'Pago Parcialmente';
-                    } else {
-                        novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
-                    }
+                    let novoStatus = vencimento < today ? 'Vencido' : 'Pendente';
+                    if (novoSaldo <= 0) novoStatus = 'Pago';
+                    else if (novoTotalPago > 0) novoStatus = 'Pago Parcialmente';
 
                     transaction.update(pagamentoRef, { estornado: true });
-                    transaction.update(despesaRef, {
-                        totalPago: novoTotalPago,
-                        valorSaldo: novoSaldo,
-                        status: novoStatus
-                    });
+                    transaction.update(despesaRef, { totalPago: novoTotalPago, valorSaldo: novoSaldo, status: novoStatus });
                 } else if (movData.origemTipo === 'RECEBIMENTO_RECEITA') {
                     const receitaData = receitaDoc.data();
-                    const recebimentoData = recebimentoDocData.data();
+                    const recebimentoData = recebimentoDocGet.data();
                     const valorPrincipalEstornadoReceita = recebimentoData.valorPrincipal || 0;
-
                     const novoTotalRecebido = (receitaData.totalRecebido || 0) - valorPrincipalEstornadoReceita;
                     const novoSaldoPendente = (receitaData.saldoPendente || 0) + valorPrincipalEstornadoReceita;
 
-                    let novoStatusReceita;
-                    const todayReceita = new Date();
-                    todayReceita.setHours(0, 0, 0, 0);
+                    const todayReceita = new Date(); todayReceita.setHours(0, 0, 0, 0);
                     const vencimentoReceita = new Date((receitaData.dataVencimento || receitaData.vencimento) + 'T00:00:00');
-
-                    if (novoSaldoPendente <= 0) {
-                        novoStatusReceita = 'Recebido';
-                    } else if (novoTotalRecebido > 0) {
-                        novoStatusReceita = 'Recebido Parcialmente';
-                    } else {
-                        novoStatusReceita = vencimentoReceita < todayReceita ? 'Vencido' : 'Pendente';
-                    }
+                    let novoStatusReceita = vencimentoReceita < todayReceita ? 'Vencido' : 'Pendente';
+                    if (novoSaldoPendente <= 0) novoStatusReceita = 'Recebido';
+                    else if (novoTotalRecebido > 0) novoStatusReceita = 'Recebido Parcialmente';
 
                     transaction.update(recebimentoRef, { estornado: true });
-                    transaction.update(receitaRef, {
-                        totalRecebido: novoTotalRecebido,
-                        saldoPendente: novoSaldoPendente,
-                        status: novoStatusReceita
-                    });
+                    transaction.update(receitaRef, { totalRecebido: novoTotalRecebido, saldoPendente: novoSaldoPendente, status: novoStatusReceita });
                 }
             });
 
