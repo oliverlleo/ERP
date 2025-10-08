@@ -48,7 +48,7 @@ export function initializeTesouraria(db, userId, common) {
     let selectedMovimentacaoForEstorno = null;
 
     // --- Common Functions ---
-    const { formatCurrency, toCents } = common;
+    const { formatCurrency, toCents, showFeedback } = common;
 
     // --- Main Functions ---
 
@@ -87,14 +87,13 @@ export function initializeTesouraria(db, userId, common) {
         let saldoAnterior = conta ? (conta.saldoInicial || 0) : 0;
 
         const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
-            where("contaBancariaId", "==", contaId),
-            where("dataTransacao", "<", startDate)
+            where("contaBancariaId", "==", contaId)
         );
-        const pastMovimentacoesSnap = await getDocs(q);
+        const allMovimentacoesSnap = await getDocs(q);
 
-        pastMovimentacoesSnap.docs.forEach(doc => {
+        allMovimentacoesSnap.docs.forEach(doc => {
             const data = doc.data();
-            if (data.estornado !== true) {
+            if (data.estornado !== true && data.dataTransacao < startDate) {
                 saldoAnterior += data.valor;
             }
         });
@@ -125,15 +124,18 @@ export function initializeTesouraria(db, userId, common) {
             const saldoAnterior = await calculateSaldoAnterior(contaId, startDate);
 
             const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
-                where("contaBancariaId", "==", contaId),
-                where("dataTransacao", ">=", startDate),
-                where("dataTransacao", "<=", endDate)
+                where("contaBancariaId", "==", contaId)
             );
             const snapshot = await getDocs(q);
 
             allMovimentacoes = snapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(mov => mov.estornado !== true);
+                .filter(mov => {
+                    return mov.estornado !== true &&
+                           mov.dataTransacao >= startDate &&
+                           mov.dataTransacao <= endDate;
+                });
+
             allMovimentacoes.sort((a, b) => new Date(a.dataTransacao) - new Date(b.dataTransacao));
 
             let totalEntradas = 0;
@@ -269,11 +271,10 @@ export function initializeTesouraria(db, userId, common) {
 
         const allConciliado = selectedMovs.every(m => m.conciliado);
         const allPendente = selectedMovs.every(m => !m.conciliado);
-        const anyEstornado = selectedMovs.some(m => m.estornado);
 
-        conciliarBtn.disabled = !allPendente || anyEstornado;
-        desfazerConciliacaoBtn.disabled = !allConciliado || anyEstornado;
-        estornarBtn.disabled = count !== 1 || anyEstornado;
+        conciliarBtn.disabled = !allPendente;
+        desfazerConciliacaoBtn.disabled = !allConciliado;
+        estornarBtn.disabled = count !== 1;
     }
 
     async function updateConciliacaoStatus(isConciliado) {
@@ -305,13 +306,13 @@ export function initializeTesouraria(db, userId, common) {
     tableBody.addEventListener('click', (e) => {
         if (e.target.closest('.origem-link')) {
             e.preventDefault();
-            // This relies on global functions exposed by the main script
             const link = e.target.closest('.origem-link');
             const movId = link.dataset.movId;
             const mov = allMovimentacoes.find(m => m.id === movId);
 
             if (mov && mov.origemPath) {
-                const parentId = mov.origemPath.split('/')[3];
+                const pathParts = mov.origemPath.split('/');
+                const parentId = pathParts[pathParts.length - 2];
                 if (mov.origemTipo === 'PAGAMENTO_DESPESA' && window.openVisualizarModal) {
                     window.openVisualizarModal(parentId);
                 } else if (mov.origemTipo === 'RECEBIMENTO_RECEITA' && window.openVisualizarReceitaModal) {
@@ -340,6 +341,8 @@ export function initializeTesouraria(db, userId, common) {
     cancelOperacaoModalBtn.addEventListener('click', () => operacaoModal.classList.add('hidden'));
     conciliarBtn.addEventListener('click', () => updateConciliacaoStatus(true));
     desfazerConciliacaoBtn.addEventListener('click', () => updateConciliacaoStatus(false));
+    transferenciaBtn.addEventListener('click', () => document.getElementById('lancar-transferencia-btn').click());
+
 
     operacaoForm.addEventListener('submit', async (e) => {
         e.preventDefault();

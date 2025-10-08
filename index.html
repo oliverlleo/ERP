@@ -1222,7 +1222,6 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Tesouraria (Extrato)</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -1757,7 +1756,6 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                              <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Tesouraria (Extrato)</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -2308,7 +2306,6 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
-                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Tesouraria (Extrato)</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -2521,6 +2518,561 @@
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Container da Tela de Movimentação Bancária -->
+  <div id="movimentacao-bancaria-page" class="view-container min-h-screen w-full">
+     <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <div class="relative">
+                        <button id="financeiro-nav-link-tesouraria" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
+                            <span>Financeiro</span>
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        <div id="financeiro-dropdown-tesouraria" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Tesouraria (Extrato)</a>
+                        </div>
+                    </div>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-button-tesouraria" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-tesouraria" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-tesouraria" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-tesouraria" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8 bg-gray-50">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Tesouraria e Conciliação Bancária</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Consulte o extrato detalhado de suas contas, realize conciliações e execute operações de tesouraria.</p>
+                    </div>
+
+                    <!-- Painel de Filtros -->
+                    <div class="flex flex-wrap items-end gap-4 p-4 bg-white rounded-lg border shadow-sm">
+                        <div class="flex-grow">
+                            <label for="tesouraria-conta-bancaria" class="block text-sm font-medium text-gray-700">Conta Bancária</label>
+                            <select id="tesouraria-conta-bancaria" class="form-select mt-1 block w-full">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div class="flex-grow">
+                            <label for="tesouraria-periodo-de" class="block text-sm font-medium text-gray-700">Período de:</label>
+                            <input type="date" id="tesouraria-periodo-de" class="form-input mt-1 block w-full">
+                        </div>
+                        <div class="flex-grow">
+                            <label for="tesouraria-periodo-ate" class="block text-sm font-medium text-gray-700">Até:</label>
+                            <input type="date" id="tesouraria-periodo-ate" class="form-input mt-1 block w-full">
+                        </div>
+                    </div>
+
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-6">
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-gray-600 text-sm font-medium">Saldo Inicial</p><p id="kpi-tesouraria-saldo-inicial" class="text-gray-900 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-green-600 text-sm font-medium">Total Entradas</p><p id="kpi-tesouraria-total-entradas" class="text-green-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-red-600 text-sm font-medium">Total Saídas</p><p id="kpi-tesouraria-total-saidas" class="text-red-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-gray-600 text-sm font-medium">Saldo Período</p><p id="kpi-tesouraria-saldo-periodo" class="text-gray-900 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-blue-600 text-sm font-medium">Saldo Final</p><p id="kpi-tesouraria-saldo-final" class="text-blue-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 p-4 shadow-sm"><p class="text-yellow-800 text-sm font-medium">Saldo a Conciliar</p><p id="kpi-tesouraria-saldo-a-conciliar" class="text-yellow-900 text-2xl font-bold">R$ 0,00</p></div>
+                    </div>
+
+                    <!-- Tabela de Movimentações -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex items-center gap-2 mb-4">
+                            <button id="tesouraria-nova-entrada-btn" class="inline-flex items-center gap-2 rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600"><span class="material-symbols-outlined text-base">add</span> Nova Entrada</button>
+                            <button id="tesouraria-nova-saida-btn" class="inline-flex items-center gap-2 rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"><span class="material-symbols-outlined text-base">remove</span> Nova Saída</button>
+                            <button id="tesouraria-transferencia-btn" class="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-cyan-700"><span class="material-symbols-outlined text-base">swap_horiz</span> Transferência</button>
+                            <div class="flex-grow"></div>
+                            <button id="tesouraria-conciliar-btn" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">check_circle</span> Conciliar</button>
+                            <button id="tesouraria-desfazer-conciliacao-btn" class="inline-flex items-center gap-2 rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-600 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">cancel</span> Desfazer</button>
+                            <button id="tesouraria-estornar-btn" class="inline-flex items-center gap-2 rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">undo</span> Estornar</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-4"><input id="tesouraria-select-all-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded"></th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entrada (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saída (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saldo (R$)</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tesouraria-table-body" class="bg-white divide-y divide-gray-200">
+                                   <tr><td colspan="8" class="text-center p-8 text-gray-500">Selecione uma conta bancária para ver as movimentações.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Operação de Tesouraria (Nova Entrada / Nova Saída) -->
+  <div id="tesouraria-operacao-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 id="tesouraria-operacao-title" class="text-2xl font-bold text-gray-900">Nova Operação</h3>
+            <button id="close-tesouraria-operacao-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <form id="tesouraria-operacao-form" class="space-y-6">
+                <input type="hidden" id="tesouraria-operacao-type">
+                <div>
+                    <label for="tesouraria-operacao-data" class="block text-sm font-medium text-gray-700">Data</label>
+                    <input type="date" id="tesouraria-operacao-data" class="form-input mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-valor" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                    <input type="text" id="tesouraria-operacao-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                    <input type="text" id="tesouraria-operacao-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Taxa bancária, Aporte de sócio...">
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-plano-contas" class="block text-sm font-medium text-gray-700">Plano de Contas</label>
+                    <select id="tesouraria-operacao-plano-contas" class="form-select mt-1 block w-full" required>
+                        <option value="">Selecione uma categoria</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div id="tesouraria-operacao-feedback" class="text-sm mt-4"></div>
+                <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                    <button type="button" id="cancel-tesouraria-operacao-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                    <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Estorno -->
+  <div id="tesouraria-estorno-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900">Confirmar Estorno</h3>
+            <button id="close-tesouraria-estorno-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <p class="text-gray-700 text-base mb-4">Você está prestes a estornar o lançamento: "<strong id="tesouraria-estorno-descricao"></strong>". Esta ação criará uma transação de contrapartida e não pode ser desfeita.</p>
+            <div class="space-y-4">
+                <div>
+                    <label for="tesouraria-estorno-motivo" class="block text-sm font-medium text-gray-700">
+                        Motivo do Estorno (Obrigatório)
+                    </label>
+                    <textarea id="tesouraria-estorno-motivo" rows="3" class="form-textarea mt-1 block w-full" required></textarea>
+                </div>
+            </div>
+            <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
+                <button type="button" id="cancel-tesouraria-estorno-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                <button type="button" id="confirmar-tesouraria-estorno-btn" class="text-white bg-orange-600 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Estorno</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Container da Tela de Movimentação Bancária -->
+  <div id="movimentacao-bancaria-page" class="view-container min-h-screen w-full">
+     <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <div class="relative">
+                        <button id="financeiro-nav-link-tesouraria" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
+                            <span>Financeiro</span>
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        <div id="financeiro-dropdown-tesouraria" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Tesouraria (Extrato)</a>
+                        </div>
+                    </div>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-button-tesouraria" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-tesouraria" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-tesouraria" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-tesouraria" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8 bg-gray-50">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Tesouraria e Conciliação Bancária</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Consulte o extrato detalhado de suas contas, realize conciliações e execute operações de tesouraria.</p>
+                    </div>
+
+                    <!-- Painel de Filtros -->
+                    <div class="flex flex-wrap items-end gap-4 p-4 bg-white rounded-lg border shadow-sm">
+                        <div class="flex-grow">
+                            <label for="tesouraria-conta-bancaria" class="block text-sm font-medium text-gray-700">Conta Bancária</label>
+                            <select id="tesouraria-conta-bancaria" class="form-select mt-1 block w-full">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div class="flex-grow">
+                            <label for="tesouraria-periodo-de" class="block text-sm font-medium text-gray-700">Período de:</label>
+                            <input type="date" id="tesouraria-periodo-de" class="form-input mt-1 block w-full">
+                        </div>
+                        <div class="flex-grow">
+                            <label for="tesouraria-periodo-ate" class="block text-sm font-medium text-gray-700">Até:</label>
+                            <input type="date" id="tesouraria-periodo-ate" class="form-input mt-1 block w-full">
+                        </div>
+                    </div>
+
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-6">
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-gray-600 text-sm font-medium">Saldo Inicial</p><p id="kpi-tesouraria-saldo-inicial" class="text-gray-900 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-green-600 text-sm font-medium">Total Entradas</p><p id="kpi-tesouraria-total-entradas" class="text-green-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-red-600 text-sm font-medium">Total Saídas</p><p id="kpi-tesouraria-total-saidas" class="text-red-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-gray-600 text-sm font-medium">Saldo Período</p><p id="kpi-tesouraria-saldo-periodo" class="text-gray-900 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-blue-600 text-sm font-medium">Saldo Final</p><p id="kpi-tesouraria-saldo-final" class="text-blue-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 p-4 shadow-sm"><p class="text-yellow-800 text-sm font-medium">Saldo a Conciliar</p><p id="kpi-tesouraria-saldo-a-conciliar" class="text-yellow-900 text-2xl font-bold">R$ 0,00</p></div>
+                    </div>
+
+                    <!-- Tabela de Movimentações -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex items-center gap-2 mb-4">
+                            <button id="tesouraria-nova-entrada-btn" class="inline-flex items-center gap-2 rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600"><span class="material-symbols-outlined text-base">add</span> Nova Entrada</button>
+                            <button id="tesouraria-nova-saida-btn" class="inline-flex items-center gap-2 rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"><span class="material-symbols-outlined text-base">remove</span> Nova Saída</button>
+                            <button id="tesouraria-transferencia-btn" class="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-cyan-700"><span class="material-symbols-outlined text-base">swap_horiz</span> Transferência</button>
+                            <div class="flex-grow"></div>
+                            <button id="tesouraria-conciliar-btn" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">check_circle</span> Conciliar</button>
+                            <button id="tesouraria-desfazer-conciliacao-btn" class="inline-flex items-center gap-2 rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-600 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">cancel</span> Desfazer</button>
+                            <button id="tesouraria-estornar-btn" class="inline-flex items-center gap-2 rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">undo</span> Estornar</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-4"><input id="tesouraria-select-all-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded"></th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entrada (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saída (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saldo (R$)</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tesouraria-table-body" class="bg-white divide-y divide-gray-200">
+                                   <tr><td colspan="8" class="text-center p-8 text-gray-500">Selecione uma conta bancária para ver as movimentações.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Operação de Tesouraria (Nova Entrada / Nova Saída) -->
+  <div id="tesouraria-operacao-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 id="tesouraria-operacao-title" class="text-2xl font-bold text-gray-900">Nova Operação</h3>
+            <button id="close-tesouraria-operacao-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <form id="tesouraria-operacao-form" class="space-y-6">
+                <input type="hidden" id="tesouraria-operacao-type">
+                <div>
+                    <label for="tesouraria-operacao-data" class="block text-sm font-medium text-gray-700">Data</label>
+                    <input type="date" id="tesouraria-operacao-data" class="form-input mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-valor" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                    <input type="text" id="tesouraria-operacao-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                    <input type="text" id="tesouraria-operacao-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Taxa bancária, Aporte de sócio...">
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-plano-contas" class="block text-sm font-medium text-gray-700">Plano de Contas</label>
+                    <select id="tesouraria-operacao-plano-contas" class="form-select mt-1 block w-full" required>
+                        <option value="">Selecione uma categoria</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div id="tesouraria-operacao-feedback" class="text-sm mt-4"></div>
+                <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                    <button type="button" id="cancel-tesouraria-operacao-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                    <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Estorno -->
+  <div id="tesouraria-estorno-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900">Confirmar Estorno</h3>
+            <button id="close-tesouraria-estorno-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <p class="text-gray-700 text-base mb-4">Você está prestes a estornar o lançamento: "<strong id="tesouraria-estorno-descricao"></strong>". Esta ação criará uma transação de contrapartida e não pode ser desfeita.</p>
+            <div class="space-y-4">
+                <div>
+                    <label for="tesouraria-estorno-motivo" class="block text-sm font-medium text-gray-700">
+                        Motivo do Estorno (Obrigatório)
+                    </label>
+                    <textarea id="tesouraria-estorno-motivo" rows="3" class="form-textarea mt-1 block w-full" required></textarea>
+                </div>
+            </div>
+            <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
+                <button type="button" id="cancel-tesouraria-estorno-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                <button type="button" id="confirmar-tesouraria-estorno-btn" class="text-white bg-orange-600 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Estorno</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Container da Tela de Movimentação Bancária -->
+  <div id="movimentacao-bancaria-page" class="view-container min-h-screen w-full">
+     <div class="relative flex size-full min-h-screen flex-col group/design-root w-full">
+        <div class="layout-container flex h-full grow flex-col w-full">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 bg-white px-10 py-3">
+                <a href="#" class="flex items-center gap-4 text-gray-800 nav-link" data-target="main-page">
+                    <div class="size-8 text-[var(--primary-color)]">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L24 4L44 8L24 12L4 8Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 24L24 20L44 24L24 28L4 24Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M4 40L24 36L44 40L24 44L4 40Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg>
+                    </div>
+                    <h2 class="text-gray-800 text-lg font-semibold leading-tight tracking-[-0.015em]">ArchSys</h2>
+                </a>
+                <nav class="flex items-center gap-8">
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="main-page">Painel</a>
+                    <a class="nav-link text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#" data-target="cadastros-page">Cadastros</a>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Compras</a>
+                    <div class="relative">
+                        <button id="financeiro-nav-link-tesouraria" class="text-[var(--primary-color)] text-sm font-medium leading-normal flex items-center gap-1">
+                            <span>Financeiro</span>
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        <div id="financeiro-dropdown-tesouraria" class="hidden absolute mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Tesouraria (Extrato)</a>
+                        </div>
+                    </div>
+                    <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-button-tesouraria" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
+                        <div id="profile-dropdown-tesouraria" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                <p class="font-medium">Logado como:</p>
+                                <p id="user-email-tesouraria" class="truncate"></p>
+                            </div>
+                            <a href="#" id="logout-button-tesouraria" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 px-10 py-8 bg-gray-50">
+                <div class="layout-content-container mx-auto flex max-w-7xl flex-col gap-8">
+                    <div class="flex flex-col gap-2">
+                        <h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Tesouraria e Conciliação Bancária</h1>
+                        <p class="text-gray-600 text-base font-normal leading-normal">Consulte o extrato detalhado de suas contas, realize conciliações e execute operações de tesouraria.</p>
+                    </div>
+
+                    <!-- Painel de Filtros -->
+                    <div class="flex flex-wrap items-end gap-4 p-4 bg-white rounded-lg border shadow-sm">
+                        <div class="flex-grow">
+                            <label for="tesouraria-conta-bancaria" class="block text-sm font-medium text-gray-700">Conta Bancária</label>
+                            <select id="tesouraria-conta-bancaria" class="form-select mt-1 block w-full">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div class="flex-grow">
+                            <label for="tesouraria-periodo-de" class="block text-sm font-medium text-gray-700">Período de:</label>
+                            <input type="date" id="tesouraria-periodo-de" class="form-input mt-1 block w-full">
+                        </div>
+                        <div class="flex-grow">
+                            <label for="tesouraria-periodo-ate" class="block text-sm font-medium text-gray-700">Até:</label>
+                            <input type="date" id="tesouraria-periodo-ate" class="form-input mt-1 block w-full">
+                        </div>
+                    </div>
+
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-6">
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-gray-600 text-sm font-medium">Saldo Inicial</p><p id="kpi-tesouraria-saldo-inicial" class="text-gray-900 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-green-600 text-sm font-medium">Total Entradas</p><p id="kpi-tesouraria-total-entradas" class="text-green-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-red-600 text-sm font-medium">Total Saídas</p><p id="kpi-tesouraria-total-saidas" class="text-red-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-gray-600 text-sm font-medium">Saldo Período</p><p id="kpi-tesouraria-saldo-periodo" class="text-gray-900 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><p class="text-blue-600 text-sm font-medium">Saldo Final</p><p id="kpi-tesouraria-saldo-final" class="text-blue-700 text-2xl font-bold">R$ 0,00</p></div>
+                        <div class="flex flex-col gap-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 p-4 shadow-sm"><p class="text-yellow-800 text-sm font-medium">Saldo a Conciliar</p><p id="kpi-tesouraria-saldo-a-conciliar" class="text-yellow-900 text-2xl font-bold">R$ 0,00</p></div>
+                    </div>
+
+                    <!-- Tabela de Movimentações -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm w-full">
+                        <div class="flex items-center gap-2 mb-4">
+                            <button id="tesouraria-nova-entrada-btn" class="inline-flex items-center gap-2 rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600"><span class="material-symbols-outlined text-base">add</span> Nova Entrada</button>
+                            <button id="tesouraria-nova-saida-btn" class="inline-flex items-center gap-2 rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"><span class="material-symbols-outlined text-base">remove</span> Nova Saída</button>
+                            <button id="tesouraria-transferencia-btn" class="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-cyan-700"><span class="material-symbols-outlined text-base">swap_horiz</span> Transferência</button>
+                            <div class="flex-grow"></div>
+                            <button id="tesouraria-conciliar-btn" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">check_circle</span> Conciliar</button>
+                            <button id="tesouraria-desfazer-conciliacao-btn" class="inline-flex items-center gap-2 rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-600 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">cancel</span> Desfazer</button>
+                            <button id="tesouraria-estornar-btn" class="inline-flex items-center gap-2 rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 disabled:opacity-50" disabled><span class="material-symbols-outlined text-base">undo</span> Estornar</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-4"><input id="tesouraria-select-all-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded"></th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origem</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entrada (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saída (R$)</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saldo (R$)</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tesouraria-table-body" class="bg-white divide-y divide-gray-200">
+                                   <tr><td colspan="8" class="text-center p-8 text-gray-500">Selecione uma conta bancária para ver as movimentações.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Operação de Tesouraria (Nova Entrada / Nova Saída) -->
+  <div id="tesouraria-operacao-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 id="tesouraria-operacao-title" class="text-2xl font-bold text-gray-900">Nova Operação</h3>
+            <button id="close-tesouraria-operacao-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <form id="tesouraria-operacao-form" class="space-y-6">
+                <input type="hidden" id="tesouraria-operacao-type">
+                <div>
+                    <label for="tesouraria-operacao-data" class="block text-sm font-medium text-gray-700">Data</label>
+                    <input type="date" id="tesouraria-operacao-data" class="form-input mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-valor" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                    <input type="text" id="tesouraria-operacao-valor" class="form-input mt-1 block w-full" required placeholder="0,00">
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                    <input type="text" id="tesouraria-operacao-descricao" class="form-input mt-1 block w-full" required placeholder="Ex: Taxa bancária, Aporte de sócio...">
+                </div>
+                <div>
+                    <label for="tesouraria-operacao-plano-contas" class="block text-sm font-medium text-gray-700">Plano de Contas</label>
+                    <select id="tesouraria-operacao-plano-contas" class="form-select mt-1 block w-full" required>
+                        <option value="">Selecione uma categoria</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div id="tesouraria-operacao-feedback" class="text-sm mt-4"></div>
+                <div class="flex items-center justify-end pt-4 border-t space-x-4">
+                    <button type="button" id="cancel-tesouraria-operacao-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                    <button type="submit" class="text-white bg-[var(--primary-color)] hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Estorno -->
+  <div id="tesouraria-estorno-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900">Confirmar Estorno</h3>
+            <button id="close-tesouraria-estorno-modal-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined text-gray-600">close</span>
+            </button>
+        </div>
+        <div class="mt-5">
+            <p class="text-gray-700 text-base mb-4">Você está prestes a estornar o lançamento: "<strong id="tesouraria-estorno-descricao"></strong>". Esta ação criará uma transação de contrapartida e não pode ser desfeita.</p>
+            <div class="space-y-4">
+                <div>
+                    <label for="tesouraria-estorno-motivo" class="block text-sm font-medium text-gray-700">
+                        Motivo do Estorno (Obrigatório)
+                    </label>
+                    <textarea id="tesouraria-estorno-motivo" rows="3" class="form-textarea mt-1 block w-full" required></textarea>
+                </div>
+            </div>
+            <div class="flex items-center justify-end pt-4 mt-4 border-t space-x-4">
+                <button type="button" id="cancel-tesouraria-estorno-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cancelar</button>
+                <button type="button" id="confirmar-tesouraria-estorno-btn" class="text-white bg-orange-600 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Confirmar Estorno</button>
+            </div>
         </div>
     </div>
   </div>
