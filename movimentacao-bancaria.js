@@ -313,6 +313,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                 // 3. Revert the original source, if applicable
                 if (movData.origemTipo && movData.origemId) {
                     const origemId = movData.origemId; // This is the payment/receipt ID
+                    let valorPrincipalEstornado;
 
                     switch (movData.origemTipo) {
                         case 'PAGAMENTO_DESPESA':
@@ -332,7 +333,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
                             const despesaData = despesaDoc.data();
                             const pagamentoData = pagamentoDoc.data();
-                            const valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
+                            valorPrincipalEstornado = pagamentoData.valorPrincipal || 0;
 
                             const novoTotalPago = (despesaData.totalPago || 0) - valorPrincipalEstornado;
                             const novoSaldo = (despesaData.valorSaldo || 0) + valorPrincipalEstornado;
@@ -375,7 +376,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
                             const receitaData = receitaDoc.data();
                             const recebimentoData = recebimentoDoc.data();
-                            const valorPrincipalEstornado = recebimentoData.valorPrincipal || 0;
+                            valorPrincipalEstornado = recebimentoData.valorPrincipal || 0;
 
                             const novoTotalRecebido = (receitaData.totalRecebido || 0) - valorPrincipalEstornado;
                             const novoSaldoPendente = (receitaData.saldoPendente || 0) + valorPrincipalEstornado;
