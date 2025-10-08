@@ -257,22 +257,22 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
         }
         isReverting = true;
 
+        const selectedIds = getSelectedMovimentacaoIds();
+        if (selectedIds.length !== 1) {
+            alert("Selecione exatamente um lançamento para estornar.");
+            isReverting = false;
+            return;
+        }
+        const movId = selectedIds[0];
+
+        if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
+            isReverting = false;
+            return;
+        }
+
+        const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
+
         try {
-            const selectedIds = getSelectedMovimentacaoIds();
-            if (selectedIds.length !== 1) {
-                alert("Selecione exatamente um lançamento para estornar.");
-                isReverting = false; // Reset flag
-                return;
-            }
-            const movId = selectedIds[0];
-
-            if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
-                isReverting = false; // Reset flag
-                return;
-            }
-
-            const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
-
             await runTransaction(db, async (transaction) => {
                 // PHASE 1: ALL READS
                 const movDoc = await transaction.get(movRef);
