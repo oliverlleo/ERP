@@ -153,7 +153,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         if (!showRealizado && !showProjetado) {
             extratoTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-500">Selecione uma visão (Realizado e/ou Projetado).</td></tr>`;
             renderKPIs({ saldoAnterior: 0, totalEntradas: 0, totalSaidas: 0, resultadoLiquido: 0, saldoFinal: 0 });
-            renderCharts([]);
+            destroyAllCharts(); // Correct function to clear charts
             renderDRE([]);
             return;
         }
@@ -858,8 +858,17 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const ctx = document.getElementById('chart-evolucao-saldo')?.getContext('2d');
         if (!ctx) return;
 
-        const realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
-        const projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
+        let realizadoData = [];
+        let projetadoData = [];
+
+        if (lastRealizedDayIndex < 0) {
+            // All data is projected
+            realizadoData = [];
+            projetadoData = dataPoints;
+        } else {
+            realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
+            projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
+        }
 
         chartInstances.evolucaoSaldo = new Chart(ctx, {
             type: 'line',
