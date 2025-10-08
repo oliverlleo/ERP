@@ -5,7 +5,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
     if (!userId) return;
 
     const { formatCurrency, fromCents, toCents, showFeedback } = commonUtils;
-    const currentUserName = userName; // Armazena o nome do usuário
+    const currentUserName = userName;
 
     // DOM Elements
     const contaBancariaSelect = document.getElementById('mov-conta-bancaria-select');
@@ -254,89 +254,78 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
         if (selectedIds.length !== 1) return;
         const movId = selectedIds[0];
 
-        if (!confirm("Tem certeza que deseja estornar este lançamento? A pendência original será reaberta.")) return;
+        if (!confirm("Esta ação irá EXCLUIR esta movimentação e REABRIR o título original em Contas a Pagar/Receber. Deseja continuar?")) return;
 
-        // ETAPA CRÍTICA: Desabilita os botões IMEDIATAMENTE para impedir cliques duplos.
         if (estornarBtn) estornarBtn.disabled = true;
-        if (conciliarBtn) conciliarBtn.disabled = true;
-        if (desfazerBtn) desfazerBtn.disabled = true;
 
         const movRef = doc(db, `users/${userId}/movimentacoesBancarias`, movId);
 
         try {
             await runTransaction(db, async (transaction) => {
-                // 1. LEITURA DE TODOS OS DOCUMENTOS
+                // 1. LÊ OS DOCUMENTOS NECESSÁRIOS
                 const movDoc = await transaction.get(movRef);
-                if (!movDoc.exists() || movDoc.data().estornado) {
-                    throw new Error("Este lançamento já foi estornado ou não existe.");
-                }
+                if (!movDoc.exists()) throw new Error("Lançamento bancário não encontrado para exclusão.");
+
                 const movData = movDoc.data();
 
-                let origemDocRef, origemParentDocRef, origemParentDoc, pagamentosCollectionRef;
-                let valorPrincipalEstornado = 0, jurosEstornados = 0, descontosEstornados = 0;
-
-                if ((movData.origemTipo === 'PAGAMENTO_DESPESA' || movData.origemTipo === 'RECEBIMENTO_RECEITA') && movData.origemId && movData.origemParentId) {
-                    const parentCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'despesas' : 'receitas';
-                    const subCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'pagamentos' : 'recebimentos';
-
-                    origemParentDocRef = doc(db, `users/${userId}/${parentCollection}`, movData.origemParentId);
-                    origemDocRef = doc(origemParentDocRef, subCollection, movData.origemId);
-                    pagamentosCollectionRef = collection(origemParentDocRef, subCollection);
-
-                    const [origemDoc, origemParentDocRaw] = await Promise.all([transaction.get(origemDocRef), transaction.get(origemParentDocRef)]);
-
-                    if (!origemDoc.exists() || !origemParentDocRaw.exists()) throw new Error("Documento de origem (pagamento/recebimento ou título) não encontrado.");
-                    if (origemDoc.data().estornado) throw new Error("O pagamento/recebimento de origem já foi estornado.");
-
-                    const origemData = origemDoc.data();
-                    valorPrincipalEstornado = origemData.valorPrincipal || 0;
-                    jurosEstornados = origemData.jurosPagos || origemData.jurosRecebidos || 0;
-                    descontosEstornados = origemData.descontosAplicados || origemData.descontosConcedidos || 0;
-                    origemParentDoc = origemParentDocRaw.data();
+                // Se não tiver a "ponte" para a origem, apenas deleta a movimentação manual.
+                if (!movData.origemParentId || !movData.origemId || !movData.origemTipo.includes('_')) {
+                    transaction.delete(movRef);
+                    return; // Fim da operação para lançamentos manuais
                 }
 
-                // 2. ESCRITA DE TODAS AS ALTERAÇÕES
-                transaction.update(movRef, { estornado: true, conciliado: true, dataConciliacao: new Date().toISOString().split('T')[0], usuarioConciliacao: "Sistema (Estorno)" });
-                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
-                transaction.set(newMovRef, { ...movData, valor: -movData.valor, descricao: `Estorno de: ${movData.descricao}`, origemTipo: "ESTORNO", origemDescricao: `Estorno Lanç. #${movDoc.id.substring(0, 5)}`, estornado: false, estornoDeId: movDoc.id, conciliado: true, dataConciliacao: new Date().toISOString().split('T')[0], usuarioConciliacao: "Sistema (Estorno)", createdAt: serverTimestamp() });
+                // Se tiver a "ponte", continua para reverter a despesa/receita
+                const parentCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'despesas' : 'receitas';
+                const subCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'pagamentos' : 'recebimentos';
+                const origemParentDocRef = doc(db, `users/${userId}/${parentCollection}`, movData.origemParentId);
+                const origemDocRef = doc(origemParentDocRef, subCollection, movData.origemId);
 
-                if (origemParentDocRef && origemParentDoc) {
-                    transaction.update(origemDocRef, { estornado: true });
+                const [origemDoc, origemParentDocRaw] = await Promise.all([transaction.get(origemDocRef), transaction.get(origemParentDocRef)]);
 
-                    const novoEstornoRef = doc(pagamentosCollectionRef);
-                    transaction.set(novoEstornoRef, { tipoTransacao: "Estorno", dataTransacao: new Date().toISOString().split('T')[0], valorPrincipal: valorPrincipalEstornado, usuarioResponsavel: currentUserName || "Sistema", motivoEstorno: "Estornado via Conciliação Bancária", createdAt: serverTimestamp() });
+                if (!origemParentDocRaw.exists()) throw new Error(`O título original (ID: ${movData.origemParentId}) não foi encontrado.`);
 
-                    const updateData = {};
-                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                const origemParentDoc = origemParentDocRaw.data();
+                const valorPrincipalEstornado = origemDoc.exists() ? (origemDoc.data().valorPrincipal || 0) : 0;
+                const jurosEstornados = origemDoc.exists() ? (origemDoc.data().jurosPagos || origemDoc.data().jurosRecebidos || 0) : 0;
+                const descontosEstornados = origemDoc.exists() ? (origemDoc.data().descontosAplicados || origemDoc.data().descontosConcedidos || 0) : 0;
 
-                    if (movData.origemTipo === 'PAGAMENTO_DESPESA') {
-                        updateData.totalPago = (origemParentDoc.totalPago || 0) - valorPrincipalEstornado;
-                        updateData.totalJuros = (origemParentDoc.totalJuros || 0) - jurosEstornados;
-                        updateData.totalDescontos = (origemParentDoc.totalDescontos || 0) - descontosEstornados;
-                        updateData.valorSaldo = (origemParentDoc.valorOriginal + (updateData.totalJuros || 0)) - (updateData.totalPago || 0) - (updateData.totalDescontos || 0);
+                // 2. EXECUTA AS ALTERAÇÕES
 
-                        const vencimento = new Date(origemParentDoc.vencimento + 'T00:00:00');
-                        updateData.status = updateData.totalPago <= 0 ? (vencimento < today ? 'Vencido' : 'Pendente') : 'Pago Parcialmente';
-                    } else { // RECEBIMENTO_RECEITA
-                        updateData.totalRecebido = (origemParentDoc.totalRecebido || 0) - valorPrincipalEstornado;
-                        updateData.totalJuros = (origemParentDoc.totalJuros || 0) - jurosEstornados;
-                        updateData.totalDescontos = (origemParentDoc.totalDescontos || 0) - descontosEstornados;
-                        updateData.saldoPendente = (origemParentDoc.valorOriginal + (updateData.totalJuros || 0)) - (updateData.totalRecebido || 0) - (updateData.totalDescontos || 0);
-
-                        const vencimento = new Date((origemParentDoc.dataVencimento || origemParentDoc.vencimento) + 'T00:00:00');
-                        updateData.status = updateData.totalRecebido <= 0 ? (vencimento < today ? 'Vencido' : 'Pendente') : 'Recebido Parcialmente';
-                    }
-                    transaction.update(origemParentDocRef, updateData);
+                // Deleta a movimentação bancária
+                transaction.delete(movRef);
+                // Deleta o registro de pagamento/recebimento da subcoleção
+                if (origemDoc.exists()) {
+                    transaction.delete(origemDocRef);
                 }
+
+                // Recalcula e atualiza o título original (despesa/receita)
+                const updateData = {};
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+
+                if (movData.origemTipo === 'PAGAMENTO_DESPESA') {
+                    updateData.totalPago = (origemParentDoc.totalPago || 0) - valorPrincipalEstornado;
+                    updateData.totalJuros = (origemParentDoc.totalJuros || 0) - jurosEstornados;
+                    updateData.totalDescontos = (origemParentDoc.totalDescontos || 0) - descontosEstornados;
+                    updateData.valorSaldo = (origemParentDoc.valorOriginal || 0) + (updateData.totalJuros || 0) - (updateData.totalPago || 0) - (updateData.totalDescontos || 0);
+                    const vencimento = new Date(origemParentDoc.vencimento + 'T00:00:00');
+                    updateData.status = updateData.totalPago <= 0 ? (vencimento < today ? 'Vencido' : 'Pendente') : 'Pago Parcialmente';
+                } else { // RECEBIMENTO_RECEITA
+                    updateData.totalRecebido = (origemParentDoc.totalRecebido || 0) - valorPrincipalEstornado;
+                    updateData.totalJuros = (origemParentDoc.totalJuros || 0) - jurosEstornados;
+                    updateData.totalDescontos = (origemParentDoc.totalDescontos || 0) - descontosEstornados;
+                    updateData.saldoPendente = (origemParentDoc.valorOriginal || 0) + (updateData.totalJuros || 0) - (updateData.totalRecebido || 0) - (updateData.totalDescontos || 0);
+                    const vencimento = new Date((origemParentDoc.dataVencimento || origemParentDoc.vencimento) + 'T00:00:00');
+                    updateData.status = updateData.totalRecebido <= 0 ? (vencimento < today ? 'Vencido' : 'Pendente') : 'Recebido Parcialmente';
+                }
+                transaction.update(origemParentDocRef, updateData);
             });
 
-            showFeedback("Lançamento estornado com sucesso! O título original foi reaberto.", "success");
+            showFeedback("Operação desfeita! A movimentação foi excluída e o título original reaberto.", "success");
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
         } catch (error) {
-            console.error("Erro ao estornar lançamento: ", error);
-            showFeedback(`Falha no estorno: ${error.message}`, "error");
+            console.error("Erro ao desfazer lançamento: ", error);
+            showFeedback(`Falha ao desfazer: ${error.message}`, "error");
         } finally {
-            // Garante que os botões sejam reabilitados no final, com sucesso ou erro.
             updateActionButtons();
         }
     }

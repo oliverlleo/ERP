@@ -8141,7 +8141,7 @@ function validateParcelasSum() {
                         descricao: `Recebimento: ${data.descricao}`,
                         origemTipo: 'RECEBIMENTO_RECEITA',
                         origemId: novoRecebimentoRef.id, // Link to the receipt document in the subcollection
-                    origemParentId: receitaId,
+                        origemParentId: receitaId,
                         origemDescricao: `Recebimento Receita #${data.numeroDocumento || receitaId.substring(0,4)}`,
                         conciliado: false,
                         dataConciliacao: null,
