@@ -4558,7 +4558,7 @@
             updateUiForUser(currentUserName);
             setupListeners(effectiveUserId);
             initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
-            initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
+            initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils, currentUserName);
             showView('main-page');
             updateStatusFilterUI();
             updateReceitaStatusFilterUI();
@@ -4577,7 +4577,7 @@
                 updateUiForUser(currentUserName);
                 setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
-                initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils);
+                initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils, currentUserName);
                 showView('main-page');
                 updateStatusFilterUI();
                 updateReceitaStatusFilterUI();

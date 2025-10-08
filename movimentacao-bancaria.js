@@ -1,8 +1,11 @@
 import { collection, query, where, onSnapshot, doc, getDoc, writeBatch, runTransaction, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+let loggedInUserName = 'Sistema'; // Default value
+
 // This module will be initialized from the main script
-export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
+export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName) {
     if (!userId) return;
+    loggedInUserName = userName || 'Sistema'; // Store the username
 
     const { formatCurrency, fromCents, toCents, showFeedback } = commonUtils;
 
@@ -229,7 +232,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
             batch.update(ref, {
                 conciliado: conciliar,
                 dataConciliacao: conciliar ? new Date().toISOString().split('T')[0] : null,
-                usuarioConciliacao: conciliar ? "currentUserName" : null // Replace with actual user name
+                usuarioConciliacao: conciliar ? loggedInUserName : null
             });
         });
 
@@ -313,7 +316,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                     estornado: true,
                     conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
-                    usuarioConciliacao: "Sistema (Estorno)"
+                    usuarioConciliacao: loggedInUserName
                 });
 
                 // 2.2. Cria a movimentação de contrapartida (o estorno no extrato)
@@ -328,7 +331,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                     estornoDeId: movDoc.id,
                     conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
-                    usuarioConciliacao: "Sistema (Estorno)",
+                    usuarioConciliacao: loggedInUserName,
                     createdAt: serverTimestamp()
                 });
 
@@ -343,7 +346,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
                         tipoTransacao: "Estorno",
                         dataTransacao: new Date().toISOString().split('T')[0],
                         valorPrincipal: valorPrincipalEstornado,
-                        usuarioResponsavel: "Sistema",
+                        usuarioResponsavel: loggedInUserName,
                         motivoEstorno: "Estornado via Conciliação Bancária",
                         createdAt: serverTimestamp()
                     });
