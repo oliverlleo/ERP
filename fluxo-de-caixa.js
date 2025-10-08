@@ -220,23 +220,28 @@ export function initializeFluxoDeCaixa(db, userId, common) {
             saldoAnterior = contaEspecifica ? (contaEspecifica.saldoInicial || 0) : 0;
         }
 
-        // 2. Query all bank movements *before* the start date
-        const q = query(collection(db, `users/${userId}/movimentacoesBancarias`),
-            where("dataTransacao", "<", startDate),
-            where("estornado", "==", false)
-        );
-        const pastMovimentacoesSnap = await getDocs(q);
+        // 2. Build the query for past transactions. This is more efficient.
+        let pastMovimentacoesQuery;
+        if (contaId === 'todas') {
+            // If all accounts, query all movements before the date
+            pastMovimentacoesQuery = query(collection(db, `users/${userId}/movimentacoesBancarias`),
+                where("dataTransacao", "<", startDate)
+            );
+        } else {
+            // If a specific account, query for that account's movements
+            pastMovimentacoesQuery = query(collection(db, `users/${userId}/movimentacoesBancarias`),
+                where("contaBancariaId", "==", contaId),
+                where("dataTransacao", "<", startDate)
+            );
+        }
 
-        // 3. Adjust the initial balance based on past movements
+        const pastMovimentacoesSnap = await getDocs(pastMovimentacoesQuery);
+
+        // 3. Adjust the initial balance with past movements, filtering out reversed ones client-side
         pastMovimentacoesSnap.docs.forEach(doc => {
             const mov = doc.data();
-            // If a specific account is selected, only consider its movements
-            if (contaId !== 'todas') {
-                if (mov.contaBancariaId === contaId) {
-                    saldoAnterior += mov.valor;
-                }
-            } else {
-                // If "All Accounts", sum everything up. Internal transfers will cancel each other out.
+            if (mov.estornado !== true) {
+                 // For 'todas' case, we sum all values. For specific account, the query has already filtered.
                 saldoAnterior += mov.valor;
             }
         });
