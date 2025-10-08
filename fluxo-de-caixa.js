@@ -746,8 +746,16 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const ctx = document.getElementById('chart-evolucao-saldo')?.getContext('2d');
         if (!ctx) return;
 
-        const realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
-        const projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
+        let realizadoData;
+        let projetadoData;
+
+        if (lastRealizedDayIndex < 0) { // Handles the case where all data is projected
+            realizadoData = [];
+            projetadoData = dataPoints;
+        } else {
+            realizadoData = dataPoints.slice(0, lastRealizedDayIndex + 2); // +2 to connect the lines
+            projetadoData = new Array(lastRealizedDayIndex).fill(null).concat(dataPoints.slice(lastRealizedDayIndex));
+        }
 
         chartInstances.evolucaoSaldo = new Chart(ctx, {
             type: 'line',

@@ -216,18 +216,20 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
         const conta = contasBancariasData.find(c => c.id === contaId);
         const saldoInicialConta = conta ? (conta.saldoInicial || 0) : 0;
 
-        // Query for movements before the start date to adjust the initial balance
-        const qBefore = query(collection(db, 'users', userId, 'movimentacoesBancarias'),
-            where("contaBancariaId", "==", contaId),
-            where("dataTransacao", "<", de)
+        // Query for all movements for the account, then filter by date on the client-side
+        const qAllForAccount = query(collection(db, 'users', userId, 'movimentacoesBancarias'),
+            where("contaBancariaId", "==", contaId)
         );
-        const snapshotBefore = await getDocs(qBefore);
+        const snapshotAll = await getDocs(qAllForAccount);
         let ajusteSaldoInicial = 0;
-        snapshotBefore.forEach(doc => {
+        snapshotAll.forEach(doc => {
             const data = doc.data();
-            // Only count non-voided transactions for balance calculation
-            if (!data.estornado) {
-                ajusteSaldoInicial += data.valor || 0;
+            // Client-side filtering for transactions before the start date
+            if (data.dataTransacao < de) {
+                // Only count non-voided transactions for balance calculation
+                if (!data.estornado) {
+                    ajusteSaldoInicial += data.valor || 0;
+                }
             }
         });
 
