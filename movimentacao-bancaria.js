@@ -1,4 +1,4 @@
-import { collection, query, where, onSnapshot, doc, getDoc, writeBatch, runTransaction, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { collection, query, where, onSnapshot, doc, getDoc, writeBatch, runTransaction, serverTimestamp, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // This module will be initialized from the main script
 export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName) {
@@ -273,6 +273,13 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
 
                 const movData = movDoc.data();
                 if (movData.estornado) throw new Error("Este lançamento já foi estornado.");
+
+                // LIMPEZA: Procura e deleta qualquer "estorno fantasma" que possa existir de execuções anteriores.
+                const qGhost = query(collection(db, `users/${userId}/movimentacoesBancarias`), where("estornoDeId", "==", movId));
+                const ghostDocs = await getDocs(qGhost); // Note: getDocs is not a transaction-read, but this is a cleanup operation.
+                ghostDocs.forEach(ghostDoc => {
+                    transaction.delete(ghostDoc.ref);
+                });
 
                 // Se não tiver a "ponte" para a origem, apenas marca como estornado.
                 if (!movData.origemParentId || !movData.origemId || !movData.origemTipo.includes('_')) {
