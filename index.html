@@ -7032,6 +7032,7 @@
                     descricao: `Pagamento: ${data.descricao}`,
                     origemTipo: 'PAGAMENTO_DESPESA',
                     origemId: novoPagamentoRef.id, // Link to the payment document in the subcollection
+                    origemParentId: despesaId, // <<< ADICIONE ESTA LINHA
                     origemDescricao: `Pagamento Despesa #${data.numeroDocumento || despesaId.substring(0,4)}`,
                     conciliado: false,
                     dataConciliacao: null,
@@ -8140,6 +8141,7 @@ function validateParcelasSum() {
                         descricao: `Recebimento: ${data.descricao}`,
                         origemTipo: 'RECEBIMENTO_RECEITA',
                         origemId: novoRecebimentoRef.id, // Link to the receipt document in the subcollection
+                        origemParentId: receitaId, // <<< ADICIONE ESTA LINHA
                         origemDescricao: `Recebimento Receita #${data.numeroDocumento || receitaId.substring(0,4)}`,
                         conciliado: false,
                         dataConciliacao: null,

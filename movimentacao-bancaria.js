@@ -256,7 +256,7 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
         }
         const movId = selectedIds[0];
 
-        if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação é irreversível e irá reabrir a pendência original (se houver).")) {
+        if (!confirm("Tem certeza que deseja estornar este lançamento? Esta ação irá reabrir a pendência original (se houver) e não pode ser desfeita.")) {
             return;
         }
 
@@ -264,96 +264,128 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils) {
 
         try {
             await runTransaction(db, async (transaction) => {
+                // ETAPA 1: LER TODOS OS DOCUMENTOS NECESSÁRIOS PRIMEIRO
                 const movDoc = await transaction.get(movRef);
                 if (!movDoc.exists()) {
-                    throw "Lançamento não encontrado.";
+                    throw new Error("Lançamento bancário não encontrado.");
                 }
 
                 const movData = movDoc.data();
                 if (movData.estornado) {
-                    throw "Este lançamento já foi estornado.";
+                    throw new Error("Este lançamento já foi estornado.");
                 }
 
-                // 1. Mark original movement as estornado
+                let origemDocRef, origemParentDocRef, origemParentDoc, pagamentosCollectionRef;
+                let valorPrincipalEstornado = 0;
+                let jurosEstornados = 0;
+                let descontosEstornados = 0;
+
+                // Identifica e prepara as referências para os documentos de origem
+                if ((movData.origemTipo === 'PAGAMENTO_DESPESA' || movData.origemTipo === 'RECEBIMENTO_RECEITA') && movData.origemId && movData.origemParentId) {
+                    const parentCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'despesas' : 'receitas';
+                    const subCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'pagamentos' : 'recebimentos';
+
+                    origemParentDocRef = doc(db, `users/${userId}/${parentCollection}`, movData.origemParentId);
+                    origemDocRef = doc(origemParentDocRef, subCollection, movData.origemId);
+                    pagamentosCollectionRef = collection(origemParentDocRef, subCollection);
+
+                    const origemDoc = await transaction.get(origemDocRef);
+                    const origemParentDocRaw = await transaction.get(origemParentDocRef);
+
+                    if (!origemDoc.exists() || !origemParentDocRaw.exists()) {
+                        throw new Error("O documento de pagamento/recebimento original ou seu título pai não foi encontrado.");
+                    }
+                    if (origemDoc.data().estornado) {
+                        throw new Error("O pagamento/recebimento de origem já foi estornado anteriormente.");
+                    }
+
+                    const origemData = origemDoc.data();
+                    valorPrincipalEstornado = origemData.valorPrincipal || 0;
+                    jurosEstornados = origemData.jurosPagos || origemData.jurosRecebidos || 0;
+                    descontosEstornados = origemData.descontosAplicados || origemData.descontosConcedidos || 0;
+                    origemParentDoc = origemParentDocRaw.data();
+                }
+
+                // ETAPA 2: EXECUTAR TODAS AS ESCRITAS DE FORMA ATÔMICA
+
+                // 2.1. Marca a movimentação bancária original como estornada
                 transaction.update(movRef, {
                     estornado: true,
-                    // If the original wasn't conciliado, it should be marked as such now
-                    // so it doesn't affect the "to be reconciled" balance anymore.
                     conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
                     usuarioConciliacao: "Sistema (Estorno)"
                 });
 
-                // 2. Create the reversal movement
-                const contrapartidaData = {
+                // 2.2. Cria a movimentação de contrapartida (o estorno no extrato)
+                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
+                transaction.set(newMovRef, {
                     ...movData,
-                    valor: -movData.valor, // Invert the value
+                    valor: -movData.valor,
                     descricao: `Estorno de: ${movData.descricao}`,
                     origemTipo: "ESTORNO",
                     origemDescricao: `Estorno Lanç. #${movDoc.id.substring(0, 5)}`,
                     estornado: false,
                     estornoDeId: movDoc.id,
-                    conciliado: true, // Reversal is born reconciled
+                    conciliado: true,
                     dataConciliacao: new Date().toISOString().split('T')[0],
                     usuarioConciliacao: "Sistema (Estorno)",
                     createdAt: serverTimestamp()
-                };
-                const newMovRef = doc(collection(db, `users/${userId}/movimentacoesBancarias`));
-                transaction.set(newMovRef, contrapartidaData);
+                });
 
+                // 2.3. Se houver uma origem (despesa/receita), reverte o estado dela
+                if (origemParentDocRef && origemParentDoc) {
+                    // Marca o pagamento/recebimento original como estornado
+                    transaction.update(origemDocRef, { estornado: true });
 
-                // 3. Revert the original source, if applicable
-                if (movData.origemTipo && movData.origemId) {
-                    const origemId = movData.origemId;
-                    let origemRef;
-                    let updateData;
+                    // Adiciona um registro de "Estorno" no histórico do título para rastreabilidade
+                    const novoEstornoRef = doc(pagamentosCollectionRef);
+                    transaction.set(novoEstornoRef, {
+                        tipoTransacao: "Estorno",
+                        dataTransacao: new Date().toISOString().split('T')[0],
+                        valorPrincipal: valorPrincipalEstornado,
+                        usuarioResponsavel: "Sistema",
+                        motivoEstorno: "Estornado via Conciliação Bancária",
+                        createdAt: serverTimestamp()
+                    });
 
-                    switch (movData.origemTipo) {
-                        case 'PAGAMENTO_DESPESA':
-                            // This logic assumes 'origemId' is the ID of the payment document
-                            // in the 'pagamentos' subcollection of a 'despesas' document.
-                            // We need to find the despesa first. This is complex and might require
-                            // a more direct link, e.g., storing despesaId on the movimentacao.
-                            // For now, we'll assume a structure or skip if too complex without more info.
-                            // --- Placeholder for Reversal Logic ---
-                            // Let's assume we can find the despesa and pagamento ref
-                            // const pagamentoRef = doc(db, `users/${userId}/despesas/${despesaId}/pagamentos`, origemId);
-                            // const despesaRef = doc(db, `users/${userId}/despesas`, despesaId);
-                            // const pagDoc = await transaction.get(pagamentoRef);
-                            // if(pagDoc.exists()) {
-                            //     const valorEstornado = pagDoc.data().valorPago;
-                            //     transaction.update(pagamentoRef, { estornado: true });
-                            //     transaction.update(despesaRef, {
-                            //         totalPago: increment(-valorEstornado),
-                            //         valorSaldo: increment(valorEstornado)
-                            //     });
-                            // }
-                            showFeedback("Estorno de pagamento de despesa ainda não implementado na origem.", "info");
-                            break;
+                    // Recalcula saldos e status do título PAI (despesa ou receita)
+                    const updateData = {};
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
 
-                        case 'RECEBIMENTO_RECEITA':
-                            // Similar logic for reversing a receita payment
-                            showFeedback("Estorno de recebimento de receita ainda não implementado na origem.", "info");
-                            break;
+                    if (movData.origemTipo === 'PAGAMENTO_DESPESA') {
+                        updateData.totalPago = (origemParentDoc.totalPago || 0) - valorPrincipalEstornado;
+                        updateData.totalJuros = (origemParentDoc.totalJuros || 0) - jurosEstornados;
+                        updateData.totalDescontos = (origemParentDoc.totalDescontos || 0) - descontosEstornados;
+                        updateData.valorSaldo = (origemParentDoc.valorOriginal + updateData.totalJuros) - updateData.totalPago - updateData.totalDescontos;
 
-                        case 'TRANSFERENCIA_SAIDA':
-                        case 'TRANSFERENCIA_ENTRADA':
-                             showFeedback("Estorno de transferência ainda não implementado na origem.", "info");
-                            break;
+                        const vencimento = new Date(origemParentDoc.vencimento + 'T00:00:00');
+                        if (updateData.totalPago <= 0) {
+                            updateData.status = vencimento < today ? 'Vencido' : 'Pendente';
+                        } else {
+                            updateData.status = 'Pago Parcialmente';
+                        }
+                    } else { // RECEBIMENTO_RECEITA
+                        updateData.totalRecebido = (origemParentDoc.totalRecebido || 0) - valorPrincipalEstornado;
+                        updateData.totalJuros = (origemParentDoc.totalJuros || 0) - jurosEstornados;
+                        updateData.totalDescontos = (origemParentDoc.totalDescontos || 0) - descontosEstornados;
+                        updateData.saldoPendente = (origemParentDoc.valorOriginal + updateData.totalJuros) - updateData.totalRecebido - updateData.totalDescontos;
 
-                        default:
-                            // For manual entries like APORTE_CAPITAL, no further action is needed.
-                            break;
+                        const vencimento = new Date((origemParentDoc.dataVencimento || origemParentDoc.vencimento) + 'T00:00:00');
+                        if (updateData.totalRecebido <= 0) {
+                             updateData.status = vencimento < today ? 'Vencido' : 'Pendente';
+                        } else {
+                            updateData.status = 'Recebido Parcialmente';
+                        }
                     }
+                    transaction.update(origemParentDocRef, updateData);
                 }
             });
 
-            showFeedback("Lançamento estornado com sucesso!", "success");
-            selectAllCheckbox.checked = false;
-            // The onSnapshot listener will automatically refresh the view
+            showFeedback("Lançamento estornado com sucesso! O título original foi reaberto.", "success");
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
         } catch (error) {
             console.error("Erro ao estornar lançamento: ", error);
-            showFeedback(`Falha no estorno: ${error.toString()}`, "error");
+            showFeedback(`Falha no estorno: ${error.message}`, "error");
         }
     }
 }
