@@ -1757,6 +1757,7 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                              <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -2307,6 +2308,7 @@
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-pagar-page">Contas a Pagar</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="contas-a-receber-page">Contas a Receber</a>
                             <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="fluxo-de-caixa-page">Fluxo de Caixa</a>
+                            <a href="#" class="nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-target="movimentacao-bancaria-page">Conciliação Bancária</a>
                         </div>
                     </div>
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
@@ -4175,6 +4177,8 @@
             const docs = querySnapshot.docs;
             populateDropdown(pagamentoContaSelect, docs);
             populateDropdown(pagarContaSaidaSelect, docs);
+            // Also populate the dropdown on the new bank reconciliation page
+            populateDropdown(movContaBancariaSelect, docs);
         });
     }
 
