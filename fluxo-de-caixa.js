@@ -58,7 +58,10 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const parentDocsSnapshot = await getDocs(parentQuery);
 
         const promises = parentDocsSnapshot.docs.map(parentDoc => {
-            let subcollectionQuery = collection(parentDoc.ref, subcollectionName);
+            let subcollectionQuery = query(
+                collection(parentDoc.ref, subcollectionName),
+                where("estornado", "!=", true) // Exclude reversed transactions
+            );
 
             // Apply the precise date filtering at the subcollection level.
             if (startDate) {
