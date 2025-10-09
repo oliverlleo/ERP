@@ -273,44 +273,48 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
 
                 const movData = movDoc.data();
 
-                // Marca a movimentação como estornada em vez de deletar
-                transaction.update(movRef, {
-                    estornado: true,
-                    conciliado: false, // Um item estornado não pode estar conciliado
-                    dataConciliacao: null,
-                    usuarioConciliacao: null
-                });
-
-
-                // Se não tiver a "ponte" para a origem, a operação para aqui.
+                // If it doesn't have an origin, we only need to update the mov. No other reads needed.
                 if (!movData.origemParentId || !movData.origemId || !movData.origemTipo.includes('_')) {
-                    return;
+                    transaction.update(movRef, {
+                        estornado: true,
+                        conciliado: false,
+                        dataConciliacao: null,
+                        usuarioConciliacao: null
+                    });
+                    return; // End transaction
                 }
 
-                // Se tiver a "ponte", continua para reverter a despesa/receita
+                // --- ALL READS FIRST ---
                 const parentCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'despesas' : 'receitas';
                 const subCollection = movData.origemTipo === 'PAGAMENTO_DESPESA' ? 'pagamentos' : 'recebimentos';
                 const origemParentDocRef = doc(db, `users/${userId}/${parentCollection}`, movData.origemParentId);
                 const origemDocRef = doc(origemParentDocRef, subCollection, movData.origemId);
-                const historicoCollectionRef = collection(origemParentDocRef, subCollection);
 
                 const [origemDoc, origemParentDocRaw] = await Promise.all([transaction.get(origemDocRef), transaction.get(origemParentDocRef)]);
 
                 if (!origemParentDocRaw.exists()) throw new Error(`O título original (ID: ${movData.origemParentId}) não foi encontrado.`);
                 if (!origemDoc.exists()) throw new Error(`O registro de pagamento/recebimento original (ID: ${movData.origemId}) não foi encontrado no histórico.`);
 
+                // --- ALL WRITES AFTER ---
                 const origemParentDoc = origemParentDocRaw.data();
                 const pagamentoOriginalData = origemDoc.data();
                 const valorPrincipalEstornado = pagamentoOriginalData.valorPrincipal || 0;
                 const jurosEstornados = pagamentoOriginalData.jurosPagos || pagamentoOriginalData.jurosRecebidos || 0;
                 const descontosEstornados = pagamentoOriginalData.descontosAplicados || pagamentoOriginalData.descontosConcedidos || 0;
 
-                // 2. EXECUTA AS ALTERAÇÕES
+                // 1. Update the bank transaction to mark it as reversed
+                transaction.update(movRef, {
+                    estornado: true,
+                    conciliado: false, // A reversed item cannot be reconciled
+                    dataConciliacao: null,
+                    usuarioConciliacao: null
+                });
 
-                // A movimentação bancária já foi marcada como 'estornado' no início da transação.
-
-                // Marca o registro de pagamento/recebimento original como estornado, em vez de deletar
+                // 2. Mark the original payment/receipt record as reversed
                 transaction.update(origemDocRef, { estornado: true });
+
+                // 3. Add a new "Estorno" record to the history of the original title
+                const historicoCollectionRef = collection(origemParentDocRef, subCollection);
 
                 // Adiciona um novo registro de "Estorno" no histórico do título
                 const novoEstornoRef = doc(historicoCollectionRef);
