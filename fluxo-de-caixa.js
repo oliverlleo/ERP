@@ -58,10 +58,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
         const parentDocsSnapshot = await getDocs(parentQuery);
 
         const promises = parentDocsSnapshot.docs.map(parentDoc => {
-            let subcollectionQuery = query(
-                collection(parentDoc.ref, subcollectionName),
-                where("estornado", "!=", true) // Exclude reversed transactions
-            );
+            let subcollectionQuery = collection(parentDoc.ref, subcollectionName);
 
             // Apply the precise date filtering at the subcollection level.
             if (startDate) {
@@ -264,6 +261,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         for (const doc of pagamentos) {
             const data = doc.data();
+            if (data.estornado === true) continue; // Skip reversed transactions
             const parentDespesaRef = doc.ref.parent.parent;
             if (parentDespesaRef) {
                 const despesaSnap = await getDoc(parentDespesaRef);
@@ -293,6 +291,7 @@ export function initializeFluxoDeCaixa(db, userId, common) {
 
         for (const doc of recebimentos) {
             const data = doc.data();
+            if (data.estornado === true) continue; // Skip reversed transactions
             const parentReceitaRef = doc.ref.parent.parent;
              if (parentReceitaRef) {
                 const receitaSnap = await getDoc(parentReceitaRef);
