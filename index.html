@@ -6535,21 +6535,6 @@
 
                 // --- PHASE 2: ALL WRITES ---
 
-                // Create the reversal (contrapartida) entry
-                const estornoRef = doc(collection(db, 'users', userId, 'movimentacoesBancarias'));
-                transaction.set(estornoRef, {
-                    ...movData, // Inherit most data
-                    valor: -movData.valor, // Invert the value
-                    descricao: `Estorno de: ${movData.descricao} (Motivo: ${motivo})`,
-                    origemTipo: "ESTORNO",
-                    origemId: movDoc.id,
-                    estornoDeId: movDoc.id,
-                    conciliado: true, // Estornos nascem conciliados
-                    dataConciliacao: new Date().toISOString().split('T')[0],
-                    estornado: false, // O estorno em si não é estornado
-                    createdAt: serverTimestamp()
-                });
-
                 // Mark the original movement as reversed and reconciled
                 transaction.update(movRef, {
                     estornado: true,
