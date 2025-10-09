@@ -294,8 +294,8 @@ export function initializeMovimentacaoBancaria(db, userId, commonUtils, userName
 
                 // 2. EXECUTA AS ALTERAÇÕES
 
-                // Deleta a movimentação bancária da tela de conciliação
-                transaction.delete(movRef);
+                // Em vez de deletar, marca a movimentação bancária como estornada
+                transaction.update(movRef, { estornado: true, status: 'Estornado' });
 
                 // Marca o registro de pagamento/recebimento original como estornado, em vez de deletar
                 transaction.update(origemDocRef, { estornado: true });
