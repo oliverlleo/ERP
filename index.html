@@ -63,6 +63,24 @@
 
 <body class="bg-gray-50">
 
+  <!-- Painel de Notificações Lateral -->
+  <div id="notification-sidebar" class="fixed top-0 right-0 h-full w-80 bg-white shadow-lg p-6 transform translate-x-full transition-transform duration-300 ease-in-out z-50">
+      <div class="flex justify-between items-center border-b pb-4">
+          <h3 class="text-xl font-bold text-gray-800">Notificações</h3>
+          <button id="close-notification-sidebar" class="p-2 rounded-full hover:bg-gray-200">
+              <span class="material-symbols-outlined">close</span>
+          </button>
+      </div>
+      <div id="notification-list" class="mt-4 space-y-4 overflow-y-auto h-[calc(100%-100px)]">
+          <!-- As notificações serão inseridas aqui pelo JS -->
+          <div class="text-center text-gray-500 pt-10">Nenhuma notificação nova.</div>
+      </div>
+      <div class="absolute bottom-0 left-0 w-full p-4 border-t">
+        <button id="clear-all-notifications" class="w-full text-center text-sm text-gray-500 hover:text-[var(--primary-color)]">Limpar todas</button>
+      </div>
+  </div>
+
+
   <!--
   Tailwind JIT safelist:
   bg-green-100 text-green-800
@@ -161,8 +179,9 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
                  <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    <button class="notification-bell relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600">notifications</span>
+                        <span class="notification-badge hidden absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     </button>
                     <div class="relative">
                         <button id="profile-button" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
@@ -380,8 +399,9 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
                  <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    <button class="notification-bell relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600">notifications</span>
+                        <span class="notification-badge hidden absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     </button>
                     <div class="relative">
                         <button id="profile-button-cadastros" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
@@ -1228,8 +1248,9 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
                  <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    <button class="notification-bell relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600">notifications</span>
+                        <span class="notification-badge hidden absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     </button>
                     <div class="relative">
                         <button id="profile-button-contas" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
@@ -1763,8 +1784,9 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
                  <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    <button class="notification-bell relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600">notifications</span>
+                        <span class="notification-badge hidden absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     </button>
                     <div class="relative">
                         <button id="profile-button-receber" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
@@ -2314,8 +2336,9 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
                  <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    <button class="notification-bell relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600">notifications</span>
+                        <span class="notification-badge hidden absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     </button>
                     <div class="relative">
                         <button id="profile-button-fluxo" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
@@ -2638,8 +2661,9 @@
                     <a class="text-gray-600 hover:text-[var(--primary-color)] text-sm font-medium leading-normal transition-colors" href="#">Vendas</a>
                 </nav>
                  <div class="flex items-center gap-4">
-                    <button class="relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
-                        <span class="material-symbols-outlined text-gray-600"> notifications </span>
+                    <button class="notification-bell relative rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)]">
+                        <span class="material-symbols-outlined text-gray-600">notifications</span>
+                        <span class="notification-badge hidden absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     </button>
                     <div class="relative">
                         <button id="profile-button-movimentacao" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://placehold.co/40x40/E2E8F0/4A5568?text=U");'></button>
@@ -2889,6 +2913,7 @@
     import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, deleteDoc, query, where, getDocs, getDoc, updateDoc, runTransaction, writeBatch, collectionGroup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
     import { initializeFluxoDeCaixa } from './fluxo-de-caixa.js';
     import { initializeMovimentacaoBancaria } from './movimentacao-bancaria.js';
+    import { initializeNotifications, generateFinancialAlerts } from './notificacoes.js';
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -4559,6 +4584,8 @@
             setupListeners(effectiveUserId);
             initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
             initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils, currentUserName);
+            initializeNotifications(db, effectiveUserId);
+            generateFinancialAlerts();
             showView('main-page');
             updateStatusFilterUI();
             updateReceitaStatusFilterUI();
@@ -4622,6 +4649,8 @@
           detachListeners();
           updateUiForUser(currentUserName);
           setupListeners(effectiveUserId); // Use a mock UID
+          initializeNotifications(db, effectiveUserId);
+          generateFinancialAlerts();
           adminLoginModal.classList.add('hidden');
           showView('main-page');
           updateStatusFilterUI();
@@ -4696,6 +4725,8 @@
                 setupListeners(effectiveUserId);
                 initializeFluxoDeCaixa(db, effectiveUserId, commonUtils);
                 initializeMovimentacaoBancaria(db, effectiveUserId, commonUtils, currentUserName);
+                initializeNotifications(db, effectiveUserId);
+                generateFinancialAlerts();
                 showView('main-page');
             }
         } catch (error) {
